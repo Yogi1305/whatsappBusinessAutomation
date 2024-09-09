@@ -1,0 +1,148 @@
+.image-editor-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  .editor-content {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+  }
+  
+  .control-panel {
+    flex: 1;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  
+  .photopea-container {
+    flex: 2;
+    height: 600px;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .photopea-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  
+  h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.5em;
+  }
+  
+  .prompt-section {
+    margin-bottom: 20px;
+  }
+  
+  .prompt-select, .additional-specs, .inpainting-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  .additional-specs {
+    height: 80px;
+    resize: vertical;
+  }
+  
+  .button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .primary-button, .secondary-button, .action-button, .aspect-ratio-select {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 0.9em;
+  }
+  
+  .primary-button {
+    background-color: #4CAF50;
+    color: white;
+    flex-grow: 1;
+  }
+  
+  .secondary-button {
+    background-color: #008CBA;
+    color: white;
+  }
+  
+  .action-button {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .aspect-ratio-select {
+    background-color: #ddd;
+    flex-grow: 1;
+  }
+  
+  .inpainting-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .inpainting-input {
+    flex-grow: 1;
+  }
+  
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .error-message {
+    color: #f44336;
+    margin-bottom: 10px;
+  }
+  
+  @media (max-width: 1024px) {
+    .editor-content {
+      flex-direction: column;
+    }
+  
+    .photopea-container {
+      height: 400px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .image-editor-container {
+      padding: 10px;
+    }
+  
+    .control-panel {
+      padding: 15px;
+    }
+  
+    h2 {
+      font-size: 1.2em;
+    }
+  
+    .primary-button, .secondary-button, .action-button, .aspect-ratio-select {
+      font-size: 0.8em;
+      padding: 8px 12px;
+    }
+  }
