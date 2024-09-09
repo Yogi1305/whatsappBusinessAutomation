@@ -1,0 +1,573 @@
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Handle, Position, useReactFlow } from 'reactflow';
+import { FaTrash, FaCopy, FaMinus, FaPlus } from 'react-icons/fa';
+import { useFlow } from './FlowContext';
+import uploadToBlob from "../../azureUpload.jsx";
+import { convertMentionsForBackend, convertMentionsForFrontend, MentionTextArea } from './MentionTextArea';
+import { useAuth } from '../../authContext.jsx';
+import axiosInstance from '../../api.jsx';
+
+const nodeStyles = {
+  padding: '20px',
+  borderRadius: '12px',
+  width: '300px',
+  fontSize: '14px',
+  color: '#333',
+  textAlign: 'left',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  border: '1px solid #e0e0e0',
+  background: '#ffffff',
+};
+
+const inputStyles = {
+  width: '100%',
+  padding: '10px',
+  margin: '10px 0',
+  borderRadius: '6px',
+  border: '1px solid #ccc',
+  fontSize: '14px',
+  backgroundColor: '#f9f9f9',
+  color: '#333',
+  transition: 'border-color 0.3s, box-shadow 0.3s',
+};
+
+const buttonStyles = {
+  background: '#4CAF50',
+  color: 'white',
+  border: 'none',
+  padding: '10px 15px',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  margin: '10px 5px',
+  fontSize: '14px',
+  transition: 'background-color 0.3s, transform 0.1s',
+};
+
+const handleStyles = {
+  width: '12px',
+  height: '12px',
+  background: '#784212',
+  border: '2px solid #fff',
+};
+
+const iconStyles = {
+  cursor: 'pointer',
+  margin: '0 5px',
+  fontSize: '18px',
+  color: '#555',
+  transition: 'color 0.3s, transform 0.1s',
+};
+
+const selectStyles = {
+  ...inputStyles,
+  appearance: 'none',
+  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 10px top 50%',
+  backgroundSize: '12px auto',
+  paddingRight: '30px',
+};
+
+const textAreaStyles = {
+  ...inputStyles,
+  minHeight: '100px',
+  resize: 'vertical',
+};
+
+const fileInputStyles = {
+  ...inputStyles,
+  padding: '12px',
+  background: '#f0f0f0',
+  cursor: 'pointer',
+};
+
+const errorStyles = {
+  color: '#ff4d4f',
+  fontSize: '12px',
+  marginTop: '5px',
+};
+
+const mentionListStyles = {
+  position: 'absolute',
+  backgroundColor: '#fff',
+  border: '1px solid #ccc',
+  borderRadius: '4px',
+  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  zIndex: 1000,
+  maxHeight: '150px',
+  overflowY: 'auto',
+};
+
+const mentionItemStyles = {
+  padding: '8px 12px',
+  cursor: 'pointer',
+  '&:hover': {
+    backgroundColor: '#f0f0f0',
+  },
+};
+
+const mentionOptions = [
+  { id: 'name', label: 'Name' },
+  { id: 'phoneno', label: 'Phone Number' },
+  { id: 'email', label: 'Email' },
+  { id: 'description', label: 'Address' },
+  { id: 'createdBy', label: 'Account' },
+];
+
+const highlightErrorStyle = {
+  borderColor: '#ff4d4f',
+  boxShadow: '0 0 0 2px rgba(255, 77, 79, 0.2)',
+};
+
+const getTenantIdFromUrl = () => {
+  // Example: Extract tenant_id from "/3/home"
+  const pathArray = window.location.pathname.split('/');
+  if (pathArray.length >= 2) {
+    return pathArray[1]; // Assumes tenant_id is the first part of the path
+  }
+  return null; // Return null if tenant ID is not found or not in the expected place
+};
+
+const NodeWrapper = ({ children, style, type }) => {
+  
+  const { deleteElements, setNodes, getNode } = useReactFlow();
+
+  const onDelete = useCallback(() => {
+    deleteElements({ nodes: [{ id: getNode(type).id }] });
+  }, [deleteElements, getNode, type]);
+
+  const onCopy = useCallback(() => {
+    const node = getNode(type);
+    const position = {
+      x: node.position.x + 50,
+      y: node.position.y + 50,
+    };
+
+    setNodes((nds) => nds.concat({
+      ...node,
+      id: `${type}-${nds.length + 1}`,
+      position,
+    }));
+  }, [getNode, setNodes, type]);
+
+  return (
+    <div style={{ ...nodeStyles, ...style }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      </div>
+      {children}
+    </div>
+  );
+};
+
+
+
+
+export const AskQuestionNode = ({ data, isConnectable }) => {
+  const [question, setQuestion] = useState(data.question || '');
+  const [optionType, setOptionType] = useState(data.optionType || 'Buttons');
+  const [options, setOptions] = useState(data.options || []);
+  const [variable, setVariable] = useState(data.variable || '');
+  const [dataType, setDataType] = useState(data.dataType || '');
+  const [errors, setErrors] = useState({});
+  const { id } = data;
+  const { updateNodeData } = useFlow();
+
+  const handleQuestionChange = (e) => {
+    const newQuestion = e.target.value;
+    setQuestion(newQuestion);
+    updateNodeData(id, { 
+      question: convertMentionsForBackend(newQuestion), 
+      optionType, 
+      options, 
+      dataType 
+    });
+  };
+
+  const handleOptionTypeChange = (e) => {
+    const newOptionType = e.target.value;
+    setOptionType(newOptionType);
+    if (newOptionType === 'Text') {
+      setOptions([]);
+    }
+    updateNodeData(id, { question, optionType: newOptionType, options, variable, dataType });
+  };
+
+  const handleOptionChange = (index, value) => {
+    const newOptions = options.map((opt, i) => i === index ? value : opt);
+    setOptions(newOptions);
+    updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
+  };
+
+  const handleVariableChange = (value) => {
+    setVariable(value);
+    updateNodeData(id, { question, optionType, options, variable: value, dataType });
+  };
+
+  const handleDataTypeChange = (value) => {
+    setDataType(value);
+    updateNodeData(id, { question, optionType, options, variable, dataType: value });
+  };
+
+  const addOption = () => {
+    if ((optionType === 'Buttons' && options.length < 3) || 
+        (optionType === 'Lists' && options.length < 10)) {
+      const newOptions = [...options, ''];
+      setOptions(newOptions);
+      updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
+    }
+  };
+
+  const removeOption = (index) => {
+    const newOptions = options.filter((_, i) => i !== index);
+    setOptions(newOptions);
+    updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
+  };
+
+  const getOptionStyle = (type) => {
+    const baseStyle = {
+      ...inputStyles,
+      width: 'calc(100% - 60px)', // Adjusted to make room for the handle
+    };
+
+    switch (type) {
+      case 'Buttons':
+        return {
+          ...baseStyle,
+          background: '#e6f7ff',
+          border: '1px solid #91d5ff',
+          borderRadius: '20px',
+          padding: '8px 15px',
+          cursor: 'pointer',
+          color: '#0050b3',
+          fontWeight: 'bold',
+        };
+      case 'Lists':
+        return {
+          ...baseStyle,
+          background: '#f6ffed',
+          borderLeft: '3px solid #b7eb8f',
+          borderRadius: '0 6px 6px 0',
+          paddingLeft: '15px',
+          color: '#389e0d',
+        };
+      default:
+        return baseStyle;
+    }
+  };
+
+  const renderOptions = () => {
+    if (optionType === 'Text') {
+      return (
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="text"
+            style={{
+              ...handleStyles,
+            }}
+            isConnectable={isConnectable}
+          />
+      );
+    } else {
+      return options.map((option, index) => (
+        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', position: 'relative' }}>
+          <Handle
+            type="source"
+            position={Position.Right}
+            id={`option-${index}`}
+            style={{
+              ...handleStyles,
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+            isConnectable={isConnectable}
+          />
+          <input
+            style={getOptionStyle(optionType)}
+            value={option}
+            onChange={(e) => handleOptionChange(index, e.target.value)}
+            placeholder={`${optionType === 'Buttons' ? 'Button' : 'List item'} ${index + 1}`}
+          />
+          <FaMinus onClick={() => removeOption(index)} style={{ cursor: 'pointer', marginLeft: '10px' }} />
+        </div>
+      ));
+    }
+  };
+
+  return (
+    <NodeWrapper style={{ background: '#fff5f5', borderColor: '#ffa39e' }} type="askQuestion">
+      <Handle type="target" style={{
+        top: '50%',
+        right: '-10px',
+        background: '#784212',
+        width: '12px',
+        height: '12px',
+      }} position={Position.Left} isConnectable={isConnectable} />
+      <h3 style={{ marginBottom: '15px', color: '#cf1322' }}>Ask Question</h3>
+      <MentionTextArea
+        value={convertMentionsForFrontend(question)}
+        onChange={handleQuestionChange}
+        placeholder="Enter question"
+      />
+      <h4>Variables (Optional)</h4>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+        <input
+          style={{ ...inputStyles, width: 'calc(60% - 10px)', marginRight: '10px' }}
+          value={variable}
+          onChange={(e) => handleVariableChange(e.target.value)}
+          placeholder='Variable Name'
+        />
+        <select
+          value={dataType}
+          onChange={(e) => handleDataTypeChange(e.target.value)}
+          style={{ ...selectStyles, width: '40%' }}
+        >
+          <option value="">Select Type</option>
+          <option value="string">String</option>
+          <option value="number">Number</option>
+          <option value="boolean">Boolean</option>
+          <option value="date">Date</option>
+        </select>
+      </div>
+      <select 
+        value={optionType} 
+        onChange={handleOptionTypeChange}
+        style={selectStyles}
+      >
+        <option value="Buttons">Buttons</option>
+        <option value="Lists">Lists</option>
+        <option value="Text">Text</option>
+      </select>
+      {renderOptions()}
+      {optionType !== 'Text' && ((optionType === 'Buttons' && options.length < 3) || (optionType === 'Lists' && options.length < 10)) && (
+        <button style={buttonStyles} onClick={addOption}>
+          <FaPlus style={{ marginRight: '5px' }} /> Add Option
+        </button>
+      )}
+    </NodeWrapper>
+  );
+};
+
+
+
+
+
+
+export const SendMessageNode = ({ data, isConnectable }) => {
+  const [field, setField] = useState(data.fields || { type: 'Message', content: { text: '', caption: '', med_id: '' } });
+  const { id } = data;
+  const { updateNodeData } = useFlow();
+  const textAreaRef = useRef(null);
+  const { userId } = useAuth();
+  const tenantId = getTenantIdFromUrl();
+  const [accessToken, setAccessToken] = useState('');
+  const fileInputRef = useRef(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+
+  useEffect(() => {
+    const fetchAccessToken = async () => {
+      try {
+        const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=241683569037594`);
+        setAccessToken(response.data.access_token);
+      } catch (error) {
+        console.error('Error fetching access token:', error);
+      }
+    };
+    fetchAccessToken();
+  }, []);
+
+
+  const updateNodeDataSafely = (newFields) => {
+    updateNodeData(id, { fields: newFields });
+  };
+
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', file.type.startsWith('image/') ? 'image' : 'document');
+        formData.append('messaging_product', 'whatsapp');
+
+        const response = await axiosInstance.post(
+          'https://graph.facebook.com/v16.0/241683569037594/media',
+          formData,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+
+        console.log('File uploaded to WhatsApp, ID:', response.data.id);
+        const blobUrl = await uploadToBlob(file, userId, tenantId);
+
+        setField({
+          type: file.type.startsWith('image/') ? 'Image' : file.type.startsWith('video/') ? 'Video' : 'Document',
+          content: {
+            url: blobUrl,
+            med_id: response.data.id, // Store the media ID instead of the URL
+            text: '',
+            caption: ''
+          }
+        });
+
+        if (file.type.startsWith('image/')) {
+          setPreviewUrl(URL.createObjectURL(file));
+        }
+
+      } catch (error) {
+        console.error('Error uploading file to WhatsApp Media API:', error);
+      }
+    }
+  };
+
+  const handleTextAreaChange = (e) => {
+    const { value } = e.target;
+    setField(prevField => ({
+      type: 'text',
+      content: { ...prevField.content, text: convertMentionsForBackend(value) }
+    }));
+  };
+
+
+  const handleCaptionChange = (e) => {
+    const { value } = e.target;
+    setField(prevField => ({
+      ...prevField,
+      content: { ...prevField.content, caption: convertMentionsForBackend(value) }
+    }));
+  };
+
+  useEffect(() => {
+    updateNodeDataSafely(field);
+  }, [field]);
+
+  
+
+  const renderInput = () => {
+    switch (field.type) {
+      case 'Image':
+      case 'Video':
+      case 'Document':
+        return (
+          <div>
+            {field.content && field.content.med_id && (
+              <div style={{ marginBottom: '10px' }}>
+                {field.type === 'Image' && previewUrl && (
+                  <img src={previewUrl} alt="Preview" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
+                )}
+              </div>
+            )}
+            <input
+              type="file"
+              accept={`${field.type.toLowerCase()}/*`}
+              onChange={handleFileChange}
+              style={fileInputStyles}
+              ref={fileInputRef}
+            />
+            <MentionTextArea
+              value={convertMentionsForFrontend(field.content?.caption || '')}
+              onChange={handleCaptionChange}
+              placeholder="Enter caption"
+            />
+          </div>
+        );
+      default:
+        return (
+          <div style={{ position: 'relative' }} ref={textAreaRef}>
+            <MentionTextArea
+             value={convertMentionsForFrontend(field.content?.text || '')}
+              onChange={handleTextAreaChange}
+              placeholder="Enter message"
+            />
+          </div>
+        );
+    }
+  };
+
+  return (
+    <NodeWrapper style={{ background: '#e6fffb', borderColor: '#87e8de' }} type="sendMessage">
+      <Handle type="target" style={{
+        top: '50%',
+        left: '-5px',
+        background: '#784212',
+        width: '12px',
+        height: '12px',
+      }} position={Position.Left} isConnectable={isConnectable} />
+      <h3 style={{ marginBottom: '15px', color: '#006d75' }}>Send Message</h3>
+      <div style={{ marginBottom: '15px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+          <select 
+            value={field.type} 
+            onChange={(e) => setField({ type: e.target.value, content: { text: '', caption: '', med_id: '' } })}
+            style={{ ...selectStyles, width: '100%', marginRight: '10px', color:'black' }}
+          >
+            <option value="Message">Message</option>
+            <option value="Image">Image</option>
+            <option value="Document">Document</option>
+            <option value="Video">Video</option>
+          </select>
+        </div>
+        {renderInput()}
+      </div>
+      <Handle type="source" style={{
+        top: '50%',
+        right: '-5px',
+        background: '#784212',
+        width: '12px',
+        height: '12px',
+      }} position={Position.Right} isConnectable={isConnectable} />
+    </NodeWrapper>
+  );
+};
+
+
+
+
+export const SetConditionNode = ({ data, isConnectable }) => {
+  const [condition, setCondition] = useState(data.condition || '');
+  const { id } = data;
+const { updateNodeData } = useFlow();
+
+
+const handleConditionChange = (e) => {
+  const newCondition = e.target.value;
+  setCondition(newCondition);
+  updateNodeData(id, { condition: convertMentionsForBackend(newCondition) });
+};
+
+  return (
+    <NodeWrapper style={{ background: '#f9f0ff', borderColor: '#d3adf7' }} type="setCondition">
+      <Handle type="target"  style={{
+                        
+                        top: '50%',
+                        right: '-10px',
+                        background: '#784212',
+                        width: '12px',
+                        height: '12px',
+                    }} position={Position.Left} isConnectable={isConnectable} />
+      <h3 style={{ marginBottom: '15px', color: '#531dab' }}>Set Condition</h3>
+      <MentionTextArea
+        value={convertMentionsForFrontend(condition)}
+        onChange={handleConditionChange}
+        placeholder="Enter condition"
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px' }}>
+        <div style={{ background: '#d9f7be', padding: '5px 10px', borderRadius: '4px', color: '#389e0d' }}>True</div>
+        <div style={{ background: '#ffccc7', padding: '5px 10px', borderRadius: '4px', color: '#cf1322' }}>False</div>
+      </div>
+      <Handle type="source"  position={Position.Right} id="true" isConnectable={isConnectable}  style={{ top: '50%', background: '#389e0d',
+                        right: '-5px',
+                        width: '12px',
+                        height: '12px', }} />
+      <Handle type="source" position={Position.Right} id="false" isConnectable={isConnectable}  style={{ top: '80%', background: '#cf1322', right: '-5px',
+                        width: '12px',
+                        height: '12px', }} />
+    </NodeWrapper>
+  );
+};
