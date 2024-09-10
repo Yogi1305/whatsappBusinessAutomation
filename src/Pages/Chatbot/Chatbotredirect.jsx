@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import logo from "../../assets/logo.png"
+import axios from 'axios';
 
 const Chatbotredirect = () => {
   const [progress, setProgress] = useState(0);

@@ -4,6 +4,8 @@ import BroadcastPage from "./Pages/Chatbot/Broadcast/BroadcastPage";
 import Chatbot from './Pages/Chatbot/chatbot';
 import FlowBuilder from "./Pages/NewFlow/FlowBuilder";
 import { Menu, X } from 'lucide-react';
+import Homepage from './Pages/HomePage/Homepage';
+import ContactPage from './Pages/ContactPage/ContactPage';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -30,9 +32,10 @@ const Navbar = () => {
 
 const NavLinks = () => (
   <>
-    <Link to="/broadcast" className="text-white hover:text-gray-300 block py-2 md:inline-block">Broadcast</Link>
-    <Link to="/chatbot" className="text-white hover:text-gray-300 block py-2 md:inline-block">Chatbot</Link>
-    <Link to="/flow-builder" className="text-white hover:text-gray-300 block py-2 md:inline-block">Flow Builder</Link>
+    <Link to="ll/contact" className="text-white hover:text-gray-300 block py-2 md:inline-block">Contact</Link>
+    <Link to="ll/broadcast" className="text-white hover:text-gray-300 block py-2 md:inline-block">Broadcast</Link>
+    <Link to="ll/chatbot" className="text-white hover:text-gray-300 block py-2 md:inline-block">Chatbot</Link>
+    <Link to="ll/flow-builder" className="text-white hover:text-gray-300 block py-2 md:inline-block">Flow Builder</Link>
   </>
 );
 
@@ -46,7 +49,8 @@ const App = () => {
             <Route path="ll/broadcast" element={<BroadcastPage />} />
             <Route path="ll/chatbot" element={<Chatbot />} />
             <Route path="ll/flow-builder" element={<FlowBuilder />} />
-            <Route path="/" element={<h1 className="text-2xl font-bold">Welcome to NurenAI Whatsapp </h1>} />
+            <Route path="ll/contact" element={<ContactPage />} />
+            <Route path="/" element={<Homepage/>} />
           </Routes>
         </main>
       </div>

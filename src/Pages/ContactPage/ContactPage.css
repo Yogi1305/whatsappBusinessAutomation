@@ -1,0 +1,235 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --accent-color: #e74c3c;
+    --background-color: #f5f7fa;
+    --white: #ffffff;
+    --text-color: #333333;
+    --light-gray: #ecf0f1;
+    --dark-gray: #7f8c8d;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+  }
+  
+  .contact-page {
+    min-height: 90vh;
+    width: 98vw;
+    /* max-width: 1200px; */
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .contact-head {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+  }
+  
+  .contact-page__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--light-gray);
+  }
+  
+  .contact-page__actions {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .contact-page__import-btn,
+  .contact-page__add-btn,
+  .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+  }
+  
+  .contact-page__import-btn,
+  .dropdown-toggle {
+    background-color: var(--primary-color);
+    color: var(--white);
+  }
+  
+  .contact-page__add-btn {
+    background-color: var(--secondary-color);
+    color: var(--white);
+  }
+  
+  .contact-page__import-btn:hover,
+  .contact-page__add-btn:hover,
+  .dropdown-toggle:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  
+  .contact-page__search {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  
+  .contact-page__search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dark-gray);
+  }
+  
+  .contact-page__search-input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 1px solid var(--light-gray);
+    border-radius: 50px;
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+  
+  .contact-page__search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  }
+  
+  .contact-page__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .contact-page__item {
+    background-color: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .contact-page__item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .contact-page__avatar {
+    width: 80px;
+    height: 80px;
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .contact-page__details {
+    text-align: center;
+  }
+  
+  .contact-page__details h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.4rem;
+    color: var(--primary-color);
+  }
+  
+  .contact-page__details p {
+    margin: 0 0 0.25rem;
+    color: var(--dark-gray);
+  }
+  
+  .contact-page__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+  }
+  
+  .contact-page__table th,
+  .contact-page__table td {
+    padding: 1rem;
+    text-align: left;
+  }
+  
+  .contact-page__table th {
+    background-color: var(--primary-color);
+    color: var(--white);
+    font-weight: 600;
+  }
+  
+  .contact-page__table tr {
+    background-color: var(--white);
+    transition: var(--transition);
+  }
+  
+  .contact-page__table tr:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  
+  .contact-page__list-view .list-group-item {
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    transition: var(--transition);
+  }
+  
+  .contact-page__list-view .list-group-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .contact-page__view-controls{
+    padding: 10px;
+    background-color: var(--accent-color);
+    border: none;
+    border-radius: 25px;
+  }
+
+  .contact-page__view-select{
+    border: none;
+    background-color: var(--accent-color);
+    color: white;
+  }
+  
+  @media (max-width: 768px) {
+    .contact-page__header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .contact-page__actions {
+      margin-top: 1rem;
+    }
+  
+    .contact-page__list {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* New styles for avatar colors */
+  .avatar-bg-1 { background-color: #FF6B6B; }
+  .avatar-bg-2 { background-color: #4ECDC4; }
+  .avatar-bg-3 { background-color: #45B7D1; }
+  .avatar-bg-4 { background-color: #FFA07A; }
+  .avatar-bg-5 { background-color: #98D8C8; }
+  .avatar-bg-6 { background-color: #F06292; }
+  .avatar-bg-7 { background-color: #AED581; }
+  .avatar-bg-8 { background-color: #FFD54F; }
+  .avatar-bg-9 { background-color: #4DB6AC; }
+  .avatar-bg-10 { background-color: #7986CB; }
