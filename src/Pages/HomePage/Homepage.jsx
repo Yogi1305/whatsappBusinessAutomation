@@ -2,7 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MessageSquare, GitBranch, ArrowRight, Users, BarChart, Send, Workflow } from 'lucide-react';
 import "./Homepage.css"
-
+import hero_img from "../../assets/hero_img.png"
+import hero2 from "../../assets/hero2.png"
+ 
 const FeatureCard = ({ icon, title, description }) => (
   <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
     <div className="flex items-center justify-center w-12 h-12 bg-green-100 text-green-600 rounded-full mb-4">
@@ -24,12 +26,12 @@ const Homepage = () => {
               <div className="md:w-1/2 mb-8 md:mb-0">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">Transform Your WhatsApp Business</h1>
                 <p className="text-xl mb-6">NurenAI: The ultimate WhatsApp management system for broadcasting, flow creation, and AI-powered chatbots.</p>
-                <Link to="/ll/broadcast" className="bg-white text-green-600 font-semibold py-2 px-6 rounded-full hover:bg-green-100 transition duration-300">
+                <Link to="/login" className="bg-white text-green-600 font-semibold py-2 px-6 rounded-full hover:bg-green-100 transition duration-300">
                   Get Started
                 </Link>
               </div>
               <div className="md:w-1/2">
-                <img src="/api/placeholder/600/400" alt="WhatsApp Management Dashboard" className="rounded-lg shadow-xl" />
+                <img src={hero_img} alt="WhatsApp Management Dashboard" className="rounded-lg hero-img" />
               </div>
             </div>
           </div>
@@ -65,7 +67,7 @@ const Homepage = () => {
             <h2 className="text-3xl font-bold text-center mb-12">How NurenAI Works</h2>
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="md:w-1/2 mb-8 md:mb-0">
-                <img src="/api/placeholder/500/300" alt="NurenAI Workflow" className="rounded-lg shadow-lg" />
+                <img src={hero2} alt="NurenAI Workflow" className="rounded-lg " />
               </div>
               <div className="md:w-1/2 md:pl-12">
                 <ol className="space-y-4">

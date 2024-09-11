@@ -21,6 +21,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid'; 
 
 import io from 'socket.io-client';
+import { PhoneIcon, PlusIcon } from 'lucide-react';
 
 const socket = io('https://whatsappbotserver.azurewebsites.net/');
 
@@ -75,7 +76,9 @@ const Chatbot = () => {
   const [accessToken, setAccessToken] = useState('');
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const [headerMediaId, setHeaderMediaId] = useState('');
-
+  const [inputMessage, setInputMessage] = useState('');
+  const [showNewChatInput, setShowNewChatInput] = useState(false);
+  const [newPhoneNumber, setNewPhoneNumber] = useState('');
 
   const openPopup = () => {
     setShowPopup(true);
@@ -99,6 +102,15 @@ const Chatbot = () => {
     };
   }, []);
 
+   useEffect(() => {
+    fetchContacts();
+    socket.on('new-message', handleNewMessage);
+
+    return () => {
+      socket.off('new-message', handleNewMessage);
+    };
+  }, []);
+
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation]);
@@ -107,76 +119,58 @@ const Chatbot = () => {
   
   
 
-const renderInteractiveMessage = (parsedMessage) => {
-  try {
+  const renderInteractiveMessage = (parsedMessage) => {
     const { type, interactive, text, image } = parsedMessage;
 
     if (type === 'interactive') {
       if (interactive.type === 'list') {
-        // Handle list type interactive messages
         return (
-          <div className="interactive-message">
-            <div className="message-text">{interactive.body.text}</div>
-            <div className="message-buttons">
+          <div className="interactive-message list-message">
+            <p className="message-text">{interactive.body.text}</p>
+            <ul className="message-list">
               {interactive.action.sections.map((section, sectionIndex) => (
-                <div key={sectionIndex} className="section">
-                  {section.rows.map((row) => (
-                    <button key={row.id} className="button_interactive">
-                      {row.title}
-                    </button>
-                  ))}
-                </div>
+                <li key={sectionIndex} className="list-section">
+                  {section.title && <h4 className="section-title">{section.title}</h4>}
+                  <ul>
+                    {section.rows.map((row) => (
+                      <li key={row.id} className="list-item">
+                        {row.title}
+                        {row.description && <p className="item-description">{row.description}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         );
       } else if (interactive.type === 'button') {
-        // Handle button type interactive messages
         return (
-          <div className="interactive-message">
-            <div className="message-text">{interactive.body.text}</div>
+          <div className="interactive-message button-message">
+            <p className="message-text">{interactive.body.text}</p>
             <div className="message-buttons">
               {interactive.action.buttons.map((button, buttonIndex) => (
-                <button key={buttonIndex} className="button_interactive">
+                <button key={buttonIndex} className="interactive-button">
                   {button.reply.title}
                 </button>
               ))}
             </div>
           </div>
         );
-      } else if (interactive.type === 'text') {
-        // Handle text type interactive messages
-        return (
-          <div className="interactive-message">
-            <div className="message-text">
-              {interactive.text.body}
-            </div>
-          </div>
-        );
       }
     } else if (type === 'text') {
-      // Handle plain text messages
-      return (
-        <div className="plain-message">
-          {text.body}
-        </div>
-      );
+      return <p className="plain-message">{text.body}</p>;
     } else if (type === 'image') {
-      // Handle image messages
       return (
         <div className="image-message">
-          <img src={image.link} alt="Sent image" className="cb-message-image" />
-          {image.caption && <p className="cb-message-caption">{image.caption}</p>}
+          <img src={image.link} alt="Sent image" className="message-image" />
+          {image.caption && <p className="message-caption">{image.caption}</p>}
         </div>
       );
     }
 
-    return <div className="error">Unsupported message type</div>;
-  } catch (e) {
-    console.error('Error rendering message:', e);
-    return <div className="error">Failed to render message</div>;
-  }
-};
+    return <p className="error-message">Unsupported message type</p>;
+  };
   
   const fixJsonString = (jsonString) => {
     try {
@@ -1081,12 +1075,151 @@ const saveGroupToLocalStorage = (group) => {
 };
 
 
+const handleSendMessage = async () => {
+  if (!selectedContact || !inputMessage.trim()) return;
+
+  try {
+    await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-message', {
+      phoneNumbers: [selectedContact.phone],
+      message: inputMessage,
+      business_phone_number_id: "241683569037594",
+      messageType: "text",
+    });
+
+    setMessages(prev => ({
+      ...prev,
+      [selectedContact.phone]: [...(prev[selectedContact.phone] || []), { text: inputMessage, sender: 'bot' }]
+    }));
+    setInputMessage('');
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
+};
+
+
+const handleNewChat = async () => {
+  if (!newPhoneNumber.trim()) return;
+
+  try {
+    const response = await axiosInstance.post('/contacts/', {
+      phone: newPhoneNumber,
+      // Add other required fields for creating a new contact
+    }, {
+      headers: { token: localStorage.getItem('token') },
+    });
+
+    const newContact = response.data;
+    setContacts(prev => sortContacts([newContact, ...prev]));
+    setSelectedContact(newContact);
+    setShowNewChatInput(false);
+    setNewPhoneNumber('');
+  } catch (error) {
+    console.error("Error creating new contact:", error);
+  }
+};
+
+// return (
+//   <div className="flex h-screen bg-gray-100">
+//     <div className="w-1/3 bg-white border-r">
+//       <div className="p-4 border-b flex justify-between items-center">
+//         <h2 className="text-xl font-semibold">Chats</h2>
+//         <button onClick={() => setShowNewChatInput(!showNewChatInput)} className="text-blue-500 hover:text-blue-700">
+//           <PlusIcon />
+//         </button>
+//       </div>
+//       {showNewChatInput && (
+//         <div className="p-4 border-b">
+//           <input
+//             type="text"
+//             value={newPhoneNumber}
+//             onChange={(e) => setNewPhoneNumber(e.target.value)}
+//             placeholder="Enter phone number"
+//             className="w-full p-2 border rounded"
+//           />
+//           <button onClick={handleNewChat} className="mt-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+//             Start New Chat
+//           </button>
+//         </div>
+//       )}
+//       <div className="overflow-y-auto h-full">
+//         {contacts.map(contact => (
+//           <div
+//             key={contact.id}
+//             onClick={() => handleContactSelection(contact)}
+//             className={`p-4 border-b cursor-pointer ${selectedContact?.id === contact.id ? 'bg-gray-200' : ''} ${contact.hasNewMessage ? 'font-bold' : ''}`}
+//           >
+//             <div className="flex items-center">
+//               <PhoneIcon className="mr-2" />
+//               <span>{contact.phone}</span>
+//               {contact.hasNewMessage && <span className="ml-2 w-3 h-3 bg-blue-500 rounded-full"></span>}
+//             </div>
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//     <div className="flex-1 flex flex-col">
+//       {selectedContact ? (
+//         <>
+//           <div className="p-4 border-b">
+//             <h3 className="text-lg font-semibold">{selectedContact.phone}</h3>
+//           </div>
+//           <div className="flex-1 overflow-y-auto p-4">
+//             {messages[selectedContact.phone]?.map((message, index) => (
+//               <div key={index} className={`mb-4 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+//                 <div className={`inline-block p-2 rounded-lg ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}>
+//                   {message.text}
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//           <div className="p-4 border-t flex">
+//             <input
+//               type="text"
+//               value={inputMessage}
+//               onChange={(e) => setInputMessage(e.target.value)}
+//               placeholder="Type a message"
+//               className="flex-1 p-2 border rounded-l"
+//             />
+//             <button onClick={handleSendMessage} className="bg-blue-500 text-white p-2 rounded-r">
+//               <SendIcon />
+//             </button>
+//           </div>
+//         </>
+//       ) : (
+//         <div className="flex-1 flex items-center justify-center">
+//           <p className="text-gray-500">Select a contact to start chatting</p>
+//         </div>
+//       )}
+//     </div>
+//   </div>
+// );
+
  return (
     <div className="cb-container">
       <div className="cb-sidebar">
+        <div className="cb-sidebar-header">
         <h1 className='cb-sidebar-title'>
       <ArrowBackIcon className="cb-back-icon" onClick={handleBack} /> 
-          Contacts</h1>
+          Contacts 
+          </h1>
+          <button onClick={() => setShowNewChatInput(!showNewChatInput)} className="text-blue-500 hover:text-blue-700">
+          <PlusIcon />
+        </button>
+        </div>
+        {showNewChatInput && (
+          <div className="p-4 border-b">
+            <input
+              type="text"
+              value={newPhoneNumber}
+              onChange={(e) => setNewPhoneNumber(e.target.value)}
+              placeholder="Enter phone number"
+              className="w-full p-2 border rounded"
+            />
+            <button onClick={handleNewChat} className="mt-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+              Start New Chat
+            </button>
+          </div>
+        )}
         <div className='cb-search-container'>
           <input
             type="text"
@@ -1099,6 +1232,7 @@ const saveGroupToLocalStorage = (group) => {
         </div>
         <div className="cb-contact-list">
           <h2 className='cb-contact-title'>Contacts</h2>
+          
           {filteredContacts.map(contact => (
             <div
               key={contact.id}
@@ -1106,7 +1240,7 @@ const saveGroupToLocalStorage = (group) => {
               onClick={() => handleContactSelection(contact)}
             >
               <div className="cb-contact-info">
-                <span className="cb-contact-name">{contact.first_name} {contact.last_name}</span>
+                <span className="cb-contact-name">{contact.name} {contact.last_name}</span>
                 <span className="cb-contact-phone">{contact.phone}</span>
                 {contact.hasNewMessage && <span className="cb-unread-count"></span>}
                 {contact.lastMessageTime && (
@@ -1135,7 +1269,7 @@ const saveGroupToLocalStorage = (group) => {
          <span className="cb-default-avatar">{selectedContact.first_name && selectedContact.first_name[0]}</span>
        )}
        <div className="cb-contact-details">
-         <span className="cb-contact-name">{selectedContact.first_name} {selectedContact.last_name}</span>
+         <span className="cb-contact-name">{selectedContact.name} {selectedContact.last_name}</span>
          <span className="cb-contact-phone">{selectedContact.phone}</span>
        </div>
      </div>
@@ -1325,6 +1459,7 @@ const saveGroupToLocalStorage = (group) => {
       )}
     </div>
   );
+
 };
 
 export default Chatbot;

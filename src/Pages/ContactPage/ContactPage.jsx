@@ -7,6 +7,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import './ContactPage.css';
+import { Button } from '@mui/material';
 
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
@@ -84,6 +85,27 @@ const ContactPage = () => {
     doc.save("contacts.pdf");
   };
 
+  const handleUploadClick = () => {
+    // Create a hidden file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.xlsx, .xls';
+    fileInput.style.display = 'none';
+
+    // Trigger the file selection dialog when the input changes
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        // onUpload(file);
+      }
+    });
+
+    // Append the input to the body, click it, and then remove it
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+  };
+
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
   };
@@ -102,22 +124,9 @@ const ContactPage = () => {
       <header className="contact-page__header">
         <h1 className='contact-head'>Contacts</h1>
         <div className="contact-page__actions">
-          <Dropdown>
-            <Dropdown.Toggle variant="primary" id="excel-dropdown">
-              Excel File
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={handleImportClick}>
-                <FaFileExcel /> Import Excel
-              </Dropdown.Item>
-              <Dropdown.Item onClick={handleDownloadExcel}>
-                <FaFileExcel /> Export Excel
-              </Dropdown.Item>
-              <Dropdown.Item onClick={handleDownloadPDF}>
-                <FaFilePdf /> Export PDF
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+        <Button onClick={handleUploadClick}>
+      <FaFileExcel className="mr-2" /> Upload Excel File
+    </Button>
           <div className="contact-page__view-controls">
         <select
           value={viewMode}

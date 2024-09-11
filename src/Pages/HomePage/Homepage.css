@@ -1,4 +1,9 @@
 .main-homepage{
     height: 90vh;
-    width: 98vw;
+    width: 98.9vw;
+}
+
+.hero-img{
+    height: 80%;
+    width: 80%;
 }
