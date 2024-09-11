@@ -7,12 +7,12 @@ const PopupCard = ({ message, onClose }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div className="bg-white rounded-lg p-8 max-w-sm w-full">
       <h2 className="text-xl font-bold mb-4">{message}</h2>
-      <button
+      {/* <button
         onClick={onClose}
         className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-300"
       >
         OK
-      </button>
+      </button> */}
     </div>
   </div>
 );
@@ -35,7 +35,7 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await fetch('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/login/', {
+      const response = await fetch('https://8twdg37p-8000.inc1.devtunnels.ms/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -44,9 +44,8 @@ const Login = ({ onLogin }) => {
       if (!response.ok) throw new Error('Login failed');
 
       const data = await response.json();
-      setRole(data.role);
+      login(data.user_id, data.tenant_id, data.role, data.model);
       setShowPopup(true);
-      login(data.user_id, data.tenant_id, data.role,data.model);
     } catch (error) {
       setError('Login failed. Please check your credentials and try again.');
     } finally {
@@ -56,14 +55,11 @@ const Login = ({ onLogin }) => {
 
   useEffect(() => {
     if (showPopup) {
-      // Set a timeout to close the popup and navigate after 2 seconds
       const timer = setTimeout(() => {
         setShowPopup(false);
-        onLogin();
         navigate('/profile');
       }, 2000);
 
-      // Clear the timer if the component unmounts
       return () => clearTimeout(timer);
     }
   }, [showPopup, navigate]);

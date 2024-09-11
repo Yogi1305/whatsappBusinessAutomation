@@ -1101,8 +1101,9 @@ const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-    const response = await axiosInstance.post('/contacts/', {
+    const response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/contacts/', {
       phone: newPhoneNumber,
+      tenant: tenantId,
       // Add other required fields for creating a new contact
     }, {
       headers: { token: localStorage.getItem('token') },

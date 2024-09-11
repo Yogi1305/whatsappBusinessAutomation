@@ -86,21 +86,35 @@ const ContactPage = () => {
   };
 
   const handleUploadClick = () => {
-    // Create a hidden file input element
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.xlsx, .xls';
     fileInput.style.display = 'none';
+    
 
-    // Trigger the file selection dialog when the input changes
-    fileInput.addEventListener('change', (event) => {
+    fileInput.addEventListener('change', async (event) => {
       const file = event.target.files[0];
       if (file) {
-        // onUpload(file);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('model_name', "Contact");
+
+        try {
+          const response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/upload/', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          console.log('File uploaded successfully:', response.data);
+          // You can add further logic here, such as showing a success message
+          // or refreshing the contacts list
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          // Handle the error, e.g., show an error message to the user
+        }
       }
     });
 
-    // Append the input to the body, click it, and then remove it
     document.body.appendChild(fileInput);
     fileInput.click();
     document.body.removeChild(fileInput);
@@ -137,9 +151,6 @@ const ContactPage = () => {
           <option value="table">Table View</option>
         </select>
       </div>
-          <NavLink to={`/${tenantId}/addcontact`} className="contact-page__add-btn">
-            <FaPlus /> Create Contact
-          </NavLink>
         </div>
       </header>
 
@@ -159,7 +170,7 @@ const ContactPage = () => {
       {viewMode === "tile" && (
         <div className="contact-page__list">
           {filteredContacts.map(contact => {
-            const initials = getInitials(contact.first_name, contact.last_name);
+            const initials = getInitials(contact.name, contact.last_name);
             const avatarColorClass = getAvatarColor(initials);
             return (
               <div key={contact.id} className="contact-page__item">
@@ -168,8 +179,8 @@ const ContactPage = () => {
                 </div>
                 <div className="contact-page__details">
                   <h2>
-                    <Link to={`/${tenantId}/contactinfo/${contact.id}`}>
-                      {contact.first_name} {contact.last_name}
+                    <Link>
+                      {contact.name} {contact.last_name}
                     </Link>
                   </h2>
                   <p>{contact.email}</p>
@@ -196,7 +207,7 @@ const ContactPage = () => {
               <tr key={contact.id}>
                 <td>
                   <Link to={`/${tenantId}/contactinfo/${contact.id}`}>
-                    {contact.first_name} {contact.last_name}
+                    {contact.name} {contact.last_name}
                   </Link>
                 </td>
                 <td>{contact.email}</td>

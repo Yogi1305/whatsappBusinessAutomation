@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import ReactFlow, {
   ReactFlowProvider,
   addEdge,
@@ -20,6 +20,7 @@ import "./FlowBuilder.css";
 import SaveFlowPopup from "./SaveFlowPopup";
 import axiosInstance from "../../api";
 import { FlowProvider, useFlow } from './FlowContext';
+import { useAuth } from "../../authContext";
 
 let id = 0;
 const getId = () => `${id++}`;
@@ -51,6 +52,8 @@ const FlowBuilderContent = () => {
   const [flowDescription, setFlowDescription] = useState('');
   const [fallbackMessage, setFallbackMessage] = useState('');
   const [fallbackCount, setFallbackCount] = useState(1);
+  const navigate = useNavigate();
+  const { authenticated } = useAuth();
 
 
 
@@ -151,6 +154,11 @@ const FlowBuilderContent = () => {
   const saveFlow = useCallback(async () => {
     console.log('Current nodes:', nodes);
     console.log('Current edges:', edges);
+    if (!authenticated) {
+      alert("Please log in to save your flow.");
+      navigate('/login');
+      return;
+    }
     const startEdge = edges.find(edge => edge.source === 'start');
     const flow = {
       name: flowName,
@@ -183,7 +191,7 @@ const FlowBuilderContent = () => {
     } catch (error) {
       console.error('Error saving flow:', error);
     }
-  }, [nodes, edges, flowName, flowDescription, fetchExistingFlows]);
+  }, [authenticated, navigate, nodes, edges, flowName, flowDescription, fetchExistingFlows]);
 
   const handleSaveConfirm = (name, description) => {
     setFlowName(name);
@@ -247,6 +255,15 @@ const FlowBuilderContent = () => {
     }
   }, [setNodes, setEdges, updateNodeData, resetFlow]);
 
+  const handleSaveClick = () => {
+    if (authenticated) {
+      setShowSavePopup(true);
+    } else {
+      alert("Please log in to save your flow.");
+      navigate('/login');
+    }
+  };
+
 
   return (
     <div className="flow-builder">
@@ -276,41 +293,47 @@ const FlowBuilderContent = () => {
         </div>
       </ReactFlowProvider>
       <div className="sidebar">
-        <button onClick={() => setShowSavePopup(true)}>Save Flow</button>
-        <select style={{marginBottom:'3rem'}} value={selectedFlow} onChange={handleFlowSelect}>
-          <option value="">Select a flow</option>
-          <option value="create_new">Create New Flow</option>
-          {existingFlows.map(flow => (
-            <option key={flow.id} value={flow.id}>{flow.name}</option>
-          ))}
-        </select>
-        <div style={{marginBottom:'2rem'}}>
-          <label htmlFor="fallbackMessage">Fallback Message:</label>
-          <input
-            id="fallbackMessage"
-            style={{padding:'5px', borderRadius:'6px'}}
-            type="text"
-            value={fallbackMessage}
-            onChange={(e) => setFallbackMessage(e.target.value)}
-            placeholder="Enter fallback message"
-          />
-        </div>
-        <div>
-          <label htmlFor="fallbackCount">Fallback Count:</label>
-          <select
-            id="fallbackCount"
-            value={fallbackCount}
-            onChange={(e) => setFallbackCount(Number(e.target.value))}
-          >
-            {[1, 2, 3, 4, 5,6,7,8,9,10].map((num) => (
-              <option key={num} value={num}>
-                {num}
-              </option>
-            ))}
-          </select>
-        </div>
+      <button onClick={handleSaveClick}>
+          {authenticated ? "Save Flow" : "Log in to Save Flow"}
+        </button>
+        {authenticated && (
+          <>
+            <select style={{marginBottom:'3rem'}} value={selectedFlow} onChange={handleFlowSelect}>
+              <option value="">Select a flow</option>
+              <option value="create_new">Create New Flow</option>
+              {existingFlows.map(flow => (
+                <option key={flow.id} value={flow.id}>{flow.name}</option>
+              ))}
+            </select>
+            <div style={{marginBottom:'2rem'}}>
+              <label htmlFor="fallbackMessage">Fallback Message:</label>
+              <input
+                id="fallbackMessage"
+                style={{padding:'5px', borderRadius:'6px'}}
+                type="text"
+                value={fallbackMessage}
+                onChange={(e) => setFallbackMessage(e.target.value)}
+                placeholder="Enter fallback message"
+              />
+            </div>
+            <div>
+              <label htmlFor="fallbackCount">Fallback Count:</label>
+              <select
+                id="fallbackCount"
+                value={fallbackCount}
+                onChange={(e) => setFallbackCount(Number(e.target.value))}
+              >
+                {[1, 2, 3, 4, 5,6,7,8,9,10].map((num) => (
+                  <option key={num} value={num}>
+                    {num}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
       </div>
-      {showSavePopup && (
+      {showSavePopup && authenticated && (
         <SaveFlowPopup
           onSave={handleSaveConfirm}
           onCancel={() => setShowSavePopup(false)}
