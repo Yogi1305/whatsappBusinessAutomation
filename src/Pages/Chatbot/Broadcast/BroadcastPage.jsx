@@ -51,6 +51,9 @@ const BroadcastPage = () => {
   const { userId } = useAuth();
   const fileInputRef = useRef(null);
   const tenantId=getTenantIdFromUrl();
+  const [filteredBroadcastHistory, setFilteredBroadcastHistory] = useState([]);
+  const [filteredTemplates, setFilteredTemplates] = useState([]);
+  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
 
 
   const fetchTemplates = useCallback(async () => {
@@ -63,10 +66,21 @@ const BroadcastPage = () => {
         }
       });
       setTemplates(response.data.data);
+      setFilteredTemplates(response.data.data);
     } catch (error) {
       console.error('Error fetching templates:', error);
     }
   }, [accessToken]);
+
+  const handleTemplateFilter = (query) => {
+    setTemplateSearchQuery(query);
+    const filtered = templates.filter(template =>
+      template.name.toLowerCase().includes(query.toLowerCase()) ||
+      template.category.toLowerCase().includes(query.toLowerCase()) ||
+      template.language.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredTemplates(filtered);
+  };
   
     // Fetch the required data from the whatsapp_tenant endpoint
     useEffect(() => {
@@ -327,9 +341,20 @@ const BroadcastPage = () => {
       const response = await axiosInstance.get('get-status/');
       const formattedHistory = formatBroadcastHistory(response.data.message_statuses);
       setBroadcastHistory(formattedHistory);
+      setFilteredBroadcastHistory(formattedHistory);
     } catch (error) {
       console.error('Error fetching broadcast history:', error);
     }
+  };
+
+  const handleDateFilter = () => {
+    const filtered = broadcastHistory.filter(broadcast => {
+      const broadcastDate = new Date(broadcast.date);
+      const fromDate = dateFrom ? new Date(dateFrom) : new Date(0);
+      const toDate = dateTo ? new Date(dateTo) : new Date();
+      return broadcastDate >= fromDate && broadcastDate <= toDate;
+    });
+    setFilteredBroadcastHistory(filtered);
   };
 
 
@@ -471,7 +496,7 @@ const BroadcastPage = () => {
             <div className="bp-date-filter">
               <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
               <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-              <button className="bp-btn-apply">Apply</button>
+              <button className="bp-btn-apply" onClick={handleDateFilter}>Apply</button>
             </div>
             <button className="bp-btn-create" onClick={handleBroadcastMessage}>New Broadcast</button>
           </div>
@@ -562,16 +587,16 @@ const BroadcastPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {broadcastHistory.map(broadcast => (
-                  <tr key={broadcast.id}>
-                    <td>{broadcast.name}</td>
-                    <td>{broadcast.sent}</td>
-                    <td>{broadcast.delivered}</td>
-                    <td>{broadcast.read}</td>
-                    <td>{broadcast.date}</td>
-                    <td><span className={`bp-status bp-${broadcast.status.toLowerCase().replace(' ', '-')}`}>{broadcast.status}</span></td>
-                  </tr>
-                ))}
+              {filteredBroadcastHistory.map(broadcast => (
+                    <tr key={broadcast.id}>
+                      <td>{broadcast.name}</td>
+                      <td>{broadcast.sent}</td>
+                      <td>{broadcast.delivered}</td>
+                      <td>{broadcast.read}</td>
+                      <td>{broadcast.date}</td>
+                      <td><span className={`bp-status bp-${broadcast.status.toLowerCase().replace(' ', '-')}`}>{broadcast.status}</span></td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

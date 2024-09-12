@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './chatbot.css';
 // import OpenAI from "openai";
-import { Navigate, useParams } from "react-router-dom"; 
+import { Navigate, useNavigate, useParams } from "react-router-dom"; 
 import axiosInstance from "../../api.jsx";
 import MailIcon from '@mui/icons-material/Mail';
 import SearchIcon from '@mui/icons-material/Search';
@@ -84,6 +84,7 @@ const Chatbot = () => {
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const { authenticated } = useAuth();
   const [authPopupp, setAuthPopupp] = useState(false);
+  const navigate = useNavigate();
 
   const handleCloseAuthPopupp = () => {
     setAuthPopupp(false);
@@ -103,16 +104,6 @@ const Chatbot = () => {
     setShowPopup(false);
   };
 
-
-
-  //  useEffect(() => {
-  //   fetchContacts();
-  //   socket.on('new-message', handleNewMessage);
-
-  //   return () => {
-  //     socket.off('new-message', handleNewMessage);
-  //   };
-  // }, []);
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -322,10 +313,6 @@ const Chatbot = () => {
     }
   };
 
-  const handleGenerateMessage = async (e) => {
-    e.preventDefault();
-    await generateChatbotMessage();
-  };
 
   useEffect(() => {
     const fetchTenantData = async () => {
@@ -828,7 +815,7 @@ const Chatbot = () => {
     };
 
     const handleCreateFlow = () => {
-      Navigate(`/${tenantId}/flow`); // Use navigate instead of history.push
+      navigate(`/${tenantId}/flow-builder`); // Use navigate instead of history.push
     };
   
     const fetchFlows = async () => {
@@ -1037,7 +1024,7 @@ const handleNewChat = async () => {
       <div className="cb-sidebar">
         <div className="cb-sidebar-header">
         <h1 className='cb-sidebar-title'>
-      <ArrowBackIcon className="cb-back-icon" onClick={handleBack} /> 
+      {/* <ArrowBackIcon className="cb-back-icon" onClick={handleBack} />  */}
           Contacts 
           </h1>
           <button onClick={() => setShowNewChatInput(!showNewChatInput)} className="text-blue-500 hover:text-blue-700">
@@ -1177,9 +1164,9 @@ const handleNewChat = async () => {
       <div className="cb-details-panel">
       <button className="cb-signup-btn" onClick={handleRedirect}>Sign Up</button>
     
-      {/* <button onClick={() => navigate(`/${tenantId}/broadcast`)} className="cb-action-btn"> */}
-  {/* Broadcast History */}
-{/* </button> */}
+      <button onClick={() => navigate(`/${tenantId}/broadcast`)} className="cb-action-btn" style={{marginTop:'1rem'}}>
+  Broadcast History
+</button>
         <h1 className='cb-details-title' style={{textAlign:'center'}}>Contact Details</h1>
         {selectedContact && (
   <div className="cb-contact-full-details">
@@ -1189,7 +1176,7 @@ const handleNewChat = async () => {
       ) : (
         <span className="cb-default-avatar-large">{selectedContact.first_name && selectedContact.first_name[0]}</span>
       )}
-      <h2>{selectedContact.first_name} {selectedContact.last_name}</h2>
+      <h2>{selectedContact.name} {selectedContact.last_name}</h2>
     </div>
     <div className="cb-contact-info-details">
       <p className='cb-info-item'>
