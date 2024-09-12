@@ -280,12 +280,12 @@ const NavLinks = ({ isAuthenticated }) => (
   <>
     {isAuthenticated && (
       <>
-        <Link to="/BMX/contact" className="text-white hover:text-gray-300 block py-2 md:inline-block">Contact</Link>
-        <Link to="/BMX/broadcast" className="text-white hover:text-gray-300 block py-2 md:inline-block">Broadcast</Link>
+        <Link to="/ll/contact" className="text-white hover:text-gray-300 block py-2 md:inline-block">Contact</Link>
+        <Link to="/ll/broadcast" className="text-white hover:text-gray-300 block py-2 md:inline-block">Broadcast</Link>
       </>
     )}
-    <Link to="/BMX/chatbot" className="text-white hover:text-gray-300 block py-2 md:inline-block">Chatbot</Link>
-    <Link to="/BMX/flow-builder" className="text-white hover:text-gray-300 block py-2 md:inline-block">Flow Builder</Link>
+    <Link to="/ll/chatbot" className="text-white hover:text-gray-300 block py-2 md:inline-block">Chatbot</Link>
+    <Link to="/ll/flow-builder" className="text-white hover:text-gray-300 block py-2 md:inline-block">Flow Builder</Link>
   </>
 );
 
