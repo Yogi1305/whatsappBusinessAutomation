@@ -15,7 +15,7 @@ const Chatbotredirect = () => {
         console.log("Here is the code",code);
         if (code) {
           // Send the auth code to the backend
-          const response = await axios.post('https://whatsappbotserver.azurewebsites.net/login-flow', { code });
+          const response = await axios.post('https://hx587qc4-8080.inc1.devtunnels.ms/login-flow', { code });
 
           // Handle the response (you can save token or do other logic here)
           console.log('Backend response:', response.data);
