@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './chatbot.css';
 // import OpenAI from "openai";
-import { useParams } from "react-router-dom"; 
+import { Navigate, useNavigate, useParams } from "react-router-dom"; 
 import axiosInstance from "../../api.jsx";
 import MailIcon from '@mui/icons-material/Mail';
 import SearchIcon from '@mui/icons-material/Search';
@@ -22,6 +22,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import io from 'socket.io-client';
 import { PhoneIcon, PlusIcon } from 'lucide-react';
+import { useAuth } from '../../authContext.jsx';
+import AuthPopup from './AuthPopup.jsx';
+import { div } from 'framer-motion/client';
 
 const socket = io('https://whatsappbotserver.azurewebsites.net/');
 
@@ -79,7 +82,20 @@ const Chatbot = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [showNewChatInput, setShowNewChatInput] = useState(false);
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
+  const { authenticated } = useAuth();
+  const [authPopupp, setAuthPopupp] = useState(false);
+  const navigate = useNavigate();
 
+  const handleCloseAuthPopupp = () => {
+    setAuthPopupp(false);
+  };
+  
+  useEffect(() => {
+    // Show popup only if not authenticated and not in demo mode
+    setAuthPopupp(!authenticated);
+  }, [authenticated]);
+
+  
   const openPopup = () => {
     setShowPopup(true);
   };
@@ -88,28 +104,6 @@ const Chatbot = () => {
     setShowPopup(false);
   };
 
-
-  useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to the server');
-      fetchAllMessages();
-    });
-  
-    socket.on('new-message', handleNewMessage);
-  
-    return () => {
-      socket.off('new-message', handleNewMessage);
-    };
-  }, []);
-
-   useEffect(() => {
-    fetchContacts();
-    socket.on('new-message', handleNewMessage);
-
-    return () => {
-      socket.off('new-message', handleNewMessage);
-    };
-  }, []);
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -163,7 +157,7 @@ const Chatbot = () => {
     } else if (type === 'image') {
       return (
         <div className="image-message">
-          <img src={image.link} alt="Sent image" className="message-image" />
+          <img src={image.id} alt="Sent image" className="message-image" />
           {image.caption && <p className="message-caption">{image.caption}</p>}
         </div>
       );
@@ -175,7 +169,17 @@ const Chatbot = () => {
   const fixJsonString = (jsonString) => {
     try {
       // Replace single quotes with double quotes
-      let fixedString = jsonString.replace(/'/g, '"');
+      const regex = /("(?:[^"\\]|\\.)*")|'/g;
+
+      // Replace single quotes with double quotes outside of double-quoted segments
+      let fixedString = jsonString.replace(regex, (match) => {
+          if (match.startsWith('"') && match.endsWith('"')) {
+              // If the segment is within double quotes, return it as is
+              return match;
+          }
+          // Replace single quotes with double quotes
+          return match.replace(/'/g, '"');
+      });
       // Ensure proper escape sequences
       fixedString = fixedString.replace(/\\"/g, '\\\\"');
       return fixedString;
@@ -184,6 +188,8 @@ const Chatbot = () => {
       return jsonString; // Return as-is if fixing fails
     }
   };
+
+
   const fetchAllMessages = () => {
     socket.emit('get-all-messages', {}, (response) => {
       if (response && response.messages && Array.isArray(response.messages)) {
@@ -307,10 +313,6 @@ const Chatbot = () => {
     }
   };
 
-  const handleGenerateMessage = async (e) => {
-    e.preventDefault();
-    await generateChatbotMessage();
-  };
 
   useEffect(() => {
     const fetchTenantData = async () => {
@@ -457,7 +459,7 @@ const Chatbot = () => {
 
   // Function to handle back navigation
   const handleBack = () => {
-    // navigate(-1);
+    navigate(-1);
   };
 
   // Scroll to bottom of chat
@@ -465,134 +467,47 @@ const Chatbot = () => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation]);
 
-  // Render message function
-  // const renderMessage = (message, index) => {
-  //   const isUser = message.sender === 'user';
-  //   const messageClass = `cb-message ${isUser ? 'cb-user-message' : 'cb-bot-message'}`;
-
-  //   if (message.type === 'image') {
-  //     return (
-  //       <div key={index} className={messageClass}>
-  //         <img 
-  //           src={message.imageUrl || imageMap[message.imageId]} 
-  //           alt="Sent image" 
-  //           className="cb-message-image" 
-  //           onError={(e) => {
-  //             console.error("Error loading image:", e);
-  //             e.target.onerror = null;
-  //             e.target.src = "path/to/fallback/image.png"; // Add a fallback image
-  //           }}
-  //         />
-  //         {message.caption && <p className="cb-message-caption">{message.caption}</p>}
-  //       </div>
-  //     );
-  //   }
-
-  //   // Handle text and interactive messages
-  //   if (typeof message.text === 'string') {
-  //     if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
-  //       try {
-  //         const fixedMessage = fixJsonString(message.text);
-  //         const parsedMessage = JSON.parse(fixedMessage);
-  //         return renderInteractiveMessage(parsedMessage);
-  //       } catch (e) {
-  //         console.error('Failed to parse JSON message:', e);
-  //         return <div className="error">Failed to parse message</div>;
-  //       }
-  //     }
-  //     return <div>{message.text || <span className="error">Message content is undefined</span>}</div>;
-  //   }
-  //   return <div className="error">Invalid message format</div>;
-  // };
 
 
-  const handleUploadedFile = async (event, contactId) => {
-    const selectedFile = event.target.files[0];
-    console.log('Selected file:', selectedFile);
-    console.log('this is contactId',contactId);
-    if (selectedFile) {
-      setFile(selectedFile);
-      console.log('File state set:', selectedFile);
 
-      try {
-        console.log('Uploading file to Azure Blob Storage...');
-        const fileUrl = await uploadToBlob(selectedFile);
-        console.log('File uploaded to Azure, URL:', fileUrl);
-
-        console.log('Sending POST request to backend...');
-        const response = await axiosInstance.post('/documents/', {
-          name: selectedFile.name,
-          document_type: selectedFile.type,
-          description: 'Your file description',
-          file_url: fileUrl,
-          entity_type: 10,
-          entity_id: contactId,
-          tenant: tenantId,
-        });
-        console.log('POST request successful, response:', response.data);
-
-        setUploadedFiles(prevFiles => [...prevFiles, { name: selectedFile.name, url: fileUrl }]);
-        console.log('File uploaded successfully:', response.data);
-      } catch (error) {
-        console.error('Error uploading file:', error);
-      }
-    } else {
-      console.log('No file selected');
-    }
-  };
-
-  useEffect(() => {
+ 
+  useEffect(() => {                                                 //AYUSH THIS IS A LINE
     socket.on('connect', () => {
       console.log('Connected to the server');
-      // Request all messages upon connection
-      socket.emit('fetch-all-messages', { tenantId });
     });
 
-    socket.on('all-messages', (messages) => {
-      handleAllMessages(messages);
-    });
+    
 
     socket.on('new-message', (message) => {
       if (message) {
-        console.log('Got New Message', message.contactPhone.wa_id);
-        
-        setContacts(prevContacts => {
-          const updatedContacts = prevContacts.map(contact => 
-            parseInt(contact.phone) === parseInt(message.contactPhone.wa_id)
-              ? { ...contact, hasNewMessage: true }
-              : contact
-          );
-          
-          // Sort contacts: new messages first, then alphabetically
-          return updatedContacts.sort((a, b) => {
-            if (a.hasNewMessage === b.hasNewMessage) {
-              return a.first_name.localeCompare(b.first_name);
-            }
-            return b.hasNewMessage ? 1 : -1;
-          });
-        });
-
-        setAllConversations(prevConversations => ({
-          ...prevConversations,
-          [message.contactPhone.wa_id]: [
-            ...(prevConversations[message.contactPhone.wa_id] || []),
-            { text: message.message, sender: 'user' }
-          ]
-        }));
-    
-        if (selectedContact && parseInt(message.contactPhone.wa_id) === parseInt(selectedContact.phone)) {
-          setConversation(prevMessages => [...prevMessages, { text: message.message, sender: 'user' }]);
-          setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user' }]);
+        console.log('Got New Message', selectedContact.phone);
+       
+  {
+        if (parseInt(message.contactPhone.wa_id) == parseInt(selectedContact.phone)) {
+          console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
+          setConversation(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
+          //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
         }
-      }
+      }}
     });
 
+  socket.on('node-message', (message) => {
+  if (message) {
+    
+    console.log('Got New NOde Message',message);
+  {
+   {
+    setConversation(prevMessages => [...prevMessages, { text: message.message, sender: 'bot' }]);
+    }}
+  }
+  });
+
     return () => {
-      socket.off('connect');
-      socket.off('all-messages');
+      socket.off('node-message');
       socket.off('new-message');
     };
-  }, []);
+  }, [selectedContact]);
+
 
   const handleAllMessages = (messages) => {
     setAllMessages(messages);
@@ -705,7 +620,7 @@ const Chatbot = () => {
             phoneNumber = phoneNumber.slice(2);
           }
       
-          return axiosInstance.post(
+          return axios.post(
             'https://whatsappbotserver.azurewebsites.net/send-message',
             {
               phoneNumbers: [phoneNumber],
@@ -722,7 +637,7 @@ const Chatbot = () => {
         if (phoneNumber.startsWith("91")) {
           phoneNumber = phoneNumber.slice(2);
         }
-        await axiosInstance.post(
+        await axios.post(
           'https://whatsappbotserver.azurewebsites.net/send-message',
           {
             phoneNumbers: [phoneNumber],
@@ -830,11 +745,15 @@ const Chatbot = () => {
       console.error('Error fetching data from backend:', error);
     }
   };
+
+
+  
+
   useEffect(() => {
     if (previousContact) {
       // Save conversation data for the previous contact
       console.log("commentsdsdsd::::::::::::::::::::::::::::::::::::",conversation);
-      sendDataToBackend(previousContact.phone, newMessages);
+      // sendDataToBackend(previousContact.phone, newMessages);
     }
     
     // Clear current conversation
@@ -896,7 +815,7 @@ const Chatbot = () => {
     };
 
     const handleCreateFlow = () => {
-      // navigate(`/${tenantId}/flow`); // Use navigate instead of history.push
+      navigate(`/${tenantId}/flow-builder`); // Use navigate instead of history.push
     };
   
     const fetchFlows = async () => {
@@ -1030,7 +949,7 @@ const Chatbot = () => {
         };
     
         // Send the broadcast message
-        const response = await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-message/', payload);
+        const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-message/', payload);
     
         if (response.status === 200) {
           console.log("Broadcast sent successfully");
@@ -1075,28 +994,6 @@ const saveGroupToLocalStorage = (group) => {
 };
 
 
-const handleSendMessage = async () => {
-  if (!selectedContact || !inputMessage.trim()) return;
-
-  try {
-    await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-message', {
-      phoneNumbers: [selectedContact.phone],
-      message: inputMessage,
-      business_phone_number_id: "241683569037594",
-      messageType: "text",
-    });
-
-    setMessages(prev => ({
-      ...prev,
-      [selectedContact.phone]: [...(prev[selectedContact.phone] || []), { text: inputMessage, sender: 'bot' }]
-    }));
-    setInputMessage('');
-  } catch (error) {
-    console.error('Error sending message:', error);
-  }
-};
-
-
 const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
 
@@ -1119,88 +1016,15 @@ const handleNewChat = async () => {
   }
 };
 
-// return (
-//   <div className="flex h-screen bg-gray-100">
-//     <div className="w-1/3 bg-white border-r">
-//       <div className="p-4 border-b flex justify-between items-center">
-//         <h2 className="text-xl font-semibold">Chats</h2>
-//         <button onClick={() => setShowNewChatInput(!showNewChatInput)} className="text-blue-500 hover:text-blue-700">
-//           <PlusIcon />
-//         </button>
-//       </div>
-//       {showNewChatInput && (
-//         <div className="p-4 border-b">
-//           <input
-//             type="text"
-//             value={newPhoneNumber}
-//             onChange={(e) => setNewPhoneNumber(e.target.value)}
-//             placeholder="Enter phone number"
-//             className="w-full p-2 border rounded"
-//           />
-//           <button onClick={handleNewChat} className="mt-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-//             Start New Chat
-//           </button>
-//         </div>
-//       )}
-//       <div className="overflow-y-auto h-full">
-//         {contacts.map(contact => (
-//           <div
-//             key={contact.id}
-//             onClick={() => handleContactSelection(contact)}
-//             className={`p-4 border-b cursor-pointer ${selectedContact?.id === contact.id ? 'bg-gray-200' : ''} ${contact.hasNewMessage ? 'font-bold' : ''}`}
-//           >
-//             <div className="flex items-center">
-//               <PhoneIcon className="mr-2" />
-//               <span>{contact.phone}</span>
-//               {contact.hasNewMessage && <span className="ml-2 w-3 h-3 bg-blue-500 rounded-full"></span>}
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//     <div className="flex-1 flex flex-col">
-//       {selectedContact ? (
-//         <>
-//           <div className="p-4 border-b">
-//             <h3 className="text-lg font-semibold">{selectedContact.phone}</h3>
-//           </div>
-//           <div className="flex-1 overflow-y-auto p-4">
-//             {messages[selectedContact.phone]?.map((message, index) => (
-//               <div key={index} className={`mb-4 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-//                 <div className={`inline-block p-2 rounded-lg ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}>
-//                   {message.text}
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//           <div className="p-4 border-t flex">
-//             <input
-//               type="text"
-//               value={inputMessage}
-//               onChange={(e) => setInputMessage(e.target.value)}
-//               placeholder="Type a message"
-//               className="flex-1 p-2 border rounded-l"
-//             />
-//             <button onClick={handleSendMessage} className="bg-blue-500 text-white p-2 rounded-r">
-//               <SendIcon />
-//             </button>
-//           </div>
-//         </>
-//       ) : (
-//         <div className="flex-1 flex items-center justify-center">
-//           <p className="text-gray-500">Select a contact to start chatting</p>
-//         </div>
-//       )}
-//     </div>
-//   </div>
-// );
-
  return (
-    <div className="cb-container">
+  <div>
+      {authPopupp && <AuthPopup onClose={handleCloseAuthPopupp} />}
+     <div className={`${showPopup ? 'filter blur-lg' : ''}`}>
+   <div className="cb-container">
       <div className="cb-sidebar">
         <div className="cb-sidebar-header">
         <h1 className='cb-sidebar-title'>
-      <ArrowBackIcon className="cb-back-icon" onClick={handleBack} /> 
+      {/* <ArrowBackIcon className="cb-back-icon" onClick={handleBack} />  */}
           Contacts 
           </h1>
           <button onClick={() => setShowNewChatInput(!showNewChatInput)} className="text-blue-500 hover:text-blue-700">
@@ -1340,9 +1164,9 @@ const handleNewChat = async () => {
       <div className="cb-details-panel">
       <button className="cb-signup-btn" onClick={handleRedirect}>Sign Up</button>
     
-      {/* <button onClick={() => navigate(`/${tenantId}/broadcast`)} className="cb-action-btn"> */}
-  {/* Broadcast History */}
-{/* </button> */}
+      <button onClick={() => navigate(`/${tenantId}/broadcast`)} className="cb-action-btn" style={{marginTop:'1rem'}}>
+  Broadcast History
+</button>
         <h1 className='cb-details-title' style={{textAlign:'center'}}>Contact Details</h1>
         {selectedContact && (
   <div className="cb-contact-full-details">
@@ -1352,7 +1176,7 @@ const handleNewChat = async () => {
       ) : (
         <span className="cb-default-avatar-large">{selectedContact.first_name && selectedContact.first_name[0]}</span>
       )}
-      <h2>{selectedContact.first_name} {selectedContact.last_name}</h2>
+      <h2>{selectedContact.name} {selectedContact.last_name}</h2>
     </div>
     <div className="cb-contact-info-details">
       <p className='cb-info-item'>
@@ -1458,6 +1282,8 @@ const handleNewChat = async () => {
           </div>
         </div>
       )}
+    </div>
+    </div>
     </div>
   );
 

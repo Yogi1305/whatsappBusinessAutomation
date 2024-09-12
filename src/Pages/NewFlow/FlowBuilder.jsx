@@ -294,7 +294,7 @@ const FlowBuilderContent = () => {
       </ReactFlowProvider>
       <div className="sidebar">
       <button onClick={handleSaveClick}>
-          {authenticated ? "Save Flow" : "Log in to Save Flow"}
+          {authenticated ? "Save Flow" : "Save Flow"}
         </button>
         {authenticated && (
           <>
