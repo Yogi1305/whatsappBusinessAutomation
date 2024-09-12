@@ -5,11 +5,11 @@ import Navbar from './Navbar';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
 import BroadcastPage from "./Pages/Chatbot/Broadcast/BroadcastPage";
-import Chatbot from './Pages/Chatbot/chatbot';
-import FlowBuilder from "./Pages/NewFlow/FlowBuilder";
-import ContactPage from './Pages/ContactPage/ContactPage';
+import Chatbot from './Pages/Chatbot/chatbot.jsx';
+import FlowBuilder from "./Pages/NewFlow/FlowBuilder.jsx";
+import ContactPage from './Pages/ContactPage/ContactPage.jsx';
 import ProfilePage from './Pages/ProfilePage/ProfilePage';
-import Homepage from './Pages/HomePage/HomePage';
+import Homepage from './Pages/HomePage/HomePage.jsx';
 import Chatbotredirect from './Pages/Chatbot/Chatbotredirect';
 
 const ProtectedRoute = ({ children }) => {
