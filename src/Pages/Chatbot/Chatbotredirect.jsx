@@ -56,9 +56,10 @@ const Chatbotredirect = () => {
     alignItems: 'center',
     justifyContent: 'center',
     height: '100vh',
+    width:'100vw',
     backgroundColor: '#f0f4f8',
     fontFamily: 'Arial, sans-serif',
-    marginTop:'-60px'
+    marginTop:'-90px'
   };
 
   const cardStyle = {

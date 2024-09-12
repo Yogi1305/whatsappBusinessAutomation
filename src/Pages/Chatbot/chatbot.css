@@ -135,6 +135,16 @@
   align-items: center;
 }
 
+.cb-chat-contact-info{
+  display: flex;
+  align-items: center;
+}
+
+.cb-sidebar-header{
+  display: flex;
+  justify-content: space-around;
+}
+
 .cb-profile-icon {
   width: 40px;
   height: 40px;
@@ -781,3 +791,96 @@
   .cb-message-container::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.3);
   }
+
+  /* Add these styles to your existing chatbot.css file */
+
+.interactive-message {
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.message-text {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.message-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.list-section {
+  margin-bottom: 15px;
+}
+
+.section-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.list-item {
+  background-color: #d6b92ba7;
+  border: 3px solid #907204;
+  border-radius: 5px;
+  padding: 8px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.list-item:hover {
+  background-color: #cc9110;
+}
+
+.item-description {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 5px;
+}
+
+.message-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.interactive-button {
+  background-color: #0f8b1390;
+  border: 3px solid green;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.interactive-button:hover {
+  background-color: #45a049;
+}
+
+.image-message {
+  max-width: 100%;
+}
+
+.message-image {
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+.message-caption {
+  font-style: italic;
+  color: #666;
+  margin-top: 5px;
+}
+
+.error-message {
+  color: #ff0000;
+  font-style: italic;
+}
