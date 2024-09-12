@@ -9,7 +9,7 @@ import Chatbot from './Pages/Chatbot/chatbot.jsx';
 import FlowBuilder from "./Pages/NewFlow/FlowBuilder.jsx";
 import ContactPage from './Pages/ContactPage/ContactPage.jsx';
 import ProfilePage from './Pages/ProfilePage/ProfilePage';
-import Homepage from './Pages/HomePage/HomePage.jsx';
+import {Homepage} from './Pages/HomePage/HomePage.jsx';
 import Chatbotredirect from './Pages/Chatbot/Chatbotredirect';
 
 const ProtectedRoute = ({ children }) => {
