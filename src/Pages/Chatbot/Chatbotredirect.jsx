@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import logo from "../../assets/logo.png"
 import axios from 'axios';
+import axiosInstance from '../../api';
 
 const Chatbotredirect = () => {
   const [progress, setProgress] = useState(0);
@@ -15,7 +16,11 @@ const Chatbotredirect = () => {
         console.log("Here is the code",code);
         if (code) {
           // Send the auth code to the backend
-          const response = await axios.post('https://whatsappbotserver.azurewebsites.net/login-flow', { code });
+          const response = await axios.post(
+            'https://8twdg37p-8080.inc1.devtunnels.ms/login-flow',
+            { code },  // This is the body of the request
+            { headers: { 'X-Tenant-Id': 'll' } }  // This is the headers object
+          );
 
           // Handle the response (you can save token or do other logic here)
           console.log('Backend response:', response.data);
