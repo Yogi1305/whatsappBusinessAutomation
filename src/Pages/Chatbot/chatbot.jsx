@@ -44,29 +44,21 @@ const Chatbot = () => {
   const [selectedContact, setSelectedContact] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [messageTemplates, setMessageTemplates] = useState({});
-  const [messages, setMessages] = useState({});
+
   const [showSmileys, setShowSmileys] = useState(false);
-  const [firebaseContacts, setFirebaseContacts] = useState([]);
+ 
   const [profileImage, setProfileImage] = useState(null); 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [file, setFile] = useState(null);
-  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [conversation, setConversation] = useState(['']);
   const [flows, setFlows] = useState([]);
   const [selectedFlow, setSelectedFlow] = useState('');
   const [previousContact, setPreviousContact] = useState(null);
   const [newMessages, setNewMessages] = useState([]);
-  const [showBroadcastPopup, setShowBroadcastPopup] = useState(false);
-  const [broadcastMessage, setBroadcastMessage] = useState('');
-  const [selectedPhones, setSelectedPhones] = useState([]);
+ 
   const [showPopup, setShowPopup] = useState(false);
-  const [groupName, setGroupName] = useState('');
-  const [groups, setGroups] = useState([]);
+ 
   const [allConversations, setAllConversations] = useState({});
   const [allMessages, setAllMessages] = useState([]);
-  const [lastFetchTime, setLastFetchTime] = useState(null);
-  const [lastMessageTimes, setLastMessageTimes] = useState({});
-  const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
+  
   const [unreadCounts, setUnreadCounts] = useState({});
   const messageEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -74,12 +66,12 @@ const Chatbot = () => {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [imageCaption, setImageCaption] = useState('');
   const [imageMap, setImageMap] = useState({});
-  const [blobUrl, setBlobUrl] = useState(null);
+  
   const [isUploading, setIsUploading] = useState(false);
   const [accessToken, setAccessToken] = useState('');
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const [headerMediaId, setHeaderMediaId] = useState('');
-  const [inputMessage, setInputMessage] = useState('');
+  
   const [showNewChatInput, setShowNewChatInput] = useState(false);
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const { authenticated } = useAuth();
@@ -95,14 +87,7 @@ const Chatbot = () => {
     setAuthPopupp(!authenticated);
   }, [authenticated]);
 
-  
-  const openPopup = () => {
-    setShowPopup(true);
-  };
 
-  const handlePopupClose = () => {
-    setShowPopup(false);
-  };
 
 
   useEffect(() => {
@@ -111,7 +96,27 @@ const Chatbot = () => {
 
 
   
+  const renderMessageContent = (message) => {
+    if (typeof message.text === 'object' && message.text !== null) {
+      // Handle message types
+      switch (message.text.type) {
+        case 'text':
+          return message.text.body || <div className="error">No text body provided</div>;
   
+        case 'interactive':
+          // Replace `renderInteractiveMessage` with your logic to handle interactive messages
+          return renderInteractiveMessage(message.text.interactive) || <div className="error">Interactive message rendering failed</div>;
+  
+        default:
+          return <div className="error">Unknown message type: {message.text.type}</div>;
+      }
+    } else if (typeof message.text === 'string') {
+      // Fallback for plain text messages
+      return message.text || <div className="error">Message content is undefined</div>;
+    }
+  
+    return <div className="error">Invalid message format</div>;
+  };
 
   const renderInteractiveMessage = (parsedMessage) => {
     const { type, interactive, text, image } = parsedMessage;
@@ -190,37 +195,7 @@ const Chatbot = () => {
   };
 
 
-  const fetchAllMessages = () => {
-    socket.emit('get-all-messages', {}, (response) => {
-      if (response && response.messages && Array.isArray(response.messages)) {
-        const newMessages = response.messages;
-        
-        setAllMessages(prevMessages => {
-          const combinedMessages = [...prevMessages, ...newMessages];
-          const uniqueMessages = combinedMessages.filter((message, index, self) =>
-            index === self.findIndex((t) => t.id === message.id)
-          );
-          return uniqueMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        });
 
-        const newLastMessageTimes = {};
-        const newUnreadCounts = {};
-        newMessages.forEach(message => {
-          if (message.contactPhone && message.timestamp) {
-            newLastMessageTimes[message.contactPhone] = message.timestamp;
-            newUnreadCounts[message.contactPhone] = (newUnreadCounts[message.contactPhone] || 0) + 1;
-          }
-        });
-
-        setLastMessageTimes(prev => ({...prev, ...newLastMessageTimes}));
-        setUnreadCounts(prev => ({...prev, ...newUnreadCounts}));
-
-        updateContactsWithNewMessages(newMessages);
-      } else {
-        console.error('Invalid response format for messages:', response);
-      }
-    });
-  };
 
   
   const fetchContacts = async () => {
@@ -231,14 +206,8 @@ const Chatbot = () => {
         },
       });
       // Ensure all contacts have the necessary properties
-      const processedContacts = response.data.map(contact => ({
-        ...contact,
-        first_name: contact.first_name || '',
-        last_name: contact.last_name || '',
-        lastMessageTime: contact.lastMessageTime || null,
-        hasNewMessage: contact.hasNewMessage || false
-      }));
-      setContacts(sortContacts(processedContacts));
+     
+      setContacts(response.data);
     } catch (error) {
       console.error("Error fetching contacts data:", error);
     }
@@ -280,38 +249,7 @@ const Chatbot = () => {
     }
 }, [ tenantId]);
 
-  const generateChatbotMessage = async () => {
-    try {
-      if (!selectedContact) {
-        console.error('No contact selected');
-        return;
-      }
-  
-      const name = `${selectedContact.first_name} ${selectedContact.last_name}`;
-      const prompts = [
-        `Hey ${name}! 😊 Thinking Python for AI. Simple and powerful. What do you think, ${name}?`,
-        `Hi ${name}! 😄 Python's great for AI. Let's make something cool!`,
-      ];
-  
-      const randomIndex = Math.floor(Math.random() * prompts.length);
-      const prompt = prompts[randomIndex];
-  
-      const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: prompt },
-        ],
-      });
-  
-      const messageContent = response.choices[0].message.content.trim();
-      setMessageTemplates(prevTemplates => ({
-        ...prevTemplates,
-        [selectedContact.id]: messageContent
-      }));
-    } catch (error) {
-      console.error('Error generating WhatsApp message:', error);
-    }
-  };
+
 
 
   useEffect(() => {
@@ -342,7 +280,7 @@ const Chatbot = () => {
   
         // Upload to Facebook Graph API
         const response = await axiosInstance.post(
-          'https://graph.facebook.com/v16.0/241683569037594/media',
+          'https://graph.facebook.com/v16.0/241683569037594/media', //HARDCODE
           formData,
           {
             headers: {
@@ -353,6 +291,7 @@ const Chatbot = () => {
         );
         console.log('File uploaded to WhatsApp, ID:', response.data.id);
         setHeaderMediaId(response.data.id);
+        setImageToSend(response.data.id);
   
         if (response.data && response.data.id) {
           // Store the media ID
@@ -386,15 +325,18 @@ const Chatbot = () => {
 
   const handleImageSend = async () => {
     if (!imageToSend || !selectedContact) return;
-  
+    let phoneNumber = selectedContact.phone;
+    if (phoneNumber.startsWith("91")) {
+      phoneNumber = phoneNumber.slice(2);
+    }
     try {
       const response = await axiosInstance.post(
         'https://whatsappbotserver.azurewebsites.net/send-message',
         {
-          phoneNumbers: [selectedContact.phone],
+          phoneNumbers: [phoneNumber],
           messageType: "image",
           additionalData: {
-            imageId: setImageToSend, // Use the media ID here
+            imageId: imageToSend, // Use the media ID here
             caption: imageCaption
           },
           business_phone_number_id: "241683569037594"
@@ -420,44 +362,6 @@ const Chatbot = () => {
   };
 
 
-
-  // const handleImageSend = async () => {
-  //   if (!imageToSend || !selectedContact) return;
-
-  //   try {
-  //     const imageUrl = imageMap[imageToSend];
-  //     const response = await axiosInstance.post(
-  //       'https://hx587qc4-8080.inc1.devtunnels.ms/send-message',
-  //       {
-  //         phoneNumbers: [selectedContact.phone],
-  //         url: false,
-  //         messageType: "image",
-  //         additionalData: {
-  //           imageUrl: imageUrl,
-  //           caption: imageCaption
-  //         },
-  //         business_phone_number_id: "241683569037594"
-  //       }
-  //     );
-
-  //     if (response.status === 200) {
-  //       setConversation(prev => [...prev, { 
-  //         type: 'image', 
-  //         sender: 'bot', 
-  //         imageId: imageToSend,
-  //         imageUrl: imageUrl, // Add this line
-  //         caption: imageCaption 
-  //       }]);
-  //       setImageToSend(null);
-  //       setImageCaption('');
-  //       setShowImagePreview(false);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error sending image:', error);
-  //   }
-  // };
-
-  // Function to handle back navigation
   const handleBack = () => {
     navigate(-1);
   };
@@ -469,133 +373,47 @@ const Chatbot = () => {
 
 
 
-
- 
-  useEffect(() => {                                                 //AYUSH THIS IS A LINE
+  useEffect(() => {
     socket.on('connect', () => {
       console.log('Connected to the server');
     });
-
-    
-
+  
     socket.on('new-message', (message) => {
       if (message) {
-        console.log('Got New Message', selectedContact.phone);
+        console.log('Got New Message', message.message);
        
   {
-        if (parseInt(message.contactPhone.wa_id) == parseInt(selectedContact.phone)) {
+        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone)) {
           console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
-          setConversation(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
+          setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
           //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
         }
+  
       }}
     });
+  
+    socket.on('node-message', (message) => {
+      console.log(message.message, "this is node");
+      if (message) {
+          if (parseInt(message.contactPhone) === parseInt(selectedContact?.phone)) {
+            console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+            setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'bot' }]);
+          }
 
-  socket.on('node-message', (message) => {
-  if (message) {
-    
-    console.log('Got New NOde Message',message);
-  {
-   {
-    setConversation(prevMessages => [...prevMessages, { text: message.message, sender: 'bot' }]);
-    }}
-  }
-  });
-
+      }
+    });
+  
     return () => {
       socket.off('node-message');
       socket.off('new-message');
     };
   }, [selectedContact]);
-
-
-  const handleAllMessages = (messages) => {
-    setAllMessages(messages);
-    updateContactsWithMessages(messages);
-  };
-
-  const handleNewMessage = (message) => {
-    if (message && message.contactPhone && message.contactPhone.wa_id) {
-      const contactPhone = message.contactPhone.wa_id;
-      
-      const newMessage = {
-        contactPhone: contactPhone,
-        text: message.message,
-        sender: 'user',
-        timestamp: new Date().toISOString()
-      };
   
-      setAllMessages(prevMessages => [...prevMessages, newMessage]);
-  
-      setLastMessageTimes(prev => ({
-        ...prev,
-        [contactPhone]: new Date().toISOString()
-      }));
-  
-      setUnreadCounts(prev => ({
-        ...prev,
-        [contactPhone]: (prev[contactPhone] || 0) + 1
-      }));
-  
-      updateContactPriority(contactPhone, newMessage);
-  
-      if (selectedContact && selectedContact.phone === contactPhone) {
-        setConversation(prevConversation => [...prevConversation, newMessage]);
-        setUnreadCounts(prev => ({ ...prev, [contactPhone]: 0 }));
-      }
-    }
-  };
 
-  const updateContactPriority = (contactPhone, newMessage) => {
-    setContacts(prevContacts => {
-      const updatedContacts = prevContacts.map(contact => 
-        contact.phone === contactPhone
-          ? { 
-              ...contact, 
-              hasNewMessage: true, 
-              lastMessageTime: new Date().toISOString(),
-              lastMessage: newMessage.text
-            }
-          : contact
-      );
-      
-      return sortContacts(updatedContacts);
-    });
-  };
+ 
 
-  const sortContacts = (contactsToSort) => {
-    return contactsToSort.sort((a, b) => {
-      if (a.hasNewMessage !== b.hasNewMessage) {
-        return b.hasNewMessage ? 1 : -1;
-      }
-      if (a.lastMessageTime !== b.lastMessageTime) {
-        return new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0);
-      }
-      const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim();
-      const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim();
-      return nameA.localeCompare(nameB);
-    });
-  };
+ 
 
-  const updateContactsWithNewMessages = (newMessages) => {
-    setContacts(prevContacts => {
-      const updatedContacts = prevContacts.map(contact => {
-        const contactMessages = newMessages.filter(msg => msg.contactPhone === contact.phone);
-        if (contactMessages.length > 0) {
-          const latestMessage = contactMessages[contactMessages.length - 1];
-          return {
-            ...contact,
-            lastMessageTime: latestMessage.timestamp,
-            hasNewMessage: true,
-            lastMessage: latestMessage.text
-          };
-        }
-        return contact;
-      });
-
-      return sortContacts(updatedContacts);
-    });
-  };
   
   
   const handleSend = async () => {
@@ -667,52 +485,16 @@ const Chatbot = () => {
   
   
 
-
-  const filteredContacts = contacts.filter(contact => {
-    const searchLower = searchText.toLowerCase();
-    return (
-      contact.first_name?.toLowerCase().includes(searchLower) ||
-      contact.last_name?.toLowerCase().includes(searchLower) ||
-      contact.phone?.toLowerCase().includes(searchLower) ||
-      contact.email?.toLowerCase().includes(searchLower)
-    );
-  });
+  const filteredContacts=contacts;
+ 
+  // const filteredContacts = contacts.filter(contact => {
+  //   const searchLower = searchText.toLowerCase();
+  //   return (
+  //     contact.phone?.toLowerCase().includes(searchLower) ||
+  //     contact.email?.toLowerCase().includes(searchLower)
+  //   );
+  // });
   
-
-  const sendDataToBackend = async (contactPhone, conversation) => {
-    try {
-      const formattedConversation = conversation
-        .filter(msg => msg.text && msg.text.trim() !== '')
-        .map(msg => ({
-          text: msg.text,
-          sender: msg.sender,
-        }));
-  
-      if (formattedConversation.length === 0) return;
-  
-      const response = await fetch(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/whatsapp_convo_post/${contactPhone}/?source=whatsapp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
-        },
-        body: JSON.stringify({
-          contact_id: contactPhone,
-          conversations: formattedConversation,
-          tenant: 'll',
-        }),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to send data to backend');
-      }
-  
-      console.log('Data sent to backend successfully');
-  
-    } catch (error) {
-      console.error('Error sending data to backend:', error);
-    }
-  };
   
   // Function to fetch conversation data for a given contact
   const fetchConversation = async (contactId) => {
@@ -748,14 +530,8 @@ const Chatbot = () => {
 
 
   
-
+ 
   useEffect(() => {
-    if (previousContact) {
-      // Save conversation data for the previous contact
-      console.log("commentsdsdsd::::::::::::::::::::::::::::::::::::",conversation);
-      // sendDataToBackend(previousContact.phone, newMessages);
-    }
-    
     // Clear current conversation
     setConversation(['']);
     setNewMessages(['']);
@@ -773,11 +549,13 @@ const Chatbot = () => {
     }
     setSelectedContact({ ...contact, isGroup: false });
     
+    // Safeguard to check if each contact has an id
     setContacts(prevContacts => 
       prevContacts.map(c => 
-        c.id === contact.id ? { ...c, hasNewMessage: false } : c
+        c?.id === contact.id ? { ...c, hasNewMessage: false } : c
       )
     );
+
     setConversation(allConversations[contact.phone] || []);
     if (!allConversations[contact.phone]) {
       fetchConversation(contact.phone);
@@ -794,7 +572,9 @@ const Chatbot = () => {
     setConversation(contactMessages);
     setNewMessages([]);
     setUnreadCounts(prev => ({ ...prev, [contact.phone]: 0 }));
-  };
+};
+
+
  
   const handleToggleSmileys = () => {
     setShowSmileys(!showSmileys);
@@ -878,7 +658,7 @@ const Chatbot = () => {
           business_phone_number_id:'241683569037594'
         };
         console.log('Sending flow data:', dataToSend);
-        const response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/insert-data/', dataToSend, {
+        const response = await axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/insert-data/', dataToSend, {
           headers: {
             'Content-Type': 'application/json',
             token: localStorage.getItem('token'),
@@ -896,109 +676,15 @@ const Chatbot = () => {
         setIsSending(false);
       }
     };
-    useEffect(() => {
-      return () => {
-        // This cleanup function will run when the component unmounts
-        setIsSending(false);
-        const savedGroups = JSON.parse(localStorage.getItem('broadcastGroups') || '[]');
-        setGroups(savedGroups);
-      };
-    }, []);
-    const handleBroadcastMessage = () => {
-      setShowBroadcastPopup(true);
-    };
+ 
 
-    const handleCloseBroadcastPopup = () => {
-      setShowBroadcastPopup(false);
-      setBroadcastMessage('');
-      setSelectedPhones([]);
-      setGroupName('');
-      setIsSendingBroadcast(false);
-    };
-
-    
-   
-    const handleSendBroadcast = async () => {
-      if (selectedPhones.length === 0 || !broadcastMessage.trim()) {
-        alert("Please select at least one contact and enter a message.");
-        return;
-      }
-    
-      setIsSendingBroadcast(true);
-    
-      try {
-        // Create a new group and save it to local storage
-        const newGroup = {
-          id: uuidv4(),
-          name: groupName || `Broadcast Group ${new Date().toISOString()}`,
-          members: selectedPhones
-        };
-        saveGroupToLocalStorage(newGroup);
-    
-        // Prepare the data in the specified format
-        const phoneNumbers = selectedPhones.map(contactId => {
-          const contact = contacts.find(c => c.id === contactId);
-          return parseInt(contact.phone); // Ensure the phone number is an integer
-        });
-    
-        const payload = {
-          phoneNumbers: phoneNumbers,
-          message: broadcastMessage,
-           business_phone_number_id: "241683569037594",
-           messageType: "text",
-        };
-    
-        // Send the broadcast message
-        const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-message/', payload);
-    
-        if (response.status === 200) {
-          console.log("Broadcast sent successfully");
-          alert("Broadcast message sent successfully!");
-          handleCloseBroadcastPopup();
-        } else {
-          throw new Error("Failed to send broadcast");
-        }
-
-        const broadcastMessageObj = { text: broadcastMessage, sender: 'bot' };
-        setGroups(prevGroups => prevGroups.map(group => ({
-          ...group,
-          conversation: [...(group.conversation || []), broadcastMessageObj]
-        })));
-    
-        // If the current selected contact is a group, update the conversation
-        if (selectedContact && selectedContact.isGroup) {
-          setConversation(prevConversation => [...prevConversation, broadcastMessageObj]);
-        }
-
-      } catch (error) {
-        console.error("Error sending broadcast:", error);
-        alert("Failed to send broadcast message. Please try again.");
-      } finally {
-        setIsSendingBroadcast(false);
-      }
-    };
-
-
-const handlePhoneSelection = (contactId) => {
-  setSelectedPhones(prevSelected => 
-    prevSelected.includes(contactId)
-      ? prevSelected.filter(id => id !== contactId)
-      : [...prevSelected, contactId]
-  );
-};
-
-const saveGroupToLocalStorage = (group) => {
-  const existingGroups = JSON.parse(localStorage.getItem('broadcastGroups') || '[]');
-  const updatedGroups = [...existingGroups, group];
-  localStorage.setItem('broadcastGroups', JSON.stringify(updatedGroups));
-};
 
 
 const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-    const response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/contacts/', {
+    const response = await axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/contacts/', {
       phone: newPhoneNumber,
       tenant: tenantId,
       // Add other required fields for creating a new contact
@@ -1059,28 +745,19 @@ const handleNewChat = async () => {
           <h2 className='cb-contact-title'>Contacts</h2>
           
           {filteredContacts.map(contact => (
-            <div
-              key={contact.id}
-              className={`cb-contact-item ${selectedContact?.id === contact.id ? 'cb-selected' : ''}`}
-              onClick={() => handleContactSelection(contact)}
-            >
-              <div className="cb-contact-info">
-                <span className="cb-contact-name">{contact.name} {contact.last_name}</span>
-                <span className="cb-contact-phone">{contact.phone}</span>
-                {contact.hasNewMessage && <span className="cb-unread-count"></span>}
-                {contact.lastMessageTime && (
-                  <span className="cb-last-message-time">
-                    {new Date(contact.lastMessageTime).toLocaleTimeString()}
-                  </span>
-                )}
-                {contact.lastMessage && (
-                  <span className="cb-last-message-preview">
-                    {contact.lastMessage.substring(0, 30)}...
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+  contact?.id && ( // Check if contact and contact.id exist
+    <div
+      key={contact.id}
+      className={`cb-contact-item ${selectedContact?.id === contact.id ? 'cb-selected' : ''}`}
+      onClick={() => handleContactSelection(contact)}
+    >
+      <div className="cb-contact-info">
+        <span className="cb-contact-name">{contact.name || 'Unknown Name'}</span> {/* Fallback for missing name */}
+        <span className="cb-contact-phone">{contact.phone || 'No Phone'}</span>  {/* Fallback for missing phone */}
+      </div>
+    </div>
+  )
+))}
         </div>
       </div>
       <div className="cb-main">
@@ -1108,12 +785,13 @@ const handleNewChat = async () => {
       className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
     >
       {(() => {
+      
         if (typeof message.text === 'string') {
           if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
             try {
               const fixedMessage = fixJsonString(message.text);
               const parsedMessage = JSON.parse(fixedMessage);
-              console.log('Parsed Message:', parsedMessage);
+              //console.log('Parsed Message:', parsedMessage);
               return renderInteractiveMessage(parsedMessage);
             } catch (e) {
               console.error('Failed to parse JSON message:', e);
@@ -1121,6 +799,9 @@ const handleNewChat = async () => {
             }
           }
           return message.text || <div className="error">Message content is undefined</div>;
+        }else if (typeof message.text === 'object' && message.text !== null) {
+          // Handle non-string message formats
+          return renderMessageContent(message);
         }
         return <div className="error">Invalid message format</div>;
       })()}
@@ -1207,12 +888,7 @@ const handleNewChat = async () => {
           >
             {isSending ? "Sending..." : "Send Flow Data"}
           </button>
-          <button 
-            onClick={handleBroadcastMessage} 
-            className="cb-broadcast-btn"
-          >
-            Broadcast Message
-          </button>
+         
         </div>
       </div>
       {showImagePreview && (
@@ -1236,52 +912,6 @@ const handleNewChat = async () => {
         </div>
       </div>
     )}
-      {showBroadcastPopup && (
-        <div className="cb-broadcast-popup">
-          <div className="cb-broadcast-content">
-            <h2>Broadcast Message</h2>
-            <input
-              type="text"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Enter group name (optional)"
-              className="cb-group-name-input"
-            />
-            <textarea
-              value={broadcastMessage}
-              onChange={(e) => setBroadcastMessage(e.target.value)}
-              placeholder="Type your broadcast message here..."
-              className="cb-broadcast-message-input"
-            />
-            <div className="cb-broadcast-contact-list">
-              <h3>Select Contacts:</h3>
-              {contacts.map(contact => (
-                <div key={contact.id} className="cb-broadcast-contact-item">
-                  <input
-                    type="checkbox"
-                    id={`contact-${contact.id}`}
-                    checked={selectedPhones.includes(contact.id)}
-                    onChange={() => handlePhoneSelection(contact.id)}
-                  />
-                  <label htmlFor={`contact-${contact.id}`}>
-                    {contact.name} ({contact.phone})
-                  </label>
-                </div>
-              ))}
-            </div>
-            <div className="cb-broadcast-actions">
-              <button 
-                onClick={handleSendBroadcast} 
-                disabled={isSendingBroadcast || selectedPhones.length === 0 || !broadcastMessage.trim()}
-                className="cb-send-broadcast-btn"
-              >
-                {isSendingBroadcast ? "Sending..." : "Send Broadcast"}
-              </button>
-              <button onClick={handleCloseBroadcastPopup} className="cb-cancel-broadcast-btn">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
     </div>
     </div>
