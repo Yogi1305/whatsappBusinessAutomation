@@ -693,7 +693,7 @@ const handleNewChat = async () => {
     });
 
     const newContact = response.data;
-    setContacts(prev => sortContacts([newContact, ...prev]));
+    //setContacts(prev => sortContacts([newContact, ...prev]));
     setSelectedContact(newContact);
     setShowNewChatInput(false);
     setNewPhoneNumber('');
