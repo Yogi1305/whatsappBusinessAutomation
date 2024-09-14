@@ -1344,26 +1344,21 @@ const Chatbot = () => {
   const [selectedContact, setSelectedContact] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [messageTemplates, setMessageTemplates] = useState({});
-  const [messages, setMessages] = useState({});
+
   const [showSmileys, setShowSmileys] = useState(false);
-  const [firebaseContacts, setFirebaseContacts] = useState([]);
+ 
   const [profileImage, setProfileImage] = useState(null); 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [file, setFile] = useState(null);
-  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [conversation, setConversation] = useState(['']);
   const [flows, setFlows] = useState([]);
   const [selectedFlow, setSelectedFlow] = useState('');
   const [previousContact, setPreviousContact] = useState(null);
   const [newMessages, setNewMessages] = useState([]);
-  const [selectedPhones, setSelectedPhones] = useState([]);
+ 
   const [showPopup, setShowPopup] = useState(false);
-  const [groupName, setGroupName] = useState('');
-  const [groups, setGroups] = useState([]);
+ 
   const [allConversations, setAllConversations] = useState({});
   const [allMessages, setAllMessages] = useState([]);
-  const [lastFetchTime, setLastFetchTime] = useState(null);
-  const [lastMessageTimes, setLastMessageTimes] = useState({});
+  
   const [unreadCounts, setUnreadCounts] = useState({});
   const messageEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -1371,12 +1366,12 @@ const Chatbot = () => {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [imageCaption, setImageCaption] = useState('');
   const [imageMap, setImageMap] = useState({});
-  const [blobUrl, setBlobUrl] = useState(null);
+  
   const [isUploading, setIsUploading] = useState(false);
   const [accessToken, setAccessToken] = useState('');
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const [headerMediaId, setHeaderMediaId] = useState('');
-  const [inputMessage, setInputMessage] = useState('');
+  
   const [showNewChatInput, setShowNewChatInput] = useState(false);
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const { authenticated } = useAuth();
@@ -1401,7 +1396,27 @@ const Chatbot = () => {
 
 
   
+  const renderMessageContent = (message) => {
+    if (typeof message.text === 'object' && message.text !== null) {
+      // Handle message types
+      switch (message.text.type) {
+        case 'text':
+          return message.text.body || <div className="error">No text body provided</div>;
   
+        case 'interactive':
+          // Replace `renderInteractiveMessage` with your logic to handle interactive messages
+          return renderInteractiveMessage(message.text.interactive) || <div className="error">Interactive message rendering failed</div>;
+  
+        default:
+          return <div className="error">Unknown message type: {message.text.type}</div>;
+      }
+    } else if (typeof message.text === 'string') {
+      // Fallback for plain text messages
+      return message.text || <div className="error">Message content is undefined</div>;
+    }
+  
+    return <div className="error">Invalid message format</div>;
+  };
 
   const renderInteractiveMessage = (parsedMessage) => {
     const { type, interactive, text, image } = parsedMessage;
@@ -1491,14 +1506,8 @@ const Chatbot = () => {
         },
       });
       // Ensure all contacts have the necessary properties
-      const processedContacts = response.data.map(contact => ({
-        ...contact,
-        name: contact.first_name || '',
-
-        lastMessageTime: contact.lastMessageTime || null,
-        hasNewMessage: contact.hasNewMessage || false
-      }));
-      setContacts((processedContacts));
+     
+      setContacts(response.data);
     } catch (error) {
       console.error("Error fetching contacts data:", error);
     }
@@ -1571,7 +1580,7 @@ const Chatbot = () => {
   
         // Upload to Facebook Graph API
         const response = await axiosInstance.post(
-          'https://graph.facebook.com/v16.0/241683569037594/media',
+          'https://graph.facebook.com/v16.0/241683569037594/media', //HARDCODE
           formData,
           {
             headers: {
@@ -1582,6 +1591,7 @@ const Chatbot = () => {
         );
         console.log('File uploaded to WhatsApp, ID:', response.data.id);
         setHeaderMediaId(response.data.id);
+        setImageToSend(response.data.id);
   
         if (response.data && response.data.id) {
           // Store the media ID
@@ -1615,15 +1625,18 @@ const Chatbot = () => {
 
   const handleImageSend = async () => {
     if (!imageToSend || !selectedContact) return;
-  
+    let phoneNumber = selectedContact.phone;
+    if (phoneNumber.startsWith("91")) {
+      phoneNumber = phoneNumber.slice(2);
+    }
     try {
       const response = await axiosInstance.post(
         'https://whatsappbotserver.azurewebsites.net/send-message',
         {
-          phoneNumbers: [selectedContact.phone],
+          phoneNumbers: [phoneNumber],
           messageType: "image",
           additionalData: {
-            imageId: setImageToSend, // Use the media ID here
+            imageId: imageToSend, // Use the media ID here
             caption: imageCaption
           },
           business_phone_number_id: "241683569037594"
@@ -1660,73 +1673,42 @@ const Chatbot = () => {
 
 
 
-
- 
-  useEffect(() => {                                                 //AYUSH THIS IS A LINE
+  useEffect(() => {
     socket.on('connect', () => {
       console.log('Connected to the server');
     });
-
-    
-
+  
     socket.on('new-message', (message) => {
       if (message) {
-        console.log('Got New Message',message.message);
+        console.log('Got New Message', message.message);
        
-  {const contactPhoneNumber = parseInt(message.contactPhone.wa_id); // Get phone number from message
-    const contactExists = contacts.some(contact => parseInt(contact.phone) === contactPhoneNumber); 
-    if (contactExists){
-        if (parseInt(message.contactPhone.wa_id) == parseInt(selectedContact.phone)) {
+  {
+        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone)) {
           console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
-          setConversation(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
-          setContacts(prevContacts => 
-            prevContacts.map(contact => 
-              parseInt(contact.phone) === contactPhoneNumber 
-                ? { ...contact, hasNewMessage: true, lastMessage: message.message }
-                : contact
-            )
-          );
-        }}else {
-          
-          // If contact doesn't exist, create a new contact
-          try {
-            const response = axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/contacts/', {
-              phone: contactPhoneNumber,
-              tenant: tenantId,
-              // Add other required fields for creating a new contact
-            }, {
-              headers: { token: localStorage.getItem('token') },
-            });
-        
-            const newContact = {
-              ...response.data,
-              hasNewMessage: true,
-              lastMessage: message.message
-            };
-          } catch (error) {
-            console.error("Error creating new contact:", error);
-          }
+          setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
+          //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
         }
+  
       }}
     });
+  
+    socket.on('node-message', (message) => {
+      console.log(message.message, "this is node");
+      if (message) {
+          if (parseInt(message.contactPhone) === parseInt(selectedContact?.phone)) {
+            console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+            setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'bot' }]);
+          }
 
-  socket.on('node-message', (message) => {
-  if (message) {
-    
-    console.log('Got New NOde Message',message);
-  {
-   {
-    setConversation(prevMessages => [...prevMessages, { text: message.message, sender: 'bot' }]);
-    }}
-  }
-  });
-
+      }
+    });
+  
     return () => {
       socket.off('node-message');
       socket.off('new-message');
     };
   }, [selectedContact]);
-
+  
 
  
 
@@ -1803,15 +1785,15 @@ const Chatbot = () => {
   
   
 
-
+  const filteredContacts=contacts;
  
-  const filteredContacts = contacts.filter(contact => {
-    const searchLower = searchText.toLowerCase();
-    return (
-      contact.phone?.toLowerCase().includes(searchLower) ||
-      contact.email?.toLowerCase().includes(searchLower)
-    );
-  });
+  // const filteredContacts = contacts.filter(contact => {
+  //   const searchLower = searchText.toLowerCase();
+  //   return (
+  //     contact.phone?.toLowerCase().includes(searchLower) ||
+  //     contact.email?.toLowerCase().includes(searchLower)
+  //   );
+  // });
   
   
   // Function to fetch conversation data for a given contact
@@ -1848,7 +1830,7 @@ const Chatbot = () => {
 
 
   
-
+ 
   useEffect(() => {
     // Clear current conversation
     setConversation(['']);
@@ -1867,11 +1849,13 @@ const Chatbot = () => {
     }
     setSelectedContact({ ...contact, isGroup: false });
     
+    // Safeguard to check if each contact has an id
     setContacts(prevContacts => 
       prevContacts.map(c => 
-        c.id === contact.id ? { ...c, hasNewMessage: false } : c
+        c?.id === contact.id ? { ...c, hasNewMessage: false } : c
       )
     );
+
     setConversation(allConversations[contact.phone] || []);
     if (!allConversations[contact.phone]) {
       fetchConversation(contact.phone);
@@ -1888,7 +1872,9 @@ const Chatbot = () => {
     setConversation(contactMessages);
     setNewMessages([]);
     setUnreadCounts(prev => ({ ...prev, [contact.phone]: 0 }));
-  };
+};
+
+
  
   const handleToggleSmileys = () => {
     setShowSmileys(!showSmileys);
@@ -2059,28 +2045,19 @@ const handleNewChat = async () => {
           <h2 className='cb-contact-title'>Contacts</h2>
           
           {filteredContacts.map(contact => (
-            <div
-              key={contact.id}
-              className={`cb-contact-item ${selectedContact?.id === contact.id ? 'cb-selected' : ''}`}
-              onClick={() => handleContactSelection(contact)}
-            >
-              <div className="cb-contact-info">
-                <span className="cb-contact-name">{contact.name} {contact.last_name}</span>
-                <span className="cb-contact-phone">{contact.phone}</span>
-                {contact.hasNewMessage && <span className="cb-unread-count"></span>}
-                {contact.lastMessageTime && (
-                  <span className="cb-last-message-time">
-                    {new Date(contact.lastMessageTime).toLocaleTimeString()}
-                  </span>
-                )}
-                {contact.lastMessage && (
-                  <span className="cb-last-message-preview">
-                    {contact.lastMessage.substring(0, 30)}...
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+  contact?.id && ( // Check if contact and contact.id exist
+    <div
+      key={contact.id}
+      className={`cb-contact-item ${selectedContact?.id === contact.id ? 'cb-selected' : ''}`}
+      onClick={() => handleContactSelection(contact)}
+    >
+      <div className="cb-contact-info">
+        <span className="cb-contact-name">{contact.name || 'Unknown Name'}</span> {/* Fallback for missing name */}
+        <span className="cb-contact-phone">{contact.phone || 'No Phone'}</span>  {/* Fallback for missing phone */}
+      </div>
+    </div>
+  )
+))}
         </div>
       </div>
       <div className="cb-main">
@@ -2108,12 +2085,13 @@ const handleNewChat = async () => {
       className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
     >
       {(() => {
+      
         if (typeof message.text === 'string') {
           if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
             try {
               const fixedMessage = fixJsonString(message.text);
               const parsedMessage = JSON.parse(fixedMessage);
-              console.log('Parsed Message:', parsedMessage);
+              //console.log('Parsed Message:', parsedMessage);
               return renderInteractiveMessage(parsedMessage);
             } catch (e) {
               console.error('Failed to parse JSON message:', e);
@@ -2121,6 +2099,9 @@ const handleNewChat = async () => {
             }
           }
           return message.text || <div className="error">Message content is undefined</div>;
+        }else if (typeof message.text === 'object' && message.text !== null) {
+          // Handle non-string message formats
+          return renderMessageContent(message);
         }
         return <div className="error">Invalid message format</div>;
       })()}

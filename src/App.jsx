@@ -9,7 +9,7 @@ import Chatbot from './Pages/Chatbot/chatbot';
 import FlowBuilder from "./Pages/NewFlow/FlowBuilder";
 import ContactPage from './Pages/ContactPage/ContactPage';
 import ProfilePage from './Pages/ProfilePage/ProfilePage';
-import Homepage from './Pages/HomePage/HomePage';
+import HomePage from './Pages/HomePage/Homepage';
 import Chatbotredirect from './Pages/Chatbot/Chatbotredirect';
 
 const ProtectedRoute = ({ children }) => {
@@ -26,7 +26,7 @@ const App = () => {
         <Navbar isAuthenticated={authenticated} onLogout={logout} />
         <main className="flex-grow container">
           <Routes>
-            <Route path="/" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Homepage />} />
+            <Route path="/" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <HomePage />} />
             <Route path="/login" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Login />} />
             <Route path="/register" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Register />} />
             <Route path="/chatbotredirect" element={<Chatbotredirect />} />

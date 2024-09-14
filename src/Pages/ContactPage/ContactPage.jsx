@@ -100,7 +100,7 @@ const ContactPage = () => {
         formData.append('model_name', "Contact");
 
         try {
-          const response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/upload/', formData, {
+          const response = await axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/upload/', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
