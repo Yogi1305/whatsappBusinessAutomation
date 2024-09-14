@@ -26,7 +26,7 @@ import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net/');
+const socket = io('https://hx587qc4-8080.inc1.devtunnels.ms/');
 
 
 const getTenantIdFromUrl = () => {
@@ -365,7 +365,13 @@ const Chatbot = () => {
   const handleBack = () => {
     navigate(-1);
   };
-
+  const createNewContact = (contactPhone) => ({
+    id: Date.now(), // Generate a unique ID or use another method
+    phoneNumber: contactPhone,
+    name: 'New Contact', // Default or empty name
+    hasNewMessage: true // Default or initial state
+  });
+  
   // Scroll to bottom of chat
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -394,6 +400,7 @@ const Chatbot = () => {
   
     socket.on('node-message', (message) => {
       console.log(message.message, "this is node");
+      console.log(selectedContact,"yahandekhhhhhh");
       if (message) {
           if (parseInt(message.contactPhone) === parseInt(selectedContact?.phone)) {
             console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
@@ -402,10 +409,59 @@ const Chatbot = () => {
 
       }
     });
+    socket.on('temp-user', (message) => {
+      console.log("New temp user logged");
+    
+      if (message) {
+        const storedSessionId = localStorage.getItem('sessionId');
+        console.log("Stored session ID:", storedSessionId);
+        console.log("Received message temp_user:", message.temp_user);
+        
+        const formattedMessageTempUser = `*/${message.temp_user}`;
+        if (formattedMessageTempUser === storedSessionId) {
+          console.log("Session ID matches. Adding new contact.");
+        
+          // Add new contact and select it
+          setContacts(prevContacts => {
+            // Create a new contact object
+            const newContact = {
+              id: message.temp_user + message.contactPhone,  // Use a unique combination for id
+              phone: message.contactPhone
+            };
+        
+            // Check if contact with the same ID already exists
+            const contactExists = prevContacts.some(contact => contact.id === newContact.id);
+        
+            // If the contact doesn't exist, add it
+            if (!contactExists) {
+              const updatedContacts = [...prevContacts, newContact];
+              console.log("New contacts array:", updatedContacts);
+              return updatedContacts;
+            }
+        
+            console.log("Contact already exists. Skipping addition.");
+            return prevContacts;  // Return the current contacts if no addition is made
+          });
+        
+          setSelectedContact({
+            phone: message.contactPhone
+          });
+        
+          setShowNewChatInput(false);
+          console.log("Selected contact:", message.contactPhone);
+        }else {
+          console.log("Session ID does not match.");
+        }
+      } else {
+        console.log("Message is undefined or null.");
+      }
+    });
+    
   
     return () => {
       socket.off('node-message');
       socket.off('new-message');
+      socket.off('temp_user');
     };
   }, [selectedContact]);
   
