@@ -2,11 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './BroadcastPage.css';
 import axiosInstance from '../../../api';
 import axios from 'axios';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid'; 
 // import { uploadToBlob } from '../../../utils/azureStorage';
 import { useAuth } from '../../../authContext';
 import uploadToBlob from '../../../azureUpload';
+import { MentionTextArea,convertMentionsForBackend, convertMentionsForFrontend } from '../../NewFlow/MentionTextArea';
 
 const getTenantIdFromUrl = () => {
   // Example: Extract tenant_id from "/3/home"
@@ -179,8 +180,10 @@ const BroadcastPage = () => {
       });
   
       const payload = {
+
         bg_id: newGroup.id,
         template: {
+          id: selectedTemplate.id,
           name: selectedTemplate?.name || "under_name",
         },
         business_phone_number_id: 397261306804870,
@@ -188,7 +191,13 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload);
+      const response = await axiosInstance.post('https://8twdg37p-8080.inc1.devtunnels.ms/send-template/', payload,
+        {
+          headers: {
+            'X-Tenant-ID': tenantId // Replace with the actual tenant_id
+          }
+        }
+      );
   
       if (response.status === 200) {
         console.log("Broadcast sent successfully");
@@ -199,17 +208,17 @@ const BroadcastPage = () => {
       }
   
       const broadcastMessageObj = { text: broadcastMessage, sender: 'bot' };
-      setGroups(prevGroups =>
-        prevGroups.map(group => ({
-          ...group,
-          conversation: [...(group.conversation || []), broadcastMessageObj],
-        }))
-      );
+      // setGroups(prevGroups =>
+      //   prevGroups.map(group => ({
+      //     ...group,
+      //     conversation: [...(group.conversation || []), broadcastMessageObj],
+      //   }))
+      // );
   
       // If the current selected contact is a group, update the conversation
-      if (selectedContact && selectedContact.isGroup) {
-        setConversation(prevConversation => [...prevConversation, broadcastMessageObj]);
-      }
+      // if (selectedContact && selectedContact.isGroup) {
+      //   setConversation(prevConversation => [...prevConversation, broadcastMessageObj]);
+      // }
     } catch (error) {
       console.error("Error sending broadcast:", error);
       alert("Failed to send broadcast message. Please try again.");
@@ -239,7 +248,7 @@ const BroadcastPage = () => {
       },
       {
         type: "BODY",
-        text: bodyText,
+        text: convertMentionsForBackend(bodyText),
       }
     ];
 
@@ -440,6 +449,11 @@ const BroadcastPage = () => {
     const updatedButtons = buttons.map((button, i) => 
       i === index ? { ...button, [field]: value } : button
     );
+    setButtons(updatedButtons);
+  };
+
+  const deleteButton = (index) => {
+    const updatedButtons = buttons.filter((_, i) => i !== index);
     setButtons(updatedButtons);
   };
 
@@ -696,12 +710,11 @@ const BroadcastPage = () => {
           </div>
                 <div className="bp-form-group">
                   <label>Body Text</label>
-                  <textarea
-                    value={bodyText}
+                  <MentionTextArea
+                    value={convertMentionsForFrontend(bodyText)}
                     onChange={(e) => setBodyText(e.target.value)}
-                    required
-                    placeholder="Use {{1}}, {{2}}, etc. for variables"
-                  ></textarea>
+                    placeholder="Use @name, @phoneno, etc. for variables"
+                  />
                 </div>
                 <div className="bp-form-group">
                   <label>Footer (Optional)</label>
@@ -722,12 +735,13 @@ const BroadcastPage = () => {
                         value={button.text}
                         onChange={(e) => updateButton(index, 'text', e.target.value)}
                       />
-                      <input
-                        type="text"
-                        placeholder="Button URL"
-                        value={button.url}
-                        onChange={(e) => updateButton(index, 'url', e.target.value)}
-                      />
+                       <button
+                        type="button"
+                        onClick={() => deleteButton(index)}
+                        className="bp-btn-delete-button"
+                      >
+                        <X size={18} />
+                      </button>
                     </div>
                   ))}
                   <button type="button" onClick={addButton} className="bp-btn-add-button">Add Button</button>
@@ -757,7 +771,7 @@ marginBottom:'3rem'
                       <img src={headerContent} alt="Header" className="bp-message-header-image" />
                     )}
                     <div className="bp-message-body">
-                      {bodyText}
+                    {convertMentionsForFrontend(bodyText)}
                     </div>
                     {footerText && <div className="bp-message-footer">{footerText}</div>}
                     {buttons.length > 0 && (

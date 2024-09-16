@@ -9,10 +9,12 @@ const GreenTickAnimation = () => {
       </svg>
       <style jsx>{`
         .green-tick-container {
-          width: 100px;
-          height: 100px;
+          // width: 100px;
+          // height: 100px;
           display: flex;
           align-items: center;
+          justify-content: center;
+          flex-direction:column;
           margin-bottom: 2rem;
         }
         .green-tick {

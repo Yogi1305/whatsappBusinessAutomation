@@ -506,3 +506,39 @@
     margin-bottom: 15px;
   }
 }
+
+/* Add these styles to your BroadcastPage.css file */
+
+.bp-button-inputs {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.bp-button-inputs input {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.bp-btn-delete-button {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.bp-btn-delete-button:hover {
+  background-color: #ff7875;
+}
+
+.bp-btn-add-button {
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}

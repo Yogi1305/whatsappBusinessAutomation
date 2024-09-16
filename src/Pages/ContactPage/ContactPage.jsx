@@ -8,6 +8,8 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import './ContactPage.css';
 import { Button } from '@mui/material';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
@@ -36,6 +38,7 @@ const ContactPage = () => {
       setFilteredContacts(response.data);
     } catch (error) {
       console.error("Error fetching contacts:", error);
+      toast.error("Failed to fetch contacts. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -105,12 +108,12 @@ const ContactPage = () => {
               'Content-Type': 'multipart/form-data',
             },
           });
+          toast.success("File uploaded successfully!");
           console.log('File uploaded successfully:', response.data);
-          // You can add further logic here, such as showing a success message
-          // or refreshing the contacts list
+          fetchContacts();
         } catch (error) {
           console.error('Error uploading file:', error);
-          // Handle the error, e.g., show an error message to the user
+          toast.error("Failed to upload file. Please try again.");
         }
       }
     });
@@ -125,16 +128,19 @@ const ContactPage = () => {
   };
 
   const getInitials = (firstName, lastName) => {
-    // return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    const firstInitial = firstName && firstName.charAt(0) ? firstName.charAt(0).toUpperCase() : '';
+    const lastInitial = lastName && lastName.charAt(0) ? lastName.charAt(0).toUpperCase() : '';
+    return firstInitial + lastInitial || '??';
   };
 
   const getAvatarColor = (initials) => {
-    // const charCode = initials.charCodeAt(0) + initials.charCodeAt(1);
-    // return `avatar-bg-${(charCode % 10) + 1}`;
+    const charCode = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
+    return `avatar-bg-${(charCode % 10) + 1}`;
   };
 
   return (
     <div className="contact-page">
+      <ToastContainer position="top-right" autoClose={5000} />
       <header className="contact-page__header">
         <h1 className='contact-head'>Contacts</h1>
         <div className="contact-page__actions">

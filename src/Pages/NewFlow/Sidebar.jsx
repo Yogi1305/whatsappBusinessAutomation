@@ -63,6 +63,7 @@ const Sidebar = () => {
         Set a Condition
         <div style={{fontSize: '12px', fontWeight: 'normal'}}>Send message(s) based on logical condition(s)</div>
       </div>
+      
     </aside>
   );
 };

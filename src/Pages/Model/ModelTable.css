@@ -1,0 +1,175 @@
+.model-display {
+    display: flex;
+  }
+  .model-page h1{
+    font-weight: bold;
+    margin-left: 4rem;
+  }
+  
+  .model_sidebar {
+  position: relative;
+  bottom: 13rem;
+  }
+  .model_nav{
+    width:100%;
+    position: relative;
+    bottom: 6rem;
+    
+  }
+  .model_table {
+    flex: 1 1 auto;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid ;
+}
+
+th {
+    background-color: gray;
+    color: white;
+}
+
+    
+
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.5rem;
+    color: #34495e;
+}
+/* ModelTable.css */
+
+.modal-popup {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content-popup {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 80%;
+}
+.modal-popup form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modal-popup input, .modal-popup select, .modal-popup button {
+    padding: 10px;
+    font-size: 16px;
+    line-height: 25px;
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+}
+
+.modal-popup input, .modal-popup select {
+    width: 100%;
+}
+
+.modal-popup button {
+    background: #62CD14FF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-popup .error-message {
+    color: red;
+    font-size: 14px;
+}
+
+.modal-popup .field-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.modal-popup .field-container button {
+    background: #FF4D4D;
+}
+
+
+.error-message {
+    color: red;
+    margin-top: 10px;
+}
+.edit-model{
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
+    transition: background-color 0.3s;
+}
+.edit-model:hover {
+    background-color: #0056b3;
+}
+.info-modal-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.info-modal-content-popup {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    max-width: 800px;
+    width: 100%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    max-height: 80%;
+    overflow-y: auto;
+}
+
+.info-close-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+.error {
+    color: red;
+    margin-top: 10px;
+}
+

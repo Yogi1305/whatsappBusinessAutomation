@@ -21,6 +21,8 @@ import SaveFlowPopup from "./SaveFlowPopup";
 import axiosInstance from "../../api";
 import { FlowProvider, useFlow } from './FlowContext';
 import { useAuth } from "../../authContext";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 let id = 0;
 const getId = () => `${id++}`;
@@ -71,6 +73,7 @@ const FlowBuilderContent = () => {
     setFlowDescription('');
     setIsExistingFlow(false);
     setSelectedFlow('');
+    toast.info("Flow reset successfully");
   }, [setNodes, setEdges]);
 
   useEffect(() => {
@@ -98,8 +101,10 @@ const FlowBuilderContent = () => {
     try {
       const response = await axiosInstance.get('/node-templates/');
       setExistingFlows(response.data);
+      toast.success("Existing flows fetched successfully");
     } catch (error) {
       console.error('Error fetching existing flows:', error);
+      toast.error("Failed to fetch existing flows");
     }
     setIsLoading(false);
   };
@@ -155,7 +160,7 @@ const FlowBuilderContent = () => {
     console.log('Current nodes:', nodes);
     console.log('Current edges:', edges);
     if (!authenticated) {
-      alert("Please log in to save your flow.");
+      toast.error("Please log in to save your flow");
       navigate('/login');
       return;
     }
@@ -183,6 +188,7 @@ const FlowBuilderContent = () => {
     try {
       const response = await axiosInstance.post('/node-templates/', flow);
       console.log('Flow saved successfully:', response.data);
+      toast.success("Flow saved successfully");
       setShowSavePopup(false);
       setIsExistingFlow(true);
       setSelectedFlow(flowName);
@@ -246,8 +252,10 @@ const FlowBuilderContent = () => {
         setFlowName(flow.name);
         setFlowDescription(flow.description);
         setIsExistingFlow(true);
+        toast.success("Flow loaded successfully");
       } catch (error) {
         console.error('Error fetching flow:', error);
+        toast.error("Failed to load flow");
         resetFlow();
       } finally {
         setIsLoading(false);
@@ -259,7 +267,8 @@ const FlowBuilderContent = () => {
     if (authenticated) {
       setShowSavePopup(true);
     } else {
-      alert("Please log in to save your flow.");
+      // alert("Please log in to save your flow.");
+      toast.error("Please log in to save your flow");
       navigate('/login');
     }
   };
@@ -267,6 +276,7 @@ const FlowBuilderContent = () => {
 
   return (
     <div className="flow-builder">
+      <ToastContainer position="top-right" autoClose={3000} />
       <Sidebar />
       <ReactFlowProvider>
         <div className="reactflow-wrapper" ref={reactFlowWrapper}>
@@ -336,7 +346,7 @@ const FlowBuilderContent = () => {
       {showSavePopup && authenticated && (
         <SaveFlowPopup
           onSave={handleSaveConfirm}
-          onCancel={() => setShowSavePopup(false)}
+          onCancel={() => {setShowSavePopup(false);toast.info("Save cancelled");}}
           fallbackMessage={fallbackMessage}
           fallbackCount={fallbackCount}
         />
