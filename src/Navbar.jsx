@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Bell, User } from 'lucide-react';
+import { Menu, X, Bell, User, ChevronDown } from 'lucide-react';
 import { useAuth } from './authContext'; // Assuming you have this hook
 import logo from "./assets/logo.png";
 import io from 'socket.io-client';
@@ -13,6 +13,7 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -55,6 +56,18 @@ const Navbar = () => {
       return path.startsWith('/demo') ? path : `/demo${path}`;
     }
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const profileDropdownItems = [
+    { label: 'Profile', path: '/profile' },
+    { label: 'Models', path: '/models' },
+    { label: 'Assign', path: '/assign' },
+    { label: 'Logout', action: handleLogout },
+  ];
 
   if (isAuthPage) {
     return null;
@@ -105,11 +118,42 @@ const Navbar = () => {
                   </div>
                 )}
               </div>
-              <User
-                className="text-white cursor-pointer"
-                onClick={() => navigate('/profile')}
-              />
-              <button onClick={logout} className="text-white hover:text-gray-300">Logout</button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="flex items-center text-white hover:text-gray-300 focus:outline-none"
+                >
+                  <User className="mr-1" />
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {showProfileDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                    {profileDropdownItems.map((item, index) => (
+                      <div key={index}>
+                        {item.path ? (
+                          <Link
+                            to={getPath(item.path)}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setShowProfileDropdown(false)}
+                          >
+                            {item.label}
+                          </Link>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              item.action();
+                              setShowProfileDropdown(false);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {item.label}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <Link to="/login" className="text-white hover:text-gray-300">Login</Link>
@@ -129,9 +173,34 @@ const Navbar = () => {
           )}
           <Link to={getPath('/chatbot')} className="text-white hover:text-gray-300 block py-2">Chatbot</Link>
           <Link to={getPath('/flow-builder')} className="text-white hover:text-gray-300 block py-2">Flow Builder</Link>
-          {authenticated ? (
-            <button onClick={logout} className="text-white hover:text-gray-300 block py-2">Logout</button>
-          ) : (
+          {authenticated && (
+            <>
+              {profileDropdownItems.map((item, index) => (
+                <div key={index}>
+                  {item.path ? (
+                    <Link
+                      to={getPath(item.path)}
+                      className="text-white hover:text-gray-300 block py-2"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        item.action();
+                        setIsOpen(false);
+                      }}
+                      className="text-white hover:text-gray-300 block py-2 w-full text-left"
+                    >
+                      {item.label}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+          {!authenticated && (
             <Link to="/login" className="text-white hover:text-gray-300 block py-2">Login</Link>
           )}
         </div>

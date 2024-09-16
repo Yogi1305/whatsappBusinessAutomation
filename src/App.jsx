@@ -11,6 +11,8 @@ import ContactPage from './Pages/ContactPage/ContactPage';
 import ProfilePage from './Pages/ProfilePage/ProfilePage';
 import HomePage from './Pages/HomePage/Homepage';
 import Chatbotredirect from './Pages/Chatbot/Chatbotredirect';
+import Models from './Pages/Model/ModelTable';
+
 import AssignContact from './Pages/assignContact/assignContact';
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
@@ -50,6 +52,7 @@ const App = () => {
                 <Route path="chatbot" element={<Chatbot />} />
                 <Route path="assign" element={<AssignContact />} />
                 <Route path="flow-builder" element={<FlowBuilder />} />
+                <Route path="models" element={<ProtectedRoute><Models /></ProtectedRoute>} />
               </Routes>
             } />
 

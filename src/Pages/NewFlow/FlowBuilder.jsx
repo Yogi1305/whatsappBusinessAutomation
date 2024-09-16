@@ -21,6 +21,8 @@ import SaveFlowPopup from "./SaveFlowPopup";
 import axiosInstance from "../../api";
 import { FlowProvider, useFlow } from './FlowContext';
 import { useAuth } from "../../authContext";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 let id = 0;
 const getId = () => `${id++}`;
@@ -71,6 +73,7 @@ const FlowBuilderContent = () => {
     setFlowDescription('');
     setIsExistingFlow(false);
     setSelectedFlow('');
+    toast.info("Flow reset successfully");
   }, [setNodes, setEdges]);
 
   useEffect(() => {
@@ -78,7 +81,13 @@ const FlowBuilderContent = () => {
   }, [resetFlow]);
 
   const onNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    (changes) => {
+      // Filter out any changes that would delete the start node
+      const filteredChanges = changes.filter(change => 
+        !(change.type === 'remove' && change.id === 'start')
+      );
+      setNodes((nds) => applyNodeChanges(filteredChanges, nds));
+    },
     [setNodes]
   );
 
@@ -94,12 +103,66 @@ const FlowBuilderContent = () => {
 
 
 
+  const fetchDefaultFlow = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.get('/node-templates/203/');
+      const flow = response.data;
+      const lastNodeId = Math.max(
+        ...flow.node_data.nodes
+          .map(node => parseInt(node.id, 10))
+          .filter(id => !isNaN(id))
+      );
+      id = parseInt(lastNodeId) + 1;
+      const mappedNodes = [
+        startNode,
+        ...flow.node_data.nodes.map(node => ({
+          ...node,
+          data: {
+            ...node.data,
+            updateNodeData: (newData) => updateNodeData(node.id, newData),
+          },
+        }))
+      ];
+
+      const mappedEdges = [
+        ...(flow.node_data.start ? [{ id: 'start-edge', source: 'start', target: flow.node_data.start }] : []),
+        ...flow.node_data.edges
+      ];
+
+      setNodes(mappedNodes);
+      setEdges(mappedEdges);
+      setFlowName(flow.name);
+      setFlowDescription(flow.description);
+      setIsExistingFlow(true);
+      toast.info("Default flow loaded");
+    } catch (error) {
+      console.error('Error fetching default flow:', error);
+      toast.error("Failed to load default flow");
+      resetFlow();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setNodes, setEdges, updateNodeData, resetFlow]);
+
+  useEffect(() => {
+    if (!authenticated) {
+      fetchDefaultFlow();
+    } else {
+      resetFlow();
+    }
+  }, [authenticated, fetchDefaultFlow, resetFlow]);
+
+
+
   const fetchExistingFlows = async () => {
     try {
       const response = await axiosInstance.get('/node-templates/');
       setExistingFlows(response.data);
+      toast.success("Existing flows fetched successfully");
     } catch (error) {
       console.error('Error fetching existing flows:', error);
+      toast.error("Failed to fetch existing flows");
     }
     setIsLoading(false);
   };
@@ -152,10 +215,8 @@ const FlowBuilderContent = () => {
   );
 
   const saveFlow = useCallback(async () => {
-    console.log('Current nodes:', nodes);
-    console.log('Current edges:', edges);
     if (!authenticated) {
-      alert("Please log in to save your flow.");
+      toast.error("Please log in to save your flow");
       navigate('/login');
       return;
     }
@@ -178,21 +239,30 @@ const FlowBuilderContent = () => {
         fallback_count: fallbackCount
       }
     };
-    console.log('Flow to be saved:', flow);
     
     try {
-      const response = await axiosInstance.post('/node-templates/', flow);
+      let response;
+      if (isExistingFlow) {
+        // Update existing flow
+        response = await axiosInstance.put(`/node-templates/${selectedFlow}/`, flow);
+        toast.success("Flow updated successfully");
+      } else {
+        // Create new flow
+        response = await axiosInstance.post('/node-templates/', flow);
+        toast.success("New flow created successfully");
+        setIsExistingFlow(true);
+        setSelectedFlow(response.data.id);
+      }
       console.log('Flow saved successfully:', response.data);
       setShowSavePopup(false);
-      setIsExistingFlow(true);
-      setSelectedFlow(flowName);
       fetchExistingFlows();
-      // navigate('/ll/chatbot');
     } catch (error) {
       console.error('Error saving flow:', error);
+      toast.error("Failed to save flow");
     }
-  }, [authenticated, navigate, nodes, edges, flowName, flowDescription, fetchExistingFlows]);
+  }, [authenticated, navigate, nodes, edges, flowName, flowDescription, isExistingFlow, selectedFlow, fallbackMessage, fallbackCount, fetchExistingFlows]);
 
+  
   const handleSaveConfirm = (name, description) => {
     setFlowName(name);
     setFlowDescription(description);
@@ -246,8 +316,10 @@ const FlowBuilderContent = () => {
         setFlowName(flow.name);
         setFlowDescription(flow.description);
         setIsExistingFlow(true);
+        toast.success("Flow loaded successfully");
       } catch (error) {
         console.error('Error fetching flow:', error);
+        toast.error("Failed to load flow");
         resetFlow();
       } finally {
         setIsLoading(false);
@@ -259,7 +331,8 @@ const FlowBuilderContent = () => {
     if (authenticated) {
       setShowSavePopup(true);
     } else {
-      alert("Please log in to save your flow.");
+      // alert("Please log in to save your flow.");
+      toast.error("Please log in to save your flow");
       navigate('/login');
     }
   };
@@ -267,6 +340,7 @@ const FlowBuilderContent = () => {
 
   return (
     <div className="flow-builder">
+      <ToastContainer position="top-right" autoClose={3000} />
       <Sidebar />
       <ReactFlowProvider>
         <div className="reactflow-wrapper" ref={reactFlowWrapper}>
@@ -336,7 +410,7 @@ const FlowBuilderContent = () => {
       {showSavePopup && authenticated && (
         <SaveFlowPopup
           onSave={handleSaveConfirm}
-          onCancel={() => setShowSavePopup(false)}
+          onCancel={() => {setShowSavePopup(false);toast.info("Save cancelled");}}
           fallbackMessage={fallbackMessage}
           fallbackCount={fallbackCount}
         />

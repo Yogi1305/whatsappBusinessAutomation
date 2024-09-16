@@ -26,7 +26,7 @@ import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net/');
+const socket = io('https://8twdg37p-8080.inc1.devtunnels.ms/');
 
 
 const getTenantIdFromUrl = () => {
@@ -71,12 +71,14 @@ const Chatbot = () => {
   const [accessToken, setAccessToken] = useState('');
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const [headerMediaId, setHeaderMediaId] = useState('');
-  
+  // const tenantId = getTenantIdFromUrl();
   const [showNewChatInput, setShowNewChatInput] = useState(false);
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const { authenticated } = useAuth();
   const [authPopupp, setAuthPopupp] = useState(false);
   const navigate = useNavigate();
+  const [prioritizedContacts, setPrioritizedContacts] = useState([]);
+
 
   const handleCloseAuthPopupp = () => {
     setAuthPopupp(false);
@@ -95,6 +97,22 @@ const Chatbot = () => {
   }, [conversation]);
 
 
+  useEffect(() => {
+    const fetchBusinessPhoneId = async () => {
+      try {
+        const response = await axios.get('https://8twdg37p-8000.inc1.devtunnels.ms/get-bpid/', {
+          headers: {
+            'X-Tenant-Id': tenantId
+          }
+        });
+        setBusinessPhoneNumberId(response.data.business_phone_id);
+      } catch (error) {
+        console.error('Error fetching business phone ID:', error);
+      }
+    };
+
+    fetchBusinessPhoneId();
+  }, [tenantId]);
   
   const renderMessageContent = (message) => {
     if (typeof message.text === 'object' && message.text !== null) {
@@ -255,7 +273,7 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchTenantData = async () => {
       try {
-        const business_phone_number_id = 241683569037594;
+        // const business_phone_number_id = 241683569037594;
         const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${business_phone_number_id}`);
         setAccessToken(response.data.access_token);
         setBusinessPhoneNumberId(response.data.business_phone_number_id);
@@ -362,9 +380,7 @@ const Chatbot = () => {
   };
 
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  
   const createNewContact = (contactPhone) => ({
     id: Date.now(), // Generate a unique ID or use another method
     phoneNumber: contactPhone,
@@ -387,44 +403,20 @@ const Chatbot = () => {
     socket.on('new-message', (message) => {
       if (message) {
         console.log('Got New Message', message.message);
-        const contactExists = contacts.some(contact => parseInt(contact.phone) === parseInt(message.contactPhone));
-if (!contactExists) {
-        console.log("New contact, adding to the database...");
-
-        try {
-            const response = axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/contacts/', {
-                phone: message.contactPhone,
-                tenant: tenantId,
-                // Add other required fields for creating a new contact
-            }, {
-                headers: { token: localStorage.getItem('token') },
-            });
-
-            const newContact = response.data;
-
-            // Update the contacts list with the new contact
-            setContacts(prevContacts => {
-                const updatedContacts = [...prevContacts, newContact];
-                console.log("New contacts array:", updatedContacts);
-                return updatedContacts;
-            });
-
-            // Set the newly created contact as the selected contact
-            setSelectedContact(newContact);
-            setShowNewChatInput(false);
-            setNewPhoneNumber('');
-
-        } catch (error) {
-            console.error("Error adding new contact:", error);
-        }
-    }
-       
-  {
+        updateContactPriority(message.contactPhone, message.message);
         if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone)) {
           console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
           setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
           //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
-        }
+         } else {
+          // Update unread count for non-selected contacts
+          setContacts(prevContacts => 
+            prevContacts.map(contact => 
+              contact.phone === message.contactPhone
+                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
+                : contact
+            )
+          );
   
       }}
     });
@@ -530,7 +522,7 @@ if (!contactExists) {
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
-              business_phone_number_id: "241683569037594",
+              business_phone_number_id: businessPhoneNumberId,
               messageType: "text",
             }
           );
@@ -547,7 +539,7 @@ if (!contactExists) {
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
-            business_phone_number_id: "241683569037594",
+            business_phone_number_id: businessPhoneNumberId,
             messageType: "text",
           }
         );
@@ -569,19 +561,52 @@ if (!contactExists) {
     }
   };
 
-  
-  
+  const getFilteredAndSortedContacts = () => {
+    return contacts
+      .filter(contact => {
+        const searchLower = searchText.toLowerCase();
+        return (
+          contact.name?.toLowerCase().includes(searchLower) ||
+          contact.phone?.toLowerCase().includes(searchLower) ||
+          contact.email?.toLowerCase().includes(searchLower)
+        );
+      })
+      .sort((a, b) => {
+        // First, sort by unread count
+        if (b.unreadCount !== a.unreadCount) {
+          return b.unreadCount - a.unreadCount;
+        }
+        // Then, sort by last message timestamp
+        return (b.lastMessageTimestamp || 0) - (a.lastMessageTimestamp || 0);
+      });
+  };
 
-  const filteredContacts=contacts;
- 
-  // const filteredContacts = contacts.filter(contact => {
-  //   const searchLower = searchText.toLowerCase();
-  //   return (
-  //     contact.phone?.toLowerCase().includes(searchLower) ||
-  //     contact.email?.toLowerCase().includes(searchLower)
-  //   );
-  // });
-  
+  const updateContactPriority = (contactPhone, message) => {
+    setContacts(prevContacts => {
+      const updatedContacts = prevContacts.map(contact => {
+        if (contact.phone === contactPhone) {
+          return {
+            ...contact,
+            unreadCount: (contact.unreadCount || 0) + 1,
+            lastMessageTimestamp: new Date().getTime()
+          };
+        }
+        return contact;
+      });
+      // Sort the contacts after updating
+      return updatedContacts.sort((a, b) => {
+        if (b.unreadCount !== a.unreadCount) {
+          return b.unreadCount - a.unreadCount;
+        }
+        return (b.lastMessageTimestamp || 0) - (a.lastMessageTimestamp || 0);
+      });
+    });
+  };
+
+  useEffect(() => {
+    setPrioritizedContacts(getFilteredAndSortedContacts());
+  }, [contacts, searchText]);
+
   
   // Function to fetch conversation data for a given contact
   const fetchConversation = async (contactId) => {
@@ -639,7 +664,7 @@ if (!contactExists) {
     // Safeguard to check if each contact has an id
     setContacts(prevContacts => 
       prevContacts.map(c => 
-        c?.id === contact.id ? { ...c, hasNewMessage: false } : c
+        c?.id === contact.id ? { ...c, unreadCount: 0 } : c
       )
     );
 
@@ -742,7 +767,7 @@ if (!contactExists) {
           // accountID: accountID,
           // access_token:'EAAVZBobCt7AcBO8trGDsP8t4bTe2mRA7sNdZCQ346G9ZANwsi4CVdKM5MwYwaPlirOHAcpDQ63LoHxPfx81tN9h2SUIHc1LUeEByCzS8eQGH2J7wwe9tqAxZAdwr4SxkXGku2l7imqWY16qemnlOBrjYH3dMjN4gamsTikIROudOL3ScvBzwkuShhth0rR9P',
           // firstInsert:'8',
-          business_phone_number_id:'241683569037594'
+          business_phone_number_id: businessPhoneNumberId,
         };
         console.log('Sending flow data:', dataToSend);
         const response = await axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/insert-data/', dataToSend, {
@@ -831,20 +856,21 @@ const handleNewChat = async () => {
         <div className="cb-contact-list">
           <h2 className='cb-contact-title'>Contacts</h2>
           
-          {filteredContacts.map(contact => (
-  contact?.id && ( // Check if contact and contact.id exist
-    <div
-      key={contact.id}
-      className={`cb-contact-item ${selectedContact?.id === contact.id ? 'cb-selected' : ''}`}
-      onClick={() => handleContactSelection(contact)}
-    >
-      <div className="cb-contact-info">
-        <span className="cb-contact-name">{contact.name || 'Unknown Name'}</span> {/* Fallback for missing name */}
-        <span className="cb-contact-phone">{contact.phone || 'No Phone'}</span>  {/* Fallback for missing phone */}
-      </div>
-    </div>
-  )
-))}
+          {prioritizedContacts.map(contact => (
+        <div
+          key={contact.id || contact.phone}
+          className={`cb-contact-item ${selectedContact?.phone === contact.phone ? 'cb-selected' : ''}`}
+          onClick={() => handleContactSelection(contact)}
+        >
+          <div className="cb-contact-info">
+            <span className="cb-contact-name">{contact.name || 'Unknown Name'}</span>
+            <span className="cb-contact-phone">{contact.phone || 'No Phone'}</span>
+          </div>
+          {contact.unreadCount > 0 && (
+            <span className="cb-unread-count">{contact.unreadCount}</span>
+          )}
+                </div>
+              ))}
         </div>
       </div>
       <div className="cb-main">
