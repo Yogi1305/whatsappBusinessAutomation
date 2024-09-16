@@ -97,8 +97,19 @@ const FlowBuilderContent = () => {
   );
 
   const onConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
-    [setEdges]
+    (params) => {
+      // Check if the source node already has an outgoing connection
+      const sourceHasConnection = edges.some(
+        (edge) => edge.source === params.source && edge.sourceHandle === params.sourceHandle
+      );
+  
+      if (!sourceHasConnection) {
+        setEdges((eds) => addEdge(params, eds));
+      } else {
+        toast.warning("This output is already connected. Please remove the existing connection first.");
+      }
+    },
+    [edges, setEdges]
   );
 
 
@@ -214,12 +225,109 @@ const FlowBuilderContent = () => {
     [reactFlowInstance, setNodes]
   );
 
+
+
+  const validateNodes = useCallback(() => {
+    let isValid = true;
+    const updatedNodes = nodes.map(node => {
+      let hasError = false;
+      if (node.type === 'askQuestion') {
+        if (!node.data.question || !node.data.question.trim()) {
+          hasError = true;
+          isValid = false;
+        }
+        if (Array.isArray(node.data.options)) {
+          node.data.options.forEach(option => {
+            if (!option.text || !option.text.trim()) {
+              hasError = true;
+              isValid = false;
+            }
+          });
+        }
+      } else if (node.type === 'sendMessage') {
+        if (node.data.fields && typeof node.data.fields === 'object') {
+          if (!node.data.fields.content || !node.data.fields.content.text.trim()) {
+            hasError = true;
+            isValid = false;
+          }
+        } else {
+          hasError = true;
+          isValid = false;
+        }
+      } else if (node.type === 'setCondition') {
+        if (!node.data.condition || !node.data.condition.trim()) {
+          hasError = true;
+          isValid = false;
+        }
+      }
+      return { ...node, data: { ...node.data, hasError } };
+    });
+    setNodes(updatedNodes);
+    return isValid;
+  }, [nodes, setNodes]);
+
+
+
+  // const saveFlow = useCallback(async () => {
+  //   if (!authenticated) {
+  //     toast.error("Please log in to save your flow");
+  //     navigate('/login');
+  //     return;
+  //   }
+  //   const startEdge = edges.find(edge => edge.source === 'start');
+  //   const flow = {
+  //     name: flowName,
+  //     description: flowDescription,
+  //     category: "default",
+  //     node_data: {
+  //       nodes: nodes.filter(node => node.id !== 'start').map(({ id, type, position, data }) => {
+  //         const { updateNodeData, ...cleanData } = data;
+  //         if (type === 'askQuestion' && cleanData.optionType === 'Variables') {
+  //           return { id, type, position, data: { ...cleanData, dataTypes: cleanData.dataTypes || [] } };
+  //         }
+  //         return { id, type, position, data: cleanData };
+  //       }),
+  //       edges: edges.filter(edge => edge.source !== 'start'),
+  //       start: startEdge ? startEdge.target : null,
+  //       fallback_message: fallbackMessage,
+  //       fallback_count: fallbackCount
+  //     }
+  //   };
+    
+  //   try {
+  //     let response;
+  //     if (isExistingFlow) {
+  //       // Update existing flow
+  //       response = await axiosInstance.put(`/node-templates/${selectedFlow}/`, flow);
+  //       toast.success("Flow updated successfully");
+  //     } else {
+  //       // Create new flow
+  //       response = await axiosInstance.post('/node-templates/', flow);
+  //       toast.success("New flow created successfully");
+  //       setIsExistingFlow(true);
+  //       setSelectedFlow(response.data.id);
+  //     }
+  //     console.log('Flow saved successfully:', response.data);
+  //     setShowSavePopup(false);
+  //     fetchExistingFlows();
+  //   } catch (error) {
+  //     console.error('Error saving flow:', error);
+  //     toast.error("Failed to save flow");
+  //   }
+  // }, [authenticated, navigate, nodes, edges, flowName, flowDescription, isExistingFlow, selectedFlow, fallbackMessage, fallbackCount, fetchExistingFlows]);
+
   const saveFlow = useCallback(async () => {
     if (!authenticated) {
       toast.error("Please log in to save your flow");
       navigate('/login');
       return;
     }
+  
+    if (!validateNodes()) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+  
     const startEdge = edges.find(edge => edge.source === 'start');
     const flow = {
       name: flowName,
@@ -227,9 +335,12 @@ const FlowBuilderContent = () => {
       category: "default",
       node_data: {
         nodes: nodes.filter(node => node.id !== 'start').map(({ id, type, position, data }) => {
-          const { updateNodeData, ...cleanData } = data;
+          const { updateNodeData, hasError, ...cleanData } = data;
           if (type === 'askQuestion' && cleanData.optionType === 'Variables') {
             return { id, type, position, data: { ...cleanData, dataTypes: cleanData.dataTypes || [] } };
+          }
+          if (type === 'sendMessage') {
+            return { id, type, position, data: { fields: cleanData.fields } };
           }
           return { id, type, position, data: cleanData };
         }),
@@ -243,11 +354,9 @@ const FlowBuilderContent = () => {
     try {
       let response;
       if (isExistingFlow) {
-        // Update existing flow
         response = await axiosInstance.put(`/node-templates/${selectedFlow}/`, flow);
         toast.success("Flow updated successfully");
       } else {
-        // Create new flow
         response = await axiosInstance.post('/node-templates/', flow);
         toast.success("New flow created successfully");
         setIsExistingFlow(true);
@@ -260,9 +369,11 @@ const FlowBuilderContent = () => {
       console.error('Error saving flow:', error);
       toast.error("Failed to save flow");
     }
-  }, [authenticated, navigate, nodes, edges, flowName, flowDescription, isExistingFlow, selectedFlow, fallbackMessage, fallbackCount, fetchExistingFlows]);
-
+  }, [authenticated, navigate, nodes, edges, flowName, flowDescription, isExistingFlow, selectedFlow, fallbackMessage, fallbackCount, fetchExistingFlows, validateNodes]);
   
+
+
+
   const handleSaveConfirm = (name, description) => {
     setFlowName(name);
     setFlowDescription(description);
@@ -329,9 +440,14 @@ const FlowBuilderContent = () => {
 
   const handleSaveClick = () => {
     if (authenticated) {
-      setShowSavePopup(true);
+      if (isExistingFlow) {
+        // If it's an existing flow, save directly without showing the popup
+        saveFlow();
+      } else {
+        // If it's a new flow, show the save popup
+        setShowSavePopup(true);
+      }
     } else {
-      // alert("Please log in to save your flow.");
       toast.error("Please log in to save your flow");
       navigate('/login');
     }
@@ -358,6 +474,11 @@ const FlowBuilderContent = () => {
               onDrop={onDrop}
               onDragOver={(event) => event.preventDefault()}
               minZoom={0.001}
+              connectionMode="loose"
+              defaultEdgeOptions={{
+                type: 'smoothstep',
+              }}
+              connectOnClick={false}
             >
               <Controls />
               <MiniMap />

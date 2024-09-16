@@ -185,14 +185,18 @@ export const AskQuestionNode = ({ data, isConnectable }) => {
 
   const handleOptionTypeChange = (e) => {
     const newOptionType = e.target.value;
-    setOptionType(newOptionType);
-    if (newOptionType === 'Text') {
-      setOptions([]);
+    let newOptions = [];
+    if (newOptionType === 'Buttons') {
+      newOptions = options.slice(0, 3);
+    } else if (newOptionType === 'Lists') {
+      newOptions = options.slice(0, 10);
     }
-    updateNodeData(id, { question, optionType: newOptionType, options, variable, dataType });
+    setOptionType(newOptionType);
+    setOptions(newOptions);
+    updateNodeData(id, { question, optionType: newOptionType, options: newOptions, variable, dataType });
   };
 
-  const handleOptionChange = (index, value) => {
+ const handleOptionChange = (index, value) => {
     const newOptions = options.map((opt, i) => i === index ? value : opt);
     setOptions(newOptions);
     updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
