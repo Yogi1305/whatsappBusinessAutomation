@@ -59,7 +59,7 @@ const BroadcastPage = () => {
   const fetchTemplates = useCallback(async () => {
     if (!accessToken) return;
     try {
-      const url = `https://graph.facebook.com/v20.0/441785372346471/message_templates?fields=name,status,components,language,category`;
+      const url = `https://graph.facebook.com/v20.0/272281175968279/message_templates?fields=name,status,components,language,category`;
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
@@ -183,12 +183,20 @@ const BroadcastPage = () => {
         template: {
           name: selectedTemplate?.name || "under_name",
         },
-        business_phone_number_id: 397261306804870,
+        business_phone_number_id: 241683569037594,
         phoneNumbers: phoneNumbers,
       };
   
       // Send the broadcast message
-      const response = await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload);
+      const response = await axios.post(
+        'https://8twdg37p-8080.inc1.devtunnels.ms/send-template/', 
+        payload, 
+        {
+          headers: {
+            'X-Tenant-ID': 'll',  // Add your tenant ID here
+          }
+        }
+      );
   
       if (response.status === 200) {
         console.log("Broadcast sent successfully");

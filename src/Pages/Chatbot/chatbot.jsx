@@ -387,6 +387,37 @@ const Chatbot = () => {
     socket.on('new-message', (message) => {
       if (message) {
         console.log('Got New Message', message.message);
+        const contactExists = contacts.some(contact => parseInt(contact.phone) === parseInt(message.contactPhone));
+if (!contactExists) {
+        console.log("New contact, adding to the database...");
+
+        try {
+            const response = axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/contacts/', {
+                phone: message.contactPhone,
+                tenant: tenantId,
+                // Add other required fields for creating a new contact
+            }, {
+                headers: { token: localStorage.getItem('token') },
+            });
+
+            const newContact = response.data;
+
+            // Update the contacts list with the new contact
+            setContacts(prevContacts => {
+                const updatedContacts = [...prevContacts, newContact];
+                console.log("New contacts array:", updatedContacts);
+                return updatedContacts;
+            });
+
+            // Set the newly created contact as the selected contact
+            setSelectedContact(newContact);
+            setShowNewChatInput(false);
+            setNewPhoneNumber('');
+
+        } catch (error) {
+            console.error("Error adding new contact:", error);
+        }
+    }
        
   {
         if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone)) {
