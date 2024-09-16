@@ -7,14 +7,12 @@ export const FlowProvider = ({ children }) => {
   const [edges, setEdges] = useState([]);
 
   const updateNodeData = useCallback((nodeId, newData) => {
-    setNodes(prevNodes => {
-      const updatedNodes = prevNodes.map(node => 
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
-      );
-      console.log('Updated nodes:', updatedNodes);
-      return updatedNodes;
-    });
-  }, []);
+      )
+    );
+  }, [setNodes]);
 
   const value = {
     nodes,

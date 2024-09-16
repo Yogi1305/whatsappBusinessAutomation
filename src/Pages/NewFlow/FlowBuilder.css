@@ -267,3 +267,8 @@
 .dndnode, .ask-question-node, .send-message-node, .set-condition-node {
   animation: fadeIn 0.3s ease-in-out;
 }
+
+
+.error {
+  border: 2px solid red;
+}
