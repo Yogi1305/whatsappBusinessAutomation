@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import WhatsAppQRCode from './WhatsappQrCode';  // Make sure to adjust the import path as needed
+import WhatsAppQRCode from './WhatsappQrCode';  // Adjust the import path if needed
 
 const AuthPopup = ({ onClose }) => {
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
@@ -14,7 +15,8 @@ const AuthPopup = ({ onClose }) => {
         </div>
         <p className="mb-4">To experience our incredible chatbot, please scan the QR code below:</p>
         <div className="mb-4 flex items-center justify-center">
-          <WhatsAppQRCode />
+          {/* Pass the sessionId to WhatsAppQRCode as a prop */}
+          <WhatsAppQRCode/>
         </div>
         <p className="mb-4">Once you've scanned the QR code, click the button below to start chatting!</p>
         <button

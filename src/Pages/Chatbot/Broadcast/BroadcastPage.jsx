@@ -84,20 +84,20 @@ const BroadcastPage = () => {
   };
   
     // Fetch the required data from the whatsapp_tenant endpoint
-    useEffect(() => {
-      const fetchTenantData = async () => {
-        try {
-          const business_phone_number_id = 241683569037594;
-          const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${business_phone_number_id}`);
-          setAccessToken(response.data.access_token);
-          setBusinessPhoneNumberId(response.data.business_phone_number_id);
-        } catch (error) {
-          console.error('Error fetching tenant data:', error);
-        }
-      };
+    // useEffect(() => {
+    //   const fetchTenantData = async () => {
+    //     try {
+    //       const business_phone_number_id = 241683569037594;
+    //       const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${business_phone_number_id}`);
+    //       setAccessToken(response.data.access_token);
+    //       setBusinessPhoneNumberId(response.data.business_phone_number_id);
+    //     } catch (error) {
+    //       console.error('Error fetching tenant data:', error);
+    //     }
+    //   };
       
-      fetchTenantData();
-    }, []);
+    //   fetchTenantData();
+    // }, []);
 
     useEffect(() => {
       if (accessToken) {
@@ -105,6 +105,43 @@ const BroadcastPage = () => {
         fetchBroadcastHistory();
       }
     }, [accessToken, fetchTemplates]);
+
+
+
+    useEffect(() => {
+      const fetchTenantData = async () => {
+        try {
+          const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${businessPhoneNumberId}`, {
+            headers: {
+              'X-Tenant-ID': tenantId
+            }
+          });
+          setAccessToken(response.data.access_token);
+          setBusinessPhoneNumberId(response.data.business_phone_number_id);
+        } catch (error) {
+          console.error('Error fetching tenant data:', error);
+        }
+      };
+  
+      const fetchBusinessPhoneId = async () => {
+        try {
+          const response = await axiosInstance.get('https://8twdg37p-8000.inc1.devtunnels.ms/get-bpid/', {
+            headers: {
+              'X-Tenant-ID': tenantId
+            }
+          });
+          setBusinessPhoneNumberId(response.data.business_phone_id);
+        } catch (error) {
+          console.error('Error fetching business phone ID:', error);
+        }
+      };
+      
+      fetchBusinessPhoneId().then(() => {
+        if (businessPhoneNumberId) {
+          fetchTenantData();
+        }
+      });
+    }, [tenantId, businessPhoneNumberId]);
 
 
     const handleEditTemplate = async (template) => {
@@ -186,7 +223,7 @@ const BroadcastPage = () => {
           id: selectedTemplate.id,
           name: selectedTemplate?.name || "under_name",
         },
-        business_phone_number_id: 397261306804870,
+        business_phone_number_id: businessPhoneNumberId,
         phoneNumbers: phoneNumbers,
       };
   

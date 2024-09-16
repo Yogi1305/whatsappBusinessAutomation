@@ -81,7 +81,13 @@ const FlowBuilderContent = () => {
   }, [resetFlow]);
 
   const onNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    (changes) => {
+      // Filter out any changes that would delete the start node
+      const filteredChanges = changes.filter(change => 
+        !(change.type === 'remove' && change.id === 'start')
+      );
+      setNodes((nds) => applyNodeChanges(filteredChanges, nds));
+    },
     [setNodes]
   );
 
@@ -94,6 +100,58 @@ const FlowBuilderContent = () => {
     (connection) => setEdges((eds) => addEdge(connection, eds)),
     [setEdges]
   );
+
+
+
+  const fetchDefaultFlow = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.get('/node-templates/203/');
+      const flow = response.data;
+      const lastNodeId = Math.max(
+        ...flow.node_data.nodes
+          .map(node => parseInt(node.id, 10))
+          .filter(id => !isNaN(id))
+      );
+      id = parseInt(lastNodeId) + 1;
+      const mappedNodes = [
+        startNode,
+        ...flow.node_data.nodes.map(node => ({
+          ...node,
+          data: {
+            ...node.data,
+            updateNodeData: (newData) => updateNodeData(node.id, newData),
+          },
+        }))
+      ];
+
+      const mappedEdges = [
+        ...(flow.node_data.start ? [{ id: 'start-edge', source: 'start', target: flow.node_data.start }] : []),
+        ...flow.node_data.edges
+      ];
+
+      setNodes(mappedNodes);
+      setEdges(mappedEdges);
+      setFlowName(flow.name);
+      setFlowDescription(flow.description);
+      setIsExistingFlow(true);
+      toast.info("Default flow loaded");
+    } catch (error) {
+      console.error('Error fetching default flow:', error);
+      toast.error("Failed to load default flow");
+      resetFlow();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setNodes, setEdges, updateNodeData, resetFlow]);
+
+  useEffect(() => {
+    if (!authenticated) {
+      fetchDefaultFlow();
+    } else {
+      resetFlow();
+    }
+  }, [authenticated, fetchDefaultFlow, resetFlow]);
 
 
 
@@ -157,8 +215,6 @@ const FlowBuilderContent = () => {
   );
 
   const saveFlow = useCallback(async () => {
-    console.log('Current nodes:', nodes);
-    console.log('Current edges:', edges);
     if (!authenticated) {
       toast.error("Please log in to save your flow");
       navigate('/login');
@@ -183,22 +239,30 @@ const FlowBuilderContent = () => {
         fallback_count: fallbackCount
       }
     };
-    console.log('Flow to be saved:', flow);
     
     try {
-      const response = await axiosInstance.post('/node-templates/', flow);
+      let response;
+      if (isExistingFlow) {
+        // Update existing flow
+        response = await axiosInstance.put(`/node-templates/${selectedFlow}/`, flow);
+        toast.success("Flow updated successfully");
+      } else {
+        // Create new flow
+        response = await axiosInstance.post('/node-templates/', flow);
+        toast.success("New flow created successfully");
+        setIsExistingFlow(true);
+        setSelectedFlow(response.data.id);
+      }
       console.log('Flow saved successfully:', response.data);
-      toast.success("Flow saved successfully");
       setShowSavePopup(false);
-      setIsExistingFlow(true);
-      setSelectedFlow(flowName);
       fetchExistingFlows();
-      // navigate('/ll/chatbot');
     } catch (error) {
       console.error('Error saving flow:', error);
+      toast.error("Failed to save flow");
     }
-  }, [authenticated, navigate, nodes, edges, flowName, flowDescription, fetchExistingFlows]);
+  }, [authenticated, navigate, nodes, edges, flowName, flowDescription, isExistingFlow, selectedFlow, fallbackMessage, fallbackCount, fetchExistingFlows]);
 
+  
   const handleSaveConfirm = (name, description) => {
     setFlowName(name);
     setFlowDescription(description);

@@ -4,14 +4,36 @@ import axios from 'axios';
 const WhatsAppQRCode = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [error, setError] = useState('');
+  const [sessionId, setSessionId] = useState('');
 
+  // Function to generate a unique session ID that starts with "*/"
+  const generateSessionId = () => {
+    const uniqueId = `*/${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+    return uniqueId;
+  };
+
+  // Use useEffect to generate and store the session ID in localStorage when the component mounts
   useEffect(() => {
+    const existingSessionId = localStorage.getItem('sessionId');
+    
+    if (!existingSessionId) {
+      const newSessionId = generateSessionId();
+      setSessionId(newSessionId);
+      localStorage.setItem('sessionId', newSessionId);
+    } else {
+      setSessionId(existingSessionId);  // If session already exists, use it
+    }
+  }, []);
+
+  const storedSessionId = localStorage.getItem('sessionId');
+  useEffect(() => {
+    if (!sessionId) return; 
     const generateQRCode = async () => {
       try {
         const response = await axios.post(
           'https://graph.facebook.com/v20.0/241683569037594/message_qrdls',
           {
-            prefilled_message: "Hey Nuren!!",
+            prefilled_message: `${storedSessionId} Hi! How can your chatbot automation help grow my business?`,
             generate_qr_image: "SVG"
           },
           {
@@ -34,7 +56,7 @@ const WhatsAppQRCode = () => {
     };
 
     generateQRCode();
-  }, []);
+  }, [sessionId]);
 
   if (error) {
     return <div className="text-red-500">{error}</div>;

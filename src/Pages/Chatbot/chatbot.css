@@ -885,3 +885,78 @@
   color: #ff0000;
   font-style: italic;
 }
+
+/* Add these styles to your existing chatbot.css file */
+
+.cb-contact-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cb-contact-item:hover {
+  background-color: #f5f5f5;
+}
+
+.cb-contact-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cb-contact-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.cb-contact-phone {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.cb-unread-count {
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.8em;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .cb-container {
+    flex-direction: column;
+  }
+
+  .cb-sidebar {
+    width: 100%;
+    max-width: none;
+  }
+
+  .cb-main {
+    width: 100%;
+  }
+
+  .cb-details-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .cb-message-container {
+    padding: 10px;
+  }
+
+  .cb-input-container {
+    padding: 5px;
+  }
+
+  .cb-input-field {
+    font-size: 14px;
+  }
+}
