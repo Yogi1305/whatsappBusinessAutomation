@@ -100,7 +100,7 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('https://8twdg37p-8000.inc1.devtunnels.ms/get-bpid/', {
+        const response = await axios.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
           headers: {
             'X-Tenant-Id': tenantId
           }
