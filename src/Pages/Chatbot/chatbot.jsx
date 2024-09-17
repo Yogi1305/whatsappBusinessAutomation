@@ -31,11 +31,15 @@ const socket = io('https://whatsappbotserver.azurewebsites.net/');
 
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
+
   if (pathArray.length >= 2) {
-    return pathArray[1]; // Assumes tenant_id is the first part of the path
+    var tenant_id = pathArray[1]
+    if(tenant_id == "demo") tenant_id = 'll'
+    return tenant_id; // Assumes tenant_id is the first part of the path
   }
   return null; 
 };
+
 
 const Chatbot = () => {
   const tenantId=getTenantIdFromUrl();
@@ -105,7 +109,8 @@ const Chatbot = () => {
             'X-Tenant-Id': tenantId
           }
         });
-        setBusinessPhoneNumberId(response.data.business_phone_id);
+        console.log(response.data.business_phone_number_id,"THIS IS BPID");
+        setBusinessPhoneNumberId(response.data.business_phone_number_id);
       } catch (error) {
         console.error('Error fetching business phone ID:', error);
       }
@@ -270,20 +275,20 @@ const Chatbot = () => {
 
 
 
-  useEffect(() => {
-    const fetchTenantData = async () => {
-      try {
-        // const business_phone_number_id = 241683569037594;
-        const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${business_phone_number_id}`);
-        setAccessToken(response.data.access_token);
-        setBusinessPhoneNumberId(response.data.business_phone_number_id);
-      } catch (error) {
-        console.error('Error fetching tenant data:', error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchTenantData = async () => {
+  //     try {
+  //       // const business_phone_number_id = 241683569037594;
+  //       const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${business_phone_number_id}`);
+  //       setAccessToken(response.data.access_token);
+  //       setBusinessPhoneNumberId(response.data.business_phone_number_id);
+  //     } catch (error) {
+  //       console.error('Error fetching tenant data:', error);
+  //     }
+  //   };
     
-    fetchTenantData();
-  }, []);
+  //   fetchTenantData();
+  // }, []);
 
   const handleFileSelect = async (event) => {
     const file = event.target.files[0];
@@ -298,7 +303,7 @@ const Chatbot = () => {
   
         // Upload to Facebook Graph API
         const response = await axiosInstance.post(
-          'https://graph.facebook.com/v16.0/241683569037594/media', //HARDCODE
+          `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`, //HARDCODE
           formData,
           {
             headers: {
@@ -357,7 +362,7 @@ const Chatbot = () => {
             imageId: imageToSend, // Use the media ID here
             caption: imageCaption
           },
-          business_phone_number_id: "241683569037594"
+          business_phone_number_id: businessPhoneNumberId
         }
       );
   

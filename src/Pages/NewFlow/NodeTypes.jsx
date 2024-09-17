@@ -162,14 +162,15 @@ const NodeWrapper = ({ children, style, type }) => {
 
 
 
-export const AskQuestionNode = ({ data, isConnectable }) => {
+export const AskQuestionNode = ({id, data, isConnectable }) => {
   const [question, setQuestion] = useState(data.question || '');
   const [optionType, setOptionType] = useState(data.optionType || 'Buttons');
   const [options, setOptions] = useState(data.options || []);
   const [variable, setVariable] = useState(data.variable || '');
   const [dataType, setDataType] = useState(data.dataType || '');
   const [errors, setErrors] = useState({});
-  const { id } = data;
+  //const { id } = data;
+ // console.log("this is a GOAT",id);
   const { updateNodeData } = useFlow();
 
   const handleQuestionChange = (e) => {
@@ -357,9 +358,10 @@ export const AskQuestionNode = ({ data, isConnectable }) => {
 
 
 
-export const SendMessageNode = ({ data, isConnectable }) => {
+export const SendMessageNode = ({ id,data, isConnectable }) => {
   const [field, setField] = useState(data.fields || { type: 'Message', content: { text: '', caption: '', med_id: '' } });
-  const { id } = data;
+ // const { id } = data;
+  console.log("this is a GOATA",id);
   const { updateNodeData } = useFlow();
   const textAreaRef = useRef(null);
   const { userId } = useAuth();
@@ -383,6 +385,7 @@ export const SendMessageNode = ({ data, isConnectable }) => {
 
 
   const updateNodeDataSafely = (newFields) => {
+    console.log(id,newFields,"pippity bpi");
     updateNodeData(id, { fields: newFields });
   };
 
@@ -533,14 +536,16 @@ export const SendMessageNode = ({ data, isConnectable }) => {
 
 
 
-export const SetConditionNode = ({ data, isConnectable }) => {
+export const SetConditionNode = ({ id,data, isConnectable }) => {
   const [condition, setCondition] = useState(data.condition || '');
-  const { id } = data;
+ // const { id } = data;
+  console.log("this is a GOAT",id);
 const { updateNodeData } = useFlow();
 
 
 const handleConditionChange = (e) => {
   const newCondition = e.target.value;
+  console.log(newCondition,id,"lookity look");
   setCondition(newCondition);
   updateNodeData(id, { condition: convertMentionsForBackend(newCondition) });
 };

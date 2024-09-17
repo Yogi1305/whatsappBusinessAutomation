@@ -60,7 +60,7 @@ const BroadcastPage = () => {
   const fetchTemplates = useCallback(async () => {
     if (!accessToken) return;
     try {
-      const url = `https://graph.facebook.com/v20.0/272281175968279/message_templates?fields=name,status,components,language,category`;
+      const url = `https://graph.facebook.com/v20.0/${businessPhoneNumberId}/message_templates?fields=name,status,components,language,category`;
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
@@ -125,7 +125,7 @@ const BroadcastPage = () => {
   
       const fetchBusinessPhoneId = async () => {
         try {
-          const response = await axiosInstance.get('https://whatsappbotserver.azurewebsites.net/get-bpid/', {
+          const response = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -179,7 +179,7 @@ const BroadcastPage = () => {
   const handleDeleteTemplate = async (templateId) => {
     if (window.confirm('Are you sure you want to delete this template?')) {
       try {
-        const url = `https://graph.facebook.com/v20.0/441785372346471/message_templates?name=${templateId}`;
+        const url = `https://graph.facebook.com/v20.0/${businessPhoneNumberId}/message_templates?name=${templateId}`;
         await axios.delete(url, {
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -315,8 +315,8 @@ const BroadcastPage = () => {
 
     try {
       const url = isEditing
-        ? `https://graph.facebook.com/v20.0/441785372346471/message_templates`
-        : `https://graph.facebook.com/v20.0/441785372346471/message_templates`;
+        ? `https://graph.facebook.com/v20.0/${businessPhoneNumberId}/message_templates`
+        : `https://graph.facebook.com/v20.0/${businessPhoneNumberId}/message_templates`
       
       const method = isEditing ? 'post' : 'post';
       
@@ -704,7 +704,8 @@ const BroadcastPage = () => {
                   <select value={category} onChange={(e) => setCategory(e.target.value)} required>
                     <option value="">Select category...</option>
                     <option value="MARKETING">Marketing</option>
-                    <option value="TRANSACTIONAL">Transactional</option>
+                    <option value="UTILITY">Utility</option>
+                    <option value="AUTHENTICATION">Authentication</option>
                   </select>
                 </div>
                 <div className="bp-form-group">

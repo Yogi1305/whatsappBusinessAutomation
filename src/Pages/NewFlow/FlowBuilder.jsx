@@ -323,10 +323,10 @@ const FlowBuilderContent = () => {
       return;
     }
   
-    if (!validateNodes()) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
+    // if (!validateNodes()) {
+    //   toast.error("Please fill in all required fields");
+    //   return;
+    // }
   
     const startEdge = edges.find(edge => edge.source === 'start');
     const flow = {
@@ -335,7 +335,9 @@ const FlowBuilderContent = () => {
       category: "default",
       node_data: {
         nodes: nodes.filter(node => node.id !== 'start').map(({ id, type, position, data }) => {
-          const { updateNodeData, hasError, ...cleanData } = data;
+          const { updateNodeData, hasError, ...cleanData} = data;
+          console.log(updateNodeData,"here is 1");
+          console.log(data,"here is 2");
           if (type === 'askQuestion' && cleanData.optionType === 'Variables') {
             return { id, type, position, data: { ...cleanData, dataTypes: cleanData.dataTypes || [] } };
           }
@@ -439,6 +441,7 @@ const FlowBuilderContent = () => {
   }, [setNodes, setEdges, updateNodeData, resetFlow]);
 
   const handleSaveClick = () => {
+    console.log(JSON.stringify(reactFlowInstance.toObject()),"dekho yahan");
     if (authenticated) {
       if (isExistingFlow) {
         // If it's an existing flow, save directly without showing the popup
