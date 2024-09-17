@@ -125,7 +125,7 @@ const BroadcastPage = () => {
   
       const fetchBusinessPhoneId = async () => {
         try {
-          const response = await axiosInstance.get('https://8twdg37p-8000.inc1.devtunnels.ms/get-bpid/', {
+          const response = await axiosInstance.get('https://whatsappbotserver.azurewebsites.net/get-bpid/', {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -228,7 +228,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axiosInstance.post('https://8twdg37p-8080.inc1.devtunnels.ms/send-template/', payload,
+      const response = await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id

@@ -26,7 +26,7 @@ import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 
-const socket = io('https://8twdg37p-8080.inc1.devtunnels.ms/');
+const socket = io('https://whatsappbotserver.azurewebsites.net/');
 
 
 const getTenantIdFromUrl = () => {
