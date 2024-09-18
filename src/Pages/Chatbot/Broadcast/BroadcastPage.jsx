@@ -100,24 +100,32 @@ const BroadcastPage = () => {
  
 
     useEffect(() => {
-      const fetchBusinessPhoneId = async () => {
+      if (accessToken) {
+        fetchTemplates();
+        fetchBroadcastHistory();
+      }
+    }, [accessToken, fetchTemplates]);
+
+
+
+    useEffect(() => {
+      const fetchTenantData = async () => {
         try {
-          const response = await axiosInstance.get('https://8twdg37p-8000.inc1.devtunnels.ms/get-bpid/', {
+          const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${businessPhoneNumberId}`, {
             headers: {
               'X-Tenant-ID': tenantId
             }
           });
+          setAccessToken(response.data.access_token);
           setBusinessPhoneNumberId(response.data.business_phone_number_id);
-          setAccountId(response.data.account_id);
-          return response.data;
         } catch (error) {
-          console.error('Error fetching business phone ID:', error);
+          console.error('Error fetching tenant data:', error);
         }
       };
   
       const fetchTenantData = async (bpid) => {
         try {
-          const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${bpid}`, {
+          const response = await axiosInstance.get('https://8twdg37p-8000.inc1.devtunnels.ms/get-bpid/', {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -127,10 +135,10 @@ const BroadcastPage = () => {
           console.error('Error fetching tenant data:', error);
         }
       };
-  
-      fetchBusinessPhoneId().then((data) => {
-        if (data && data.business_phone_number_id) {
-          fetchTenantData(data.business_phone_number_id);
+      
+      fetchBusinessPhoneId().then(() => {
+        if (businessPhoneNumberId) {
+          fetchTenantData();
         }
       });
     }, [tenantId]);
@@ -180,7 +188,7 @@ const BroadcastPage = () => {
   const handleDeleteTemplate = async (templateId) => {
     if (window.confirm('Are you sure you want to delete this template?')) {
       try {
-        const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates?name=${templateId}`;
+        const url = `https://graph.facebook.com/v20.0/441785372346471/message_templates?name=${templateId}`;
         await axios.delete(url, {
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -229,7 +237,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axiosInstance.post('https://8twdg37p-8080.inc1.devtunnels.ms/send-template/', payload,
+      const response = await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id
@@ -328,7 +336,11 @@ const BroadcastPage = () => {
     };
 
     try {
-      const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates`;
+      const url = isEditing
+        ? `https://graph.facebook.com/v20.0/441785372346471/message_templates`
+        : `https://graph.facebook.com/v20.0/441785372346471/message_templates`;
+      
+      const method = isEditing ? 'post' : 'post';
       
       const response = await axios({
         method: 'post',
@@ -812,7 +824,8 @@ const BroadcastPage = () => {
                   <select value={category} onChange={(e) => setCategory(e.target.value)} required>
                     <option value="">Select category...</option>
                     <option value="MARKETING">Marketing</option>
-                    <option value="TRANSACTIONAL">Transactional</option>
+                    <option value="UTILITY">Utility</option>
+                    <option value="AUTHENTICATION">Authentication</option>
                   </select>
                 </div>
                 <div className="bp-form-group">
