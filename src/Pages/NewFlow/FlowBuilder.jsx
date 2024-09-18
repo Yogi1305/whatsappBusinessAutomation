@@ -227,114 +227,168 @@ const FlowBuilderContent = () => {
   );
 
 
+ 
+
+
+  // const validateNodes = useCallback(() => {
+  //   let isValid = true;
+  //   let newErrorNodes = [];
+
+  //   const updatedNodes = nodes.map(node => {
+  //     let hasError = false;
+      
+  //     if (node.type === 'askQuestion') {
+  //       if (!node.data.question || !node.data.question.trim()) {
+  //         hasError = true;
+  //         isValid = false;
+  //       }
+  //       if (Array.isArray(node.data.options)) {
+  //         node.data.options.forEach((option, index) => {
+  //           if (!option.text || !option.text.trim()) {
+  //             hasError = true;
+  //             isValid = false;
+  //           } else if (option.text.length > 24) {
+  //             hasError = true;
+  //             isValid = false;
+  //             toast.error(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
+  //           }
+  //         });
+  //       }
+  //     } else if (node.type === 'sendMessage') {
+  //       if (node.data.fields && typeof node.data.fields === 'object') {
+  //         if (!node.data.fields.content || !node.data.fields.content.text.trim()) {
+  //           hasError = true;
+  //           isValid = false;
+  //         }
+  //       } else {
+  //         hasError = true;
+  //         isValid = false;
+  //       }
+  //     } else if (node.type === 'setCondition') {
+  //       if (!node.data.condition || !node.data.condition.trim()) {
+  //         hasError = true;
+  //         isValid = false;
+  //       }
+  //     }
+      
+  //     if (hasError) {
+  //       newErrorNodes.push(node.id);
+  //     }
+
+  //     return {
+  //       ...node,
+  //       style: {
+  //         ...node.style,
+  //         border: hasError ? '2px solid red' : undefined,
+  //       },
+  //     };
+  //   });
+
+  //   setNodes(updatedNodes);
+  //   setErrorNodes(newErrorNodes);
+  //   return isValid;
+  // }, [nodes, setNodes]);
+  
+
   const validateNodes = useCallback(() => {
+    console.log('Starting node validation');
     let isValid = true;
-    let errorNodes = []; // New array to store nodes with errors
+    let newErrorNodes = [];
   
     const updatedNodes = nodes.map(node => {
+      console.log(`Validating node: ${node.id}, Type: ${node.type}`);
       let hasError = false;
       
-      // Validate "askQuestion" type node
       if (node.type === 'askQuestion') {
+        console.log('Ask Question node data:', node.data);
         if (!node.data.question || !node.data.question.trim()) {
+          console.log(`Error: Empty question in node ${node.id}`);
           hasError = true;
           isValid = false;
         }
         if (Array.isArray(node.data.options)) {
-          node.data.options.forEach(option => {
-            if (!option.text || !option.text.trim()) {
+          node.data.options.forEach((option, index) => {
+            console.log(`Validating option ${index}:`, option);
+            if (!option || !option.trim()) {
+              console.log(`Error: Empty option ${index} in node ${node.id}`);
               hasError = true;
               isValid = false;
+            } else if (option.length > 24) {
+              console.log(`Error: Option ${index} in node ${node.id} exceeds 24 characters`);
+              hasError = true;
+              isValid = false;
+              toast.error(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
             }
           });
+        } else {
+          console.log(`Warning: options is not an array in node ${node.id}`);
         }
-      }
-      
-      // Validate "sendMessage" type node
-      else if (node.type === 'sendMessage') {
+      } else if (node.type === 'sendMessage') {
+        console.log('Send Message node data:', node.data);
         if (node.data.fields && typeof node.data.fields === 'object') {
-          if (!node.data.fields.content || !node.data.fields.content.text.trim()) {
-            hasError = true;
-            isValid = false;
+          const { type, content } = node.data.fields;
+          
+          switch (type) {
+            case 'text':
+              if (!content.text || !content.text.trim()) {
+                console.log(`Error: Empty message content in node ${node.id}`);
+                hasError = true;
+                isValid = false;
+                toast.error(`Please enter a message for the Send Message node ${node.id}`);
+              }
+              break;
+            case 'Image':
+            case 'Video':
+            case 'Document':
+              if (!content.med_id) {
+                console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
+                hasError = true;
+                isValid = false;
+                toast.error(`Please upload a ${type.toLowerCase()} for the Send Message node ${node.id}`);
+              }
+              break;
+            default:
+              console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
+              hasError = true;
+              isValid = false;
+              toast.error(`Invalid message type in Send Message node ${node.id}`);
           }
         } else {
+          console.log(`Error: Invalid fields structure in Send Message node ${node.id}`);
           hasError = true;
           isValid = false;
         }
-      }
-  
-      // Validate "setCondition" type node
-      else if (node.type === 'setCondition') {
+      } else if (node.type === 'setCondition') {
+        console.log('Set Condition node data:', node.data);
         if (!node.data.condition || !node.data.condition.trim()) {
+          console.log(`Error: Empty condition in node ${node.id}`);
           hasError = true;
           isValid = false;
         }
       }
       
-      // If there is an error, push the node ID into errorNodes array
       if (hasError) {
-        errorNodes.push(node.id); // Track the node ID
+        console.log(`Adding node ${node.id} to error nodes`);
+        newErrorNodes.push(node.id);
       }
   
-      return node; // Return node without modifying its data
+      return {
+        ...node,
+        style: {
+          ...node.style,
+          border: hasError ? '2px solid red' : undefined,
+        },
+      };
     });
   
-    console.log(errorNodes, "Nodes with validation errors"); // Debug to see nodes with errors
+    console.log('Updated nodes:', updatedNodes);
+    console.log('Error nodes:', newErrorNodes);
+    console.log('Is valid:', isValid);
   
-    // Optionally, you can store errorNodes somewhere reliable, e.g., in state
-    setErrorNodes(errorNodes); // If you're managing state for error nodes
-  
+    setNodes(updatedNodes);
+    setErrorNodes(newErrorNodes);
     return isValid;
   }, [nodes, setNodes]);
-  
-
-  // const saveFlow = useCallback(async () => {
-  //   if (!authenticated) {
-  //     toast.error("Please log in to save your flow");
-  //     navigate('/login');
-  //     return;
-  //   }
-  //   const startEdge = edges.find(edge => edge.source === 'start');
-  //   const flow = {
-  //     name: flowName,
-  //     description: flowDescription,
-  //     category: "default",
-  //     node_data: {
-  //       nodes: nodes.filter(node => node.id !== 'start').map(({ id, type, position, data }) => {
-  //         const { updateNodeData, ...cleanData } = data;
-  //         if (type === 'askQuestion' && cleanData.optionType === 'Variables') {
-  //           return { id, type, position, data: { ...cleanData, dataTypes: cleanData.dataTypes || [] } };
-  //         }
-  //         return { id, type, position, data: cleanData };
-  //       }),
-  //       edges: edges.filter(edge => edge.source !== 'start'),
-  //       start: startEdge ? startEdge.target : null,
-  //       fallback_message: fallbackMessage,
-  //       fallback_count: fallbackCount
-  //     }
-  //   };
-    
-  //   try {
-  //     let response;
-  //     if (isExistingFlow) {
-  //       // Update existing flow
-  //       response = await axiosInstance.put(`/node-templates/${selectedFlow}/`, flow);
-  //       toast.success("Flow updated successfully");
-  //     } else {
-  //       // Create new flow
-  //       response = await axiosInstance.post('/node-templates/', flow);
-  //       toast.success("New flow created successfully");
-  //       setIsExistingFlow(true);
-  //       setSelectedFlow(response.data.id);
-  //     }
-  //     console.log('Flow saved successfully:', response.data);
-  //     setShowSavePopup(false);
-  //     fetchExistingFlows();
-  //   } catch (error) {
-  //     console.error('Error saving flow:', error);
-  //     toast.error("Failed to save flow");
-  //   }
-  // }, [authenticated, navigate, nodes, edges, flowName, flowDescription, isExistingFlow, selectedFlow, fallbackMessage, fallbackCount, fetchExistingFlows]);
 
   const saveFlow = useCallback(async () => {
     if (!authenticated) {
@@ -343,10 +397,10 @@ const FlowBuilderContent = () => {
       return;
     }
   
-    // if (!validateNodes()) {
-    //   toast.error("Please fill in all required fields");
-    //   return;
-    // }
+    if (!validateNodes()) {
+      toast.error("Please fill in all required fields and check character limits");
+      return;
+    }
   
     const startEdge = edges.find(edge => edge.source === 'start');
     const flow = {
@@ -448,6 +502,8 @@ const FlowBuilderContent = () => {
         setEdges(mappedEdges);
         setFlowName(flow.name);
         setFlowDescription(flow.description);
+        setFallbackMessage(flow.node_data.fallback_message || '');
+      setFallbackCount(flow.node_data.fallback_count || 1);
         setIsExistingFlow(true);
         toast.success("Flow loaded successfully");
       } catch (error) {
@@ -479,7 +535,7 @@ const FlowBuilderContent = () => {
 
   return (
     <div className="flow-builder">
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={2000} />
       <Sidebar />
       <ReactFlowProvider>
         <div className="reactflow-wrapper" ref={reactFlowWrapper}>

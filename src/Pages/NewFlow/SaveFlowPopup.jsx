@@ -3,7 +3,17 @@ import "./FlowBuilder.css"
 import axiosInstance from '../../api';
 import { useFlow } from './FlowContext';
 import GreenTickAnimation  from './GreenTickAnimation'
+import { useNavigate } from 'react-router-dom';
 // import { useNavigate } from 'react-router-dom';
+
+
+const getTenantIdFromUrl = () => {
+  const pathArray = window.location.pathname.split('/');
+  if (pathArray.length >= 2) {
+    return pathArray[1]; // Assumes tenant_id is the first part of the path
+  }
+  return null; 
+};
 
 const SaveFlowPopup = ({ onSave, onCancel, fallbackMessage, fallbackCount }) => {
   const [flowName, setFlowName] = useState('');
@@ -12,7 +22,8 @@ const SaveFlowPopup = ({ onSave, onCancel, fallbackMessage, fallbackCount }) => 
   const [successMessage, setSuccessMessage] = useState('');
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const { nodes, edges } = useFlow();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
+  const tenantId=getTenantIdFromUrl();
 
   const handleSave = async () => {
     if (!flowName.trim()) {
@@ -60,13 +71,13 @@ const SaveFlowPopup = ({ onSave, onCancel, fallbackMessage, fallbackCount }) => 
     console.log('Flow to be saved:', flow);
 
     try {
-      const response = await axiosInstance.post('/node-templates/', flow);
+      const response = await axiosInstance.post('https://hx587qc4-8000.inc1.devtunnels.ms/node-templates/', flow);
       console.log('Flow saved successfully:', response.data);
       setSuccessMessage('Flow saved successfully!');
       setShowSuccessPopup(true);
       setTimeout(() => {
         onSave(flowName, description);
-        // navigate('/ll/chatbot');
+        navigate(`/${tenantId}/chatbot`);
         onCancel();
       }, 2000); // Close the popup after 2 seconds
     } catch (error) {

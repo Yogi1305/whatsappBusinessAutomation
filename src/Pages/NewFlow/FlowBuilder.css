@@ -269,6 +269,15 @@
 }
 
 
-.error {
+
+
+.ask-question-node .error,
+.send-message-node .error,
+.set-condition-node .error {
   border: 2px solid red;
+  /* border-radius: 40px; */
+}
+
+.react-flow__node {
+  transition: border-color 0.3s ease;
 }

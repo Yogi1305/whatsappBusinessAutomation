@@ -130,6 +130,10 @@ const Chatbot = () => {
           // Replace `renderInteractiveMessage` with your logic to handle interactive messages
           return renderInteractiveMessage(message.text.interactive) || <div className="error">Interactive message rendering failed</div>;
   
+          case 'template':
+          return renderTemplateMessage(message.text.template) || <div className="error">Template message rendering failed</div>;
+  
+
         default:
           return <div className="error">Unknown message type: {message.text.type}</div>;
       }
@@ -141,8 +145,19 @@ const Chatbot = () => {
     return <div className="error">Invalid message format</div>;
   };
 
+  const renderTemplateMessage = (template) => {
+    if (!template || !template.name) {
+      return <div className="error">Invalid template message</div>;
+    }
+    return (
+      <div className="template-message">
+        <p>Template: {template.name}</p>
+      </div>
+    );
+  };
+
   const renderInteractiveMessage = (parsedMessage) => {
-    const { type, interactive, text, image } = parsedMessage;
+    const { type, interactive, text, image, template } = parsedMessage;
 
     if (type === 'interactive') {
       if (interactive.type === 'list') {
@@ -189,6 +204,8 @@ const Chatbot = () => {
           {image.caption && <p className="message-caption">{image.caption}</p>}
         </div>
       );
+    } else if (type === 'template') {
+      return renderTemplateMessage(template);
     }
 
     return <p className="error-message">Unsupported message type</p>;

@@ -5,6 +5,10 @@ const FlowContext = createContext();
 export const FlowProvider = ({ children }) => {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
+  const [flowName, setFlowName] = useState('');
+  const [flowDescription, setFlowDescription] = useState('');
+  const [isExistingFlow, setIsExistingFlow] = useState(false);
+  const [selectedFlowId, setSelectedFlowId] = useState(null);
 
   const updateNodeData = useCallback((nodeId, newData) => {
     setNodes((prevNodes) =>
@@ -12,14 +16,32 @@ export const FlowProvider = ({ children }) => {
         node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
       )
     );
-  }, [setNodes]);
+  }, []);
+
+  const resetFlow = useCallback(() => {
+    setNodes([]);
+    setEdges([]);
+    setFlowName('');
+    setFlowDescription('');
+    setIsExistingFlow(false);
+    setSelectedFlowId(null);
+  }, []);
 
   const value = {
     nodes,
     setNodes,
     edges,
     setEdges,
-    updateNodeData
+    updateNodeData,
+    flowName,
+    setFlowName,
+    flowDescription,
+    setFlowDescription,
+    isExistingFlow,
+    setIsExistingFlow,
+    selectedFlowId,
+    setSelectedFlowId,
+    resetFlow
   };
 
   return (
