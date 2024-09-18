@@ -161,7 +161,6 @@ const NodeWrapper = ({ children, style, type }) => {
 
 
 
-
 export const AskQuestionNode = ({id, data, isConnectable }) => {
   const [question, setQuestion] = useState(data.question || '');
   const [optionType, setOptionType] = useState(data.optionType || 'Buttons');
@@ -169,9 +168,36 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
   const [variable, setVariable] = useState(data.variable || '');
   const [dataType, setDataType] = useState(data.dataType || '');
   const [errors, setErrors] = useState({});
-  //const { id } = data;
- // console.log("this is a GOAT",id);
   const { updateNodeData } = useFlow();
+
+  useEffect(() => {
+    validateNode();
+  }, [question, options, variable, dataType]);
+
+  const validateNode = () => {
+    let newErrors = {};
+    if (!question.trim()) {
+      newErrors.question = 'Question is required';
+    }
+    if (optionType !== 'Text') {
+      options.forEach((option, index) => {
+        if (!option.trim()) {
+          newErrors[`option-${index}`] = 'Option cannot be empty';
+        }
+        if (optionType === 'Buttons' && option.length > 20) {
+          newErrors[`option-${index}`] = 'Button text cannot exceed 20 characters';
+        }
+        if (optionType === 'Lists' && option.length > 24) {
+          newErrors[`option-${index}`] = 'List item cannot exceed 24 characters';
+        }
+      });
+    }
+    if (variable && !dataType) {
+      newErrors.dataType = 'Data type is required when variable is set';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleQuestionChange = (e) => {
     const newQuestion = e.target.value;
@@ -197,7 +223,7 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
     updateNodeData(id, { question, optionType: newOptionType, options: newOptions, variable, dataType });
   };
 
- const handleOptionChange = (index, value) => {
+  const handleOptionChange = (index, value) => {
     const newOptions = options.map((opt, i) => i === index ? value : opt);
     setOptions(newOptions);
     updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
@@ -228,16 +254,19 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
     updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
   };
 
-  const getOptionStyle = (type) => {
+  const getOptionStyle = (type, index) => {
     const baseStyle = {
       ...inputStyles,
-      width: 'calc(100% - 60px)', // Adjusted to make room for the handle
+      width: 'calc(100% - 60px)',
     };
+
+    const errorStyle = errors[`option-${index}`] ? { borderColor: 'red' } : {};
 
     switch (type) {
       case 'Buttons':
         return {
           ...baseStyle,
+          ...errorStyle,
           background: '#e6f7ff',
           border: '1px solid #91d5ff',
           borderRadius: '20px',
@@ -249,6 +278,7 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
       case 'Lists':
         return {
           ...baseStyle,
+          ...errorStyle,
           background: '#f6ffed',
           borderLeft: '3px solid #b7eb8f',
           borderRadius: '0 6px 6px 0',
@@ -256,22 +286,20 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
           color: '#389e0d',
         };
       default:
-        return baseStyle;
+        return { ...baseStyle, ...errorStyle };
     }
   };
 
   const renderOptions = () => {
     if (optionType === 'Text') {
       return (
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="text"
-            style={{
-              ...handleStyles,
-            }}
-            isConnectable={isConnectable}
-          />
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="text"
+          style={handleStyles}
+          isConnectable={isConnectable}
+        />
       );
     } else {
       return options.map((option, index) => (
@@ -288,19 +316,21 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
             isConnectable={isConnectable}
           />
           <input
-            style={getOptionStyle(optionType)}
+            style={getOptionStyle(optionType, index)}
             value={option}
             onChange={(e) => handleOptionChange(index, e.target.value)}
             placeholder={`${optionType === 'Buttons' ? 'Button' : 'List item'} ${index + 1}`}
+            maxLength={optionType === 'Buttons' ? 20 : 24}
           />
           <FaMinus onClick={() => removeOption(index)} style={{ cursor: 'pointer', marginLeft: '10px' }} />
+          {errors[`option-${index}`] && <div style={errorStyle}>{errors[`option-${index}`]}</div>}
         </div>
       ));
     }
   };
 
   return (
-    <NodeWrapper style={{ background: '#fff5f5', borderColor: '#ffa39e' }} type="askQuestion">
+    <NodeWrapper style={{ background: '#fff5f5', borderColor: errors.question ? 'red' : '#ffa39e' }} type="askQuestion">
       <Handle type="target" style={{
         top: '50%',
         right: '-10px',
@@ -313,7 +343,9 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
         value={convertMentionsForFrontend(question)}
         onChange={handleQuestionChange}
         placeholder="Enter question"
+        style={errors.question ? { borderColor: 'red' } : {}}
       />
+      {errors.question && <div style={errorStyle}>{errors.question}</div>}
       <h4>Variables (Optional)</h4>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
         <input
@@ -325,7 +357,7 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
         <select
           value={dataType}
           onChange={(e) => handleDataTypeChange(e.target.value)}
-          style={{ ...selectStyles, width: '40%' }}
+          style={{ ...selectStyles, width: '40%', borderColor: errors.dataType ? 'red' : undefined }}
         >
           <option value="">Select Type</option>
           <option value="string">String</option>
@@ -334,6 +366,7 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
           <option value="date">Date</option>
         </select>
       </div>
+      {errors.dataType && <div style={errorStyle}>{errors.dataType}</div>}
       <select 
         value={optionType} 
         onChange={handleOptionTypeChange}
@@ -353,7 +386,11 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
   );
 };
 
-
+const errorStyle = {
+  color: 'red',
+  fontSize: '12px',
+  marginTop: '5px',
+};
 
 
 
