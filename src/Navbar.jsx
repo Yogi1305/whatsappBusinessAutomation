@@ -18,23 +18,29 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-
-  useEffect(() => {
-    socket.on('new-message', handleNewMessage);
-    return () => {
-      socket.off('new-message', handleNewMessage);
-    };
-  }, []);
-
   const handleNewMessage = (message) => {
+    console.log(message,"amrit");
     const newNotification = {
       id: Date.now(),
-      text: `New message from ${message.contactPhone.wa_id}: ${message.message}`,
+      text: `New message from ${message.contactPhone}: ${message.message.text.body}`,
       read: false,
     };
     setNotifications(prev => [newNotification, ...prev]);
     setUnreadCount(prev => prev + 1);
   };
+    useEffect(() => {
+      const handleNewSocketMessage = (message) => {
+        if (message) {
+          handleNewMessage(message);
+        }
+      };
+      socket.on('new-message', handleNewSocketMessage);
+      return () => {
+        socket.off('new-message');
+      };
+    }, []);
+
+   
 
   const handleNotificationClick = () => {
     setShowNotifications(!showNotifications);
