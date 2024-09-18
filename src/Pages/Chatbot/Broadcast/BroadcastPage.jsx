@@ -109,19 +109,19 @@ const BroadcastPage = () => {
 
 
     useEffect(() => {
-      const fetchTenantData = async () => {
-        try {
-          const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${businessPhoneNumberId}`, {
-            headers: {
-              'X-Tenant-ID': tenantId
-            }
-          });
-          setAccessToken(response.data.access_token);
-          setBusinessPhoneNumberId(response.data.business_phone_number_id);
-        } catch (error) {
-          console.error('Error fetching tenant data:', error);
-        }
-      };
+      // const fetchTenantData = async () => {
+      //   try {
+      //     const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${businessPhoneNumberId}`, {
+      //       headers: {
+      //         'X-Tenant-ID': tenantId
+      //       }
+      //     });
+      //     setAccessToken(response.data.access_token);
+      //     setBusinessPhoneNumberId(response.data.business_phone_number_id);
+      //   } catch (error) {
+      //     console.error('Error fetching tenant data:', error);
+      //   }
+      // };
   
       const fetchBusinessPhoneId = async () => {
         try {
@@ -138,7 +138,7 @@ const BroadcastPage = () => {
       
       fetchBusinessPhoneId().then(() => {
         if (businessPhoneNumberId) {
-          fetchTenantData();
+       //   fetchTenantData();
         }
       });
     }, [tenantId, businessPhoneNumberId]);

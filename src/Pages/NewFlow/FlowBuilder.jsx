@@ -334,7 +334,7 @@ const FlowBuilderContent = () => {
       description: flowDescription,
       category: "default",
       node_data: {
-        nodes: nodes.filter(node => node.id !== 'start').map(({ id, type, position, data }) => {
+        nodes: nodes.filter(node => node).map(({ id, type, position, data }) => {
           const { updateNodeData, hasError, ...cleanData} = data;
           console.log(updateNodeData,"here is 1");
           console.log(data,"here is 2");
