@@ -55,6 +55,7 @@ const FlowBuilderContent = () => {
   const [fallbackMessage, setFallbackMessage] = useState('');
   const [fallbackCount, setFallbackCount] = useState(1);
   const navigate = useNavigate();
+  const [errorNodes,setErrorNodes]=useState();
   const { authenticated } = useAuth();
 
 
@@ -186,7 +187,7 @@ const FlowBuilderContent = () => {
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-  
+      console.log(nodes,"sec 54");
       const type = event.dataTransfer.getData("application/reactflow");
   
       if (typeof type === "undefined" || !type || type === 'start') {
@@ -226,11 +227,14 @@ const FlowBuilderContent = () => {
   );
 
 
-
   const validateNodes = useCallback(() => {
     let isValid = true;
+    let errorNodes = []; // New array to store nodes with errors
+  
     const updatedNodes = nodes.map(node => {
       let hasError = false;
+      
+      // Validate "askQuestion" type node
       if (node.type === 'askQuestion') {
         if (!node.data.question || !node.data.question.trim()) {
           hasError = true;
@@ -244,7 +248,10 @@ const FlowBuilderContent = () => {
             }
           });
         }
-      } else if (node.type === 'sendMessage') {
+      }
+      
+      // Validate "sendMessage" type node
+      else if (node.type === 'sendMessage') {
         if (node.data.fields && typeof node.data.fields === 'object') {
           if (!node.data.fields.content || !node.data.fields.content.text.trim()) {
             hasError = true;
@@ -254,19 +261,32 @@ const FlowBuilderContent = () => {
           hasError = true;
           isValid = false;
         }
-      } else if (node.type === 'setCondition') {
+      }
+  
+      // Validate "setCondition" type node
+      else if (node.type === 'setCondition') {
         if (!node.data.condition || !node.data.condition.trim()) {
           hasError = true;
           isValid = false;
         }
       }
-      return { ...node, data: { ...node.data, hasError } };
+      
+      // If there is an error, push the node ID into errorNodes array
+      if (hasError) {
+        errorNodes.push(node.id); // Track the node ID
+      }
+  
+      return node; // Return node without modifying its data
     });
-    setNodes(updatedNodes);
+  
+    console.log(errorNodes, "Nodes with validation errors"); // Debug to see nodes with errors
+  
+    // Optionally, you can store errorNodes somewhere reliable, e.g., in state
+    setErrorNodes(errorNodes); // If you're managing state for error nodes
+  
     return isValid;
   }, [nodes, setNodes]);
-
-
+  
 
   // const saveFlow = useCallback(async () => {
   //   if (!authenticated) {
@@ -346,7 +366,7 @@ const FlowBuilderContent = () => {
           }
           return { id, type, position, data: cleanData };
         }),
-        edges: edges.filter(edge => edge.source !== 'start'),
+        edges: edges.filter(edge => edge),
         start: startEdge ? startEdge.target : null,
         fallback_message: fallbackMessage,
         fallback_count: fallbackCount
