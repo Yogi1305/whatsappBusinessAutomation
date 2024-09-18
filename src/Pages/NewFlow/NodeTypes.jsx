@@ -414,7 +414,7 @@ export const SendMessageNode = ({ data, isConnectable }) => {
           type: file.type.startsWith('image/') ? 'Image' : file.type.startsWith('video/') ? 'Video' : 'Document',
           content: {
             url: blobUrl,
-            med_id: response.data.id, // Store the media ID instead of the URL
+            med_id: response.data.id,  // Store the media ID instead of the URL
             text: '',
             caption: ''
           }

@@ -55,23 +55,38 @@ const BroadcastPage = () => {
   const [filteredBroadcastHistory, setFilteredBroadcastHistory] = useState([]);
   const [filteredTemplates, setFilteredTemplates] = useState([]);
   const [templateSearchQuery, setTemplateSearchQuery] = useState('');
+  const [bodyVariables, setBodyVariables] = useState([]);
+  const [headerVariables, setHeaderVariables] = useState([]);
+  const [accountId, setAccountId] = useState('');
 
 
   const fetchTemplates = useCallback(async () => {
-    if (!accessToken) return;
+    if (!accessToken || !accountId) return;
     try {
-      const url = `https://graph.facebook.com/v20.0/441785372346471/message_templates?fields=name,status,components,language,category`;
+      const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates?fields=name,status,components,language,category`;
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      setTemplates(response.data.data);
-      setFilteredTemplates(response.data.data);
+      const formattedTemplates = response.data.data.map(template => ({
+        ...template,
+        components: template.components.map(component => {
+          if (component.type === "BODY") {
+            return {
+              ...component,
+              text: convertMentionsForFrontend(component.text)
+            };
+          }
+          return component;
+        })
+      }));
+      setTemplates(formattedTemplates);
+      setFilteredTemplates(formattedTemplates);
     } catch (error) {
       console.error('Error fetching templates:', error);
     }
-  }, [accessToken]);
+  }, [accessToken, accountId]);
 
   const handleTemplateFilter = (query) => {
     setTemplateSearchQuery(query);
@@ -82,47 +97,9 @@ const BroadcastPage = () => {
     );
     setFilteredTemplates(filtered);
   };
-  
-    // Fetch the required data from the whatsapp_tenant endpoint
-    // useEffect(() => {
-    //   const fetchTenantData = async () => {
-    //     try {
-    //       const business_phone_number_id = 241683569037594;
-    //       const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${business_phone_number_id}`);
-    //       setAccessToken(response.data.access_token);
-    //       setBusinessPhoneNumberId(response.data.business_phone_number_id);
-    //     } catch (error) {
-    //       console.error('Error fetching tenant data:', error);
-    //     }
-    //   };
-      
-    //   fetchTenantData();
-    // }, []);
+ 
 
     useEffect(() => {
-      if (accessToken) {
-        fetchTemplates();
-        fetchBroadcastHistory();
-      }
-    }, [accessToken, fetchTemplates]);
-
-
-
-    useEffect(() => {
-      const fetchTenantData = async () => {
-        try {
-          const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${businessPhoneNumberId}`, {
-            headers: {
-              'X-Tenant-ID': tenantId
-            }
-          });
-          setAccessToken(response.data.access_token);
-          setBusinessPhoneNumberId(response.data.business_phone_number_id);
-        } catch (error) {
-          console.error('Error fetching tenant data:', error);
-        }
-      };
-  
       const fetchBusinessPhoneId = async () => {
         try {
           const response = await axiosInstance.get('https://8twdg37p-8000.inc1.devtunnels.ms/get-bpid/', {
@@ -130,18 +107,34 @@ const BroadcastPage = () => {
               'X-Tenant-ID': tenantId
             }
           });
-          setBusinessPhoneNumberId(response.data.business_phone_id);
+          setBusinessPhoneNumberId(response.data.business_phone_number_id);
+          setAccountId(response.data.account_id);
+          return response.data;
         } catch (error) {
           console.error('Error fetching business phone ID:', error);
         }
       };
-      
-      fetchBusinessPhoneId().then(() => {
-        if (businessPhoneNumberId) {
-          fetchTenantData();
+  
+      const fetchTenantData = async (bpid) => {
+        try {
+          const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${bpid}`, {
+            headers: {
+              'X-Tenant-ID': tenantId
+            }
+          });
+          setAccessToken(response.data.access_token);
+        } catch (error) {
+          console.error('Error fetching tenant data:', error);
+        }
+      };
+  
+      fetchBusinessPhoneId().then((data) => {
+        if (data && data.business_phone_number_id) {
+          fetchTenantData(data.business_phone_number_id);
         }
       });
-    }, [tenantId, businessPhoneNumberId]);
+    }, [tenantId]);
+  
 
 
     const handleEditTemplate = async (template) => {
@@ -176,10 +169,18 @@ const BroadcastPage = () => {
       }
     };
 
+
+    useEffect(() => {
+      if (accessToken && accountId) {
+        fetchTemplates();
+        fetchBroadcastHistory();
+      }
+    }, [accessToken, accountId, fetchTemplates]);
+
   const handleDeleteTemplate = async (templateId) => {
     if (window.confirm('Are you sure you want to delete this template?')) {
       try {
-        const url = `https://graph.facebook.com/v20.0/441785372346471/message_templates?name=${templateId}`;
+        const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates?name=${templateId}`;
         await axios.delete(url, {
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -244,18 +245,7 @@ const BroadcastPage = () => {
         throw new Error("Failed to send broadcast");
       }
   
-      const broadcastMessageObj = { text: broadcastMessage, sender: 'bot' };
-      // setGroups(prevGroups =>
-      //   prevGroups.map(group => ({
-      //     ...group,
-      //     conversation: [...(group.conversation || []), broadcastMessageObj],
-      //   }))
-      // );
-  
-      // If the current selected contact is a group, update the conversation
-      // if (selectedContact && selectedContact.isGroup) {
-      //   setConversation(prevConversation => [...prevConversation, broadcastMessageObj]);
-      // }
+      // const broadcastMessageObj = { text: broadcastMessage, sender: 'bot' };
     } catch (error) {
       console.error("Error sending broadcast:", error);
       alert("Failed to send broadcast message. Please try again.");
@@ -273,6 +263,8 @@ const BroadcastPage = () => {
     setIsSendingBroadcast(false);
   };
   
+
+
   const handleCreateTemplate = async (e) => {
     e.preventDefault();
     
@@ -285,7 +277,10 @@ const BroadcastPage = () => {
       },
       {
         type: "BODY",
-        text: convertMentionsForBackend(bodyText),
+        text: convertBodyTextToIndexedFormat(bodyText),
+        example: {
+          body_text: [bodyVariables.map(variable => `{{${variable}}}`)]
+        }
       }
     ];
 
@@ -299,10 +294,29 @@ const BroadcastPage = () => {
     if (buttons.length > 0) {
       components.push({
         type: "BUTTONS",
-        buttons: buttons.map(button => ({
-          type: "QUICK_REPLY",
-          text: button.text,
-        }))
+        buttons: buttons.map(button => {
+          switch (button.type) {
+            case 'QUICK_REPLY':
+              return {
+                type: "QUICK_REPLY",
+                text: button.text,
+              };
+            case 'PHONE_NUMBER':
+              return {
+                type: "PHONE_NUMBER",
+                text: button.text,
+                phone_number: button.phoneNumber,
+              };
+            case 'URL':
+              return {
+                type: "URL",
+                text: button.text,
+                url: button.url,
+              };
+            default:
+              return null;
+          }
+        }).filter(Boolean)
       });
     }
 
@@ -314,14 +328,10 @@ const BroadcastPage = () => {
     };
 
     try {
-      const url = isEditing
-        ? `https://graph.facebook.com/v20.0/441785372346471/message_templates`
-        : `https://graph.facebook.com/v20.0/441785372346471/message_templates`;
-      
-      const method = isEditing ? 'post' : 'post';
+      const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates`;
       
       const response = await axios({
-        method: method,
+        method: 'post',
         url: url,
         data: templateData,
         headers: {
@@ -332,8 +342,8 @@ const BroadcastPage = () => {
       console.log('Template created/updated:', response.data);
       setShowTemplatePopup(false);
       resetTemplateForm();
-      await fetchTemplates(); // Refresh the template list
-      setActiveTab('templates'); // Ensure we're on the templates tab
+      await fetchTemplates();
+      setActiveTab('templates');
     } catch (error) {
       console.error('Error creating/updating template:', error);
       if (error.response) {
@@ -341,6 +351,7 @@ const BroadcastPage = () => {
       }
     }
   };
+
 
   const fetchTemplateDetails = async (templateId) => {
     try {
@@ -384,7 +395,7 @@ const BroadcastPage = () => {
   
   const fetchBroadcastHistory = async () => {
     try {
-      const response = await axiosInstance.get('get-status/');
+      const response = await axiosInstance.get('https://8twdg37p-8000.inc1.devtunnels.ms/get-status/');
       const formattedHistory = formatBroadcastHistory(response.data.message_statuses);
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);
@@ -446,24 +457,24 @@ const BroadcastPage = () => {
 
 
   const formatBroadcastHistory = (messageStatuses) => {
-    const filteredStatuses = messageStatuses.filter(status => status.broadcast_group !== null);
-
-    const groupedStatuses = filteredStatuses.reduce((acc, status) => {
+    const groupedStatuses = messageStatuses.reduce((acc, status) => {
       if (!acc[status.broadcast_group]) {
         acc[status.broadcast_group] = [];
       }
       acc[status.broadcast_group].push(status);
       return acc;
     }, {});
+  
     return Object.entries(groupedStatuses).map(([broadcastGroup, statuses]) => ({
       id: broadcastGroup,
       name: `Broadcast Group ${broadcastGroup}`,
       sent: statuses.length,
       delivered: statuses.filter(s => s.is_delivered).length,
       read: statuses.filter(s => s.is_read).length,
-      replied: 0, // This information is not provided in the API response
-      date: new Date().toLocaleDateString(), // You might want to add a timestamp to your API response
-      status: 'Completed', // You might want to derive this from the API data
+      replied: statuses.filter(s => s.is_replied).length,
+      failed: statuses.filter(s => s.is_failed).length,
+      date: new Date(statuses[0].timestamp).toLocaleDateString(), // Assuming there's a timestamp field
+      status: statuses.every(s => s.is_delivered) ? 'Completed' : 'In Progress',
       recipients: statuses.map(s => s.user_phone_number)
     }));
   };
@@ -477,8 +488,9 @@ const BroadcastPage = () => {
   };
 
 
+ 
   const addButton = () => {
-    setButtons([...buttons, { text: '' }]);
+    setButtons([...buttons, { type: 'QUICK_REPLY', text: '' }]);
   };
 
 
@@ -487,6 +499,41 @@ const BroadcastPage = () => {
       i === index ? { ...button, [field]: value } : button
     );
     setButtons(updatedButtons);
+  };
+
+  const extractVariables = (text) => {
+    const regex = /@(\w+)/g;
+    const matches = text.match(regex);
+    return matches ? matches.map(match => match.slice(1)) : [];
+  };
+
+  const convertBodyTextToIndexedFormat = (text) => {
+    let indexCounter = 1;
+    return text.replace(/@(\w+)/g, () => `{{${indexCounter++}}}`);
+  };
+
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'history') {
+      fetchBroadcastHistory();
+      fetchTemplates();
+    }
+  };
+  
+  
+
+
+  const formatPhoneNumber = (phoneNumber) => {
+    // Remove all non-digit characters
+    const digits = phoneNumber.replace(/\D/g, '');
+    
+    // Ensure the number starts with a '+'
+    if (!digits.startsWith('+')) {
+      return '+' + digits;
+    }
+    
+    return digits;
   };
 
   const deleteButton = (index) => {
@@ -536,8 +583,8 @@ const BroadcastPage = () => {
   return (
     <div className="bp-broadcast-page">
       <div className="bp-left-sidebar">
-        <div className={`bp-menu-item ${activeTab === 'history' ? 'bp-active' : ''}`} onClick={() => setActiveTab('history')}>Broadcast History</div>
-        <div className={`bp-menu-item ${activeTab === 'templates' ? 'bp-active' : ''}`} onClick={() => setActiveTab('templates')}>Template Messages</div>
+      <div className={`bp-menu-item ${activeTab === 'history' ? 'bp-active' : ''}`} onClick={() => handleTabChange('history')}>Broadcast History</div>
+      <div className={`bp-menu-item ${activeTab === 'templates' ? 'bp-active' : ''}`} onClick={() => handleTabChange('templates')}>Template Messages</div>
       </div>
       <div className="bp-main-content">
       {activeTab === 'history' && (
@@ -551,7 +598,7 @@ const BroadcastPage = () => {
             </div>
             <button className="bp-btn-create" onClick={handleBroadcastMessage}>New Broadcast</button>
           </div>
-          {showBroadcastPopup && (
+          {/* {showBroadcastPopup && (
         <div className="cb-broadcast-popup">
           <div className="cb-broadcast-content">
             <h2>Broadcast Message</h2>
@@ -562,12 +609,6 @@ const BroadcastPage = () => {
               placeholder="Enter group name (optional)"
               className="cb-group-name-input"
             />
-            {/* <textarea
-              value={broadcastMessage}
-              onChange={(e) => setBroadcastMessage(e.target.value)}
-              placeholder="Type your broadcast message here..."
-              className="cb-broadcast-message-input"
-            /> */}
              <div className="bp-template-actions" style={{display:'flex', justifyContent:'space-between', marginBottom:'2rem'}}>
               <select
                 value={selectedTemplate?.id || ''}
@@ -610,7 +651,62 @@ const BroadcastPage = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
+      {showBroadcastPopup && (
+  <div className="cb-broadcast-popup">
+    <div className="cb-broadcast-content">
+      <h2>Broadcast Message</h2>
+      <input
+        type="text"
+        value={groupName}
+        onChange={(e) => setGroupName(e.target.value)}
+        placeholder="Enter group name (optional)"
+        className="cb-group-name-input"
+      />
+      <div className="bp-template-actions">
+        <select
+          value={selectedTemplate?.id || ''}
+          onChange={(e) => handleTemplateClick(templates.find(t => t.id === e.target.value))}
+        >
+          <option value="">Select Template</option>
+          {templates.map(template => (
+            <option key={template.id} value={template.id}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+        <button className="bp-btn-create" onClick={() => setShowTemplatePopup(true)}>Create Template</button>
+      </div>
+      <div className="cb-broadcast-contact-list">
+        <h3>Select Contacts:</h3>
+        {contacts.map(contact => (
+          <div key={contact.id} className="cb-broadcast-contact-item">
+            <input
+              type="checkbox"
+              id={`contact-${contact.id}`}
+              checked={selectedPhones.includes(contact.id)}
+              onChange={() => handlePhoneSelection(contact.id)}
+            />
+            <label htmlFor={`contact-${contact.id}`}>
+              <span className="cb-broadcast-contact-name">{contact.name}</span>
+              <span className="cb-broadcast-contact-phone">({contact.phone})</span>
+            </label>
+          </div>
+        ))}
+      </div>
+      <div className="cb-broadcast-actions">
+        <button
+          onClick={handleSendBroadcast}
+          disabled={isSendingBroadcast || selectedPhones.length === 0 || !selectedTemplate}
+          className="cb-send-broadcast-btn"
+        >
+          {isSendingBroadcast ? "Sending..." : "Send Broadcast"}
+        </button>
+        <button onClick={handleCloseBroadcastPopup} className="cb-cancel-broadcast-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+)}
           <div className="bp-broadcast-stats">
             <div className="bp-stat-item">
               <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.sent, 0)}</span>
@@ -624,32 +720,44 @@ const BroadcastPage = () => {
               <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.read, 0)}</span>
               <span className="bp-stat-label">Read</span>
             </div>
+            <div className="bp-stat-item">
+    <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.replied, 0)}</span>
+    <span className="bp-stat-label">Replied</span>
+  </div>
+  <div className="bp-stat-item">
+    <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.failed, 0)}</span>
+    <span className="bp-stat-label">Failed</span>
+  </div>
           </div>
           <div className="bp-broadcast-list">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Sent</th>
-                  <th>Delivered</th>
-                  <th>Read</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-              {filteredBroadcastHistory.map(broadcast => (
-                    <tr key={broadcast.id}>
-                      <td>{broadcast.name}</td>
-                      <td>{broadcast.sent}</td>
-                      <td>{broadcast.delivered}</td>
-                      <td>{broadcast.read}</td>
-                      <td>{broadcast.date}</td>
-                      <td><span className={`bp-status bp-${broadcast.status.toLowerCase().replace(' ', '-')}`}>{broadcast.status}</span></td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+          <table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Sent</th>
+      <th>Delivered</th>
+      <th>Read</th>
+      <th>Replied</th>
+      <th>Failed</th>
+      <th>Date</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {filteredBroadcastHistory.map(broadcast => (
+      <tr key={broadcast.id}>
+        <td>{broadcast.name}</td>
+        <td>{broadcast.sent}</td>
+        <td>{broadcast.delivered}</td>
+        <td>{broadcast.read}</td>
+        <td>{broadcast.replied}</td>
+        <td>{broadcast.failed}</td>
+        <td>{broadcast.date}</td>
+        <td><span className={`bp-status bp-${broadcast.status.toLowerCase().replace(' ', '-')}`}>{broadcast.status}</span></td>
+      </tr>
+    ))}
+  </tbody>
+</table>
           </div>
         </div>
       )}
@@ -745,11 +853,14 @@ const BroadcastPage = () => {
               </>
             )}
           </div>
-                <div className="bp-form-group">
+          <div className="bp-form-group">
                   <label>Body Text</label>
                   <MentionTextArea
                     value={convertMentionsForFrontend(bodyText)}
-                    onChange={(e) => setBodyText(e.target.value)}
+                    onChange={(e) => {
+                      setBodyText(e.target.value);
+                      setBodyVariables(extractVariables(e.target.value));
+                    }}
                     placeholder="Use @name, @phoneno, etc. for variables"
                   />
                 </div>
@@ -766,13 +877,37 @@ const BroadcastPage = () => {
                   <label>Buttons (Optional)</label>
                   {buttons.map((button, index) => (
                     <div key={index} className="bp-button-inputs">
+                      <select
+                        value={button.type}
+                        onChange={(e) => updateButton(index, 'type', e.target.value)}
+                      >
+                        <option value="QUICK_REPLY">Quick Reply</option>
+                        <option value="PHONE_NUMBER">Phone Number</option>
+                        <option value="URL">URL</option>
+                      </select>
                       <input
                         type="text"
                         placeholder="Button Text"
                         value={button.text}
                         onChange={(e) => updateButton(index, 'text', e.target.value)}
                       />
-                       <button
+                      {button.type === 'PHONE_NUMBER' && (
+                        <input
+                          type="tel"
+                          placeholder="Phone Number (e.g., +1 555 123 4567)"
+                          value={button.phoneNumber}
+                          onChange={(e) => updateButton(index, 'phoneNumber', e.target.value)}
+                        />
+                      )}
+                      {button.type === 'URL' && (
+                        <input
+                          type="url"
+                          placeholder="URL"
+                          value={button.url}
+                          onChange={(e) => updateButton(index, 'url', e.target.value)}
+                        />
+                      )}
+                      <button
                         type="button"
                         onClick={() => deleteButton(index)}
                         className="bp-btn-delete-button"

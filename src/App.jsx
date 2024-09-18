@@ -53,15 +53,15 @@ const App = () => {
                 <Route path="assign" element={<AssignContact />} />
                 <Route path="flow-builder" element={<FlowBuilder />} />
                 <Route path="models" element={<ProtectedRoute><Models /></ProtectedRoute>} />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
               </Routes>
             } />
-
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            } />
           </Routes>
+
         </main>
       </div>
     </Router>
