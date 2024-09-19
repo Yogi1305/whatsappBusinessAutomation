@@ -26,7 +26,7 @@ import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net/');
+const socket = io('https://whatsappbotserver.azurewebsites.net');
 
 
 const getTenantIdFromUrl = () => {
@@ -426,7 +426,7 @@ const Chatbot = () => {
       if (message) {
         console.log('Got New Message', message.message);
         updateContactPriority(message.contactPhone, message.message);
-        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone)) {
+        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
           console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
           setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
           //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
@@ -447,7 +447,7 @@ const Chatbot = () => {
       console.log(message.message, "this is node");
       console.log(selectedContact,"yahandekhhhhhh");
       if (message) {
-          if (parseInt(message.contactPhone) === parseInt(selectedContact?.phone)) {
+          if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
             console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
             setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'bot' }]);
           }
@@ -633,7 +633,8 @@ const Chatbot = () => {
   // Function to fetch conversation data for a given contact
   const fetchConversation = async (contactId) => {
     try {
-      const response = await fetch(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp`, {
+      const bpid_string = businessPhoneNumberId.toString()
+      const response = await fetch(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
           'X-Tenant-ID': tenantId

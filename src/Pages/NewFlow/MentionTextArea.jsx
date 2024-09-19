@@ -74,6 +74,7 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
   const handleMentionSelect = (option) => {
     const lastAtSymbolIndex = value.lastIndexOf('@');
     const newValue = value.slice(0, lastAtSymbolIndex) + `@${option.label} ` + value.slice(lastAtSymbolIndex + 1);
+    console.log(newValue,"THIS IS AN IMPORTANT VSLUE");
     onChange({ target: { value: newValue } });
     setShowMentionList(false);
   };
