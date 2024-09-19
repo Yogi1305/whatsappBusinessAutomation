@@ -406,20 +406,32 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   const [accessToken, setAccessToken] = useState('');
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
 
   
 
   useEffect(() => {
-    const fetchAccessToken = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=241683569037594`);
-        setAccessToken(response.data.access_token);
+        // Fetch the business phone ID
+        const bpidResponse = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+          headers: {
+            'X-Tenant-ID': tenantId
+          }
+        });
+        const fetchedBusinessPhoneNumberId = bpidResponse.data.business_phone_number_id;
+        setBusinessPhoneNumberId(fetchedBusinessPhoneNumberId);
+
+        // Fetch the access token using the obtained business phone ID
+        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${fetchedBusinessPhoneNumberId}`);
+        setAccessToken(tenantResponse.data.access_token);
       } catch (error) {
-        console.error('Error fetching access token:', error);
+        console.error('Error fetching data:', error);
       }
     };
-    fetchAccessToken();
-  }, []);
+
+    fetchData();
+  }, [tenantId]);
 
 
   const updateNodeDataSafely = (newFields) => {
@@ -438,7 +450,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         formData.append('messaging_product', 'whatsapp');
 
         const response = await axiosInstance.post(
-          'https://graph.facebook.com/v16.0/241683569037594/media',
+          `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`,
           formData,
           {
             headers: {
