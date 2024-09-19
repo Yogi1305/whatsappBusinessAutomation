@@ -230,70 +230,20 @@ const FlowBuilderContent = () => {
  
 
 
-  // const validateNodes = useCallback(() => {
-  //   let isValid = true;
-  //   let newErrorNodes = [];
-
-  //   const updatedNodes = nodes.map(node => {
-  //     let hasError = false;
-      
-  //     if (node.type === 'askQuestion') {
-  //       if (!node.data.question || !node.data.question.trim()) {
-  //         hasError = true;
-  //         isValid = false;
-  //       }
-  //       if (Array.isArray(node.data.options)) {
-  //         node.data.options.forEach((option, index) => {
-  //           if (!option.text || !option.text.trim()) {
-  //             hasError = true;
-  //             isValid = false;
-  //           } else if (option.text.length > 24) {
-  //             hasError = true;
-  //             isValid = false;
-  //             toast.error(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
-  //           }
-  //         });
-  //       }
-  //     } else if (node.type === 'sendMessage') {
-  //       if (node.data.fields && typeof node.data.fields === 'object') {
-  //         if (!node.data.fields.content || !node.data.fields.content.text.trim()) {
-  //           hasError = true;
-  //           isValid = false;
-  //         }
-  //       } else {
-  //         hasError = true;
-  //         isValid = false;
-  //       }
-  //     } else if (node.type === 'setCondition') {
-  //       if (!node.data.condition || !node.data.condition.trim()) {
-  //         hasError = true;
-  //         isValid = false;
-  //       }
-  //     }
-      
-  //     if (hasError) {
-  //       newErrorNodes.push(node.id);
-  //     }
-
-  //     return {
-  //       ...node,
-  //       style: {
-  //         ...node.style,
-  //         border: hasError ? '2px solid red' : undefined,
-  //       },
-  //     };
-  //   });
-
-  //   setNodes(updatedNodes);
-  //   setErrorNodes(newErrorNodes);
-  //   return isValid;
-  // }, [nodes, setNodes]);
-  
+ 
 
   const validateNodes = useCallback(() => {
     console.log('Starting node validation');
     let isValid = true;
     let newErrorNodes = [];
+
+    const startNodeConnected = edges.some(edge => edge.source === 'start');
+    if (!startNodeConnected) {
+      console.log('Error: Start node is not connected');
+      isValid = false;
+      newErrorNodes.push('start');
+      toast.error("Please connect the Start node to another node");
+    }
   
     const updatedNodes = nodes.map(node => {
       console.log(`Validating node: ${node.id}, Type: ${node.type}`);
@@ -388,7 +338,7 @@ const FlowBuilderContent = () => {
     setNodes(updatedNodes);
     setErrorNodes(newErrorNodes);
     return isValid;
-  }, [nodes, setNodes]);
+  }, [nodes, edges,setNodes]);
 
   const saveFlow = useCallback(async () => {
     if (!authenticated) {

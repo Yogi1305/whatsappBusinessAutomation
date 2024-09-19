@@ -407,6 +407,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  
 
   useEffect(() => {
     const fetchAccessToken = async () => {
