@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axiosInstance from "../../api";  // Assuming this is the correct path to your axiosInstance
 
 const textAreaStyles = {
   width: '100%',
@@ -31,24 +32,35 @@ const mentionItemStyles = {
   },
 };
 
-const mentionOptions = [
-  { id: 'name', label: 'Name' },
-  { id: 'phoneno', label: 'Phone Number' },
-  { id: 'email', label: 'Email' },
-  { id: 'description', label: 'Address' },
-  { id: 'createdBy', label: 'Account' },
-];
-
-
 export const MentionTextArea = ({ value, onChange, placeholder }) => {
   const [showMentionList, setShowMentionList] = useState(false);
   const [mentionListPosition, setMentionListPosition] = useState({ top: 0, left: 0 });
+  const [mentionOptions, setMentionOptions] = useState([]);
   const textAreaRef = useRef(null);
+
+  useEffect(() => {
+    const fetchContactFields = async () => {
+      try {
+        const response = await axiosInstance.get('/contacts/');
+        if (response.data && response.data.length > 0) {
+          const sampleContact = response.data[0];
+          const fields = Object.keys(sampleContact).filter(key => 
+            typeof sampleContact[key] !== 'object' && 
+            typeof sampleContact[key] !== 'function'
+          );
+          setMentionOptions(fields.map(field => ({ id: field, label: field })));
+        }
+      } catch (error) {
+        console.error("Error fetching contact fields:", error);
+      }
+    };
+
+    fetchContactFields();
+  }, []);
 
   const handleTextAreaChange = (e) => {
     const { value, selectionStart } = e.target;
     onChange(e);
-
     const lastAtSymbolIndex = value.lastIndexOf('@', selectionStart - 1);
     if (lastAtSymbolIndex !== -1 && lastAtSymbolIndex === selectionStart - 1) {
       setShowMentionList(true);
@@ -77,7 +89,6 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
         setShowMentionList(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -118,3 +129,5 @@ export const convertMentionsForBackend = (text) => {
 export const convertMentionsForFrontend = (text) => {
   return text.replace(/{{(\w+)}}/g, '@$1');
 };
+
+export default MentionTextArea;

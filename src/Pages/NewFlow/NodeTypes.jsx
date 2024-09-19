@@ -490,6 +490,9 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
 
   useEffect(() => {
     updateNodeDataSafely(field);
+    if (field.type === 'Image' && field.content && field.content.url) {
+      setPreviewUrl(field.content.url);
+    }
   }, [field]);
 
   

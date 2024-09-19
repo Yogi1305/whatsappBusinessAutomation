@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from "../../api.jsx";
 import { UploadCloud, Download, FileText, Plus } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const getTenantIdFromUrl = () => {
     const pathArray = window.location.pathname.split('/');
@@ -17,7 +22,6 @@ const Models = () => {
     const [formValues, setFormValues] = useState({});
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [showInfoModal, setShowInfoModal] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         const fetchModels = async () => {
@@ -26,7 +30,7 @@ const Models = () => {
                 setModels(response.data);
             } catch (error) {
                 console.error('Error fetching models:', error);
-                setErrorMessage('Failed to fetch models');
+                toast.error('Failed to fetch models');
             }
         };
 
@@ -41,7 +45,7 @@ const Models = () => {
             setModelData(response.data);
         } catch (error) {
             console.error('Error fetching model data:', error);
-            setErrorMessage('Failed to fetch model data');
+            toast.error('Failed to fetch model data');
         } finally {
             setLoading(false);
         }
@@ -67,9 +71,10 @@ const Models = () => {
             // Refresh model data
             const updatedData = await axiosInstance.get(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/dynamic-model-data/${selectedModel.model_name}/`);
             setModelData(updatedData.data);
+            toast.success('Data submitted successfully');
         } catch (error) {
             console.error('Error submitting data:', error);
-            setErrorMessage('Failed to submit data');
+            toast.error('Failed to submit data');
         }
     };
 
@@ -78,45 +83,31 @@ const Models = () => {
         setShowInfoModal(true);
     };
 
-    const handleFileUpload = async (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            try {
-                await axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/upload/', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'X-Tenant-Id': tenantId
-                    }
-                });
-                // Refresh model data after successful upload
-                const updatedData = await axiosInstance.get(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/dynamic-model-data/${selectedModel.model_name}/`);
-                setModelData(updatedData.data);
-            } catch (error) {
-                console.error('Error uploading file:', error);
-                setErrorMessage('Failed to upload file');
-            }
+    const handleDownload = (format) => {
+        if (format === 'excel') {
+            downloadExcel();
+        } else if (format === 'pdf') {
+            downloadPdf();
         }
     };
 
-    const handleDownload = async (format) => {
-        try {
-            const response = await axiosInstance.get(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/download/${selectedModel.model_name}/${format}/`, {
-                responseType: 'blob',
-                headers: {
-                    'X-Tenant-Id': tenantId
-                }
-            });
-            const blob = new Blob([response.data], { type: format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'application/pdf' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = `${selectedModel.model_name}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-            link.click();
-        } catch (error) {
-            console.error(`Error downloading ${format}:`, error);
-            setErrorMessage(`Failed to download ${format}`);
-        }
+    const downloadExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(modelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+        XLSX.writeFile(workbook, `${selectedModel.model_name}.xlsx`);
+        toast.success('Excel file downloaded successfully');
+    };
+
+    const downloadPdf = () => {
+        const doc = new jsPDF();
+        doc.text(`${selectedModel.model_name} Data`, 14, 16);
+        doc.autoTable({
+            head: [selectedModel.fields.map(field => field.field_name)],
+            body: modelData.map(item => selectedModel.fields.map(field => item[field.field_name])),
+        });
+        doc.save(`${selectedModel.model_name}.pdf`);
+        toast.success('PDF file downloaded successfully');
     };
 
     return (
@@ -145,11 +136,6 @@ const Models = () => {
                             ))}
                         </ul>
                         <div className="flex flex-wrap gap-4 mb-4">
-                            <label className="flex items-center px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700">
-                                <UploadCloud className="mr-2" />
-                                Import Excel
-                                <input type="file" className="hidden" onChange={handleFileUpload} accept=".xlsx, .xls" />
-                            </label>
                             <button onClick={() => handleDownload('excel')} className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                                 <Download className="mr-2" />
                                 Download Excel
@@ -187,10 +173,6 @@ const Models = () => {
                         ) : (
                             <div className="text-center py-4">No data available</div>
                         )}
-                        <button onClick={() => setShowModal(true)} className="mt-4 flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                            <Plus className="mr-2" />
-                            Add Data
-                        </button>
                     </div>
                 )}
             </div>
@@ -225,7 +207,6 @@ const Models = () => {
                                 </button>
                             </div>
                         </form>
-                        {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
                     </div>
                 </div>
             )}
@@ -245,6 +226,7 @@ const Models = () => {
                     </div>
                 </div>
             )}
+            <ToastContainer />
         </div>
     );
 };

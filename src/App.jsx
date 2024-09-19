@@ -14,6 +14,7 @@ import Chatbotredirect from './Pages/Chatbot/Chatbotredirect';
 import Models from './Pages/Model/ModelTable';
 
 import AssignContact from './Pages/assignContact/assignContact';
+import { NotFound } from './Pages/NotFound/NotFound';
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
   return authenticated ? children : <Navigate to="/login" replace />;
@@ -58,8 +59,10 @@ const App = () => {
                     <ProfilePage />
                   </ProtectedRoute>
                 } />
+                 <Route path="*" element={<NotFound />} />
               </Routes>
             } />
+              <Route path="*" element={<NotFound />} />
           </Routes>
 
         </main>
