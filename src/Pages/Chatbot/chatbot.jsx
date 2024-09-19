@@ -634,7 +634,7 @@ const Chatbot = () => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?whatsapp&bpid=${bpid_string}`, {
+      const response = await fetch(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
           'X-Tenant-ID': tenantId
