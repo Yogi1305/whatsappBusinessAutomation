@@ -5,7 +5,7 @@ import { useAuth } from './authContext'; // Assuming you have this hook
 import logo from "./assets/logo.png";
 import io from 'socket.io-client';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net/');
+const socket = io('https://whatsappbotserver.azurewebsites.net');
 
 const Navbar = () => {
   const { authenticated, logout, tenantId } = useAuth();

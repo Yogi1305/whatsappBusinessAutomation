@@ -32,11 +32,11 @@ const mentionItemStyles = {
 };
 
 const mentionOptions = [
-  { id: 'name', label: 'Name' },
-  { id: 'phoneno', label: 'Phone Number' },
-  { id: 'email', label: 'Email' },
-  { id: 'description', label: 'Address' },
-  { id: 'createdBy', label: 'Account' },
+  { id: 'name', label: 'name' },
+  { id: 'phoneno', label: 'phone' },
+  { id: 'email', label: 'email' },
+  { id: 'description', label: 'address' },
+  { id: 'createdBy', label: 'account' },
 ];
 
 
@@ -62,6 +62,7 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
   const handleMentionSelect = (option) => {
     const lastAtSymbolIndex = value.lastIndexOf('@');
     const newValue = value.slice(0, lastAtSymbolIndex) + `@${option.label} ` + value.slice(lastAtSymbolIndex + 1);
+    console.log(newValue,"THIS IS AN IMPORTANT VSLUE");
     onChange({ target: { value: newValue } });
     setShowMentionList(false);
   };
