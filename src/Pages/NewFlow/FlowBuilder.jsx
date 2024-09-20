@@ -23,6 +23,7 @@ import { FlowProvider, useFlow } from './FlowContext';
 import { useAuth } from "../../authContext";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import defaultFlow from "./DefaultFlow";
 
 let id = 0;
 const getId = () => `${id++}`;
@@ -59,6 +60,7 @@ const FlowBuilderContent = () => {
   const { authenticated } = useAuth();
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [flowToDelete, setFlowToDelete] = useState(null);
+  const [defaultFlowLoaded, setDefaultFlowLoaded] = useState(false);
 
   const handleDeleteClick = (flowId) => {
     setFlowToDelete(flowId);
@@ -107,9 +109,9 @@ const FlowBuilderContent = () => {
     toast.info("Flow reset successfully");
   }, [setNodes, setEdges]);
 
-  useEffect(() => {
-    resetFlow();
-  }, [resetFlow]);
+  // useEffect(() => {
+  //   resetFlow();
+  // }, [resetFlow]);
 
   const onNodesChange = useCallback(
     (changes) => {
@@ -148,34 +150,28 @@ const FlowBuilderContent = () => {
   const fetchDefaultFlow = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get('/node-templates/203/');
-      const flow = response.data;
+      const flow = defaultFlow;
       const lastNodeId = Math.max(
-        ...flow.node_data.nodes
+        ...flow.nodes
           .map(node => parseInt(node.id, 10))
           .filter(id => !isNaN(id))
       );
       id = parseInt(lastNodeId) + 1;
-      const mappedNodes = [
-        startNode,
-        ...flow.node_data.nodes.map(node => ({
-          ...node,
-          data: {
-            ...node.data,
-            updateNodeData: (newData) => updateNodeData(node.id, newData),
-          },
-        }))
-      ];
+      
+      const mappedNodes = flow.nodes.map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          updateNodeData: (newData) => updateNodeData(node.id, newData),
+        },
+      }));
 
-      const mappedEdges = [
-        ...(flow.node_data.start ? [{ id: 'start-edge', source: 'start', target: flow.node_data.start }] : []),
-        ...flow.node_data.edges
-      ];
+      const mappedEdges = flow.edges;
 
       setNodes(mappedNodes);
       setEdges(mappedEdges);
-      setFlowName(flow.name);
-      setFlowDescription(flow.description);
+      setFlowName("Default Flow");
+      setFlowDescription("This is the default flow for unauthenticated users.");
       setIsExistingFlow(true);
       toast.info("Default flow loaded");
     } catch (error) {
@@ -192,12 +188,14 @@ const FlowBuilderContent = () => {
       fetchDefaultFlow();
     } else {
       resetFlow();
+      fetchExistingFlows();
     }
   }, [authenticated, fetchDefaultFlow, resetFlow]);
 
 
 
   const fetchExistingFlows = async () => {
+    if (!authenticated) return;
     try {
       const response = await axiosInstance.get('/node-templates/');
       setExistingFlows(response.data);
@@ -256,114 +254,6 @@ const FlowBuilderContent = () => {
     [reactFlowInstance, setNodes]
   );
  
-
-  // const validateNodes = useCallback(() => {
-  //   console.log('Starting node validation');
-  //   let isValid = true;
-  //   let newErrorNodes = [];
-
-  //   const startNodeConnected = edges.some(edge => edge.source === 'start');
-  //   if (!startNodeConnected) {
-  //     console.log('Error: Start node is not connected');
-  //     isValid = false;
-  //     newErrorNodes.push('start');
-  //     toast.error("Please connect the Start node to another node");
-  //   }
-  
-  //   const updatedNodes = nodes.map(node => {
-  //     console.log(`Validating node: ${node.id}, Type: ${node.type}`);
-  //     let hasError = false;
-      
-  //     if (node.type === 'askQuestion') {
-  //       console.log('Ask Question node data:', node.data);
-  //       if (!node.data.question || !node.data.question.trim()) {
-  //         console.log(`Error: Empty question in node ${node.id}`);
-  //         hasError = true;
-  //         isValid = false;
-  //       }
-  //       if (Array.isArray(node.data.options)) {
-  //         node.data.options.forEach((option, index) => {
-  //           console.log(`Validating option ${index}:`, option);
-  //           if (!option || !option.trim()) {
-  //             console.log(`Error: Empty option ${index} in node ${node.id}`);
-  //             hasError = true;
-  //             isValid = false;
-  //           } else if (option.length > 24) {
-  //             console.log(`Error: Option ${index} in node ${node.id} exceeds 24 characters`);
-  //             hasError = true;
-  //             isValid = false;
-  //             toast.error(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
-  //           }
-  //         });
-  //       } else {
-  //         console.log(`Warning: options is not an array in node ${node.id}`);
-  //       }
-  //     } else if (node.type === 'sendMessage') {
-  //       console.log('Send Message node data:', node.data);
-  //       if (node.data.fields && typeof node.data.fields === 'object') {
-  //         const { type, content } = node.data.fields;
-          
-  //         switch (type) {
-  //           case 'text':
-  //             if (!content.text || !content.text.trim()) {
-  //               console.log(`Error: Empty message content in node ${node.id}`);
-  //               hasError = true;
-  //               isValid = false;
-  //               toast.error(`Please enter a message for the Send Message node ${node.id}`);
-  //             }
-  //             break;
-  //           case 'Image':
-  //           case 'Video':
-  //           case 'Document':
-  //             if (!content.med_id) {
-  //               console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
-  //               hasError = true;
-  //               isValid = false;
-  //               toast.error(`Please upload a ${type.toLowerCase()} for the Send Message node ${node.id}`);
-  //             }
-  //             break;
-  //           default:
-  //             console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
-  //             hasError = true;
-  //             isValid = false;
-  //             toast.error(`Invalid message type in Send Message node ${node.id}`);
-  //         }
-  //       } else {
-  //         console.log(`Error: Invalid fields structure in Send Message node ${node.id}`);
-  //         hasError = true;
-  //         isValid = false;
-  //       }
-  //     } else if (node.type === 'setCondition') {
-  //       console.log('Set Condition node data:', node.data);
-  //       if (!node.data.condition || !node.data.condition.trim()) {
-  //         console.log(`Error: Empty condition in node ${node.id}`);
-  //         hasError = true;
-  //         isValid = false;
-  //       }
-  //     }
-      
-  //     if (hasError) {
-  //       console.log(`Adding node ${node.id} to error nodes`);
-  //       newErrorNodes.push(node.id);
-  //     }
-  
-  //     return {
-  //       ...node,
-  //       style: {
-  //         ...node.style,
-  //         border: hasError ? '2px solid red' : undefined,
-  //       },
-  //     };
-  //   });
-  
-  //   console.log('Updated nodes:', updatedNodes);
-  //   console.log('Error nodes:', newErrorNodes);
-  //   console.log('Is valid:', isValid);
-  
-  //   setNodes(updatedNodes);
-  //   setErrorNodes(newErrorNodes);
-  //   return isValid;
-  // }, [nodes, edges,setNodes]);
 
 
   const validateNodes = useCallback(() => {
@@ -563,10 +453,10 @@ const FlowBuilderContent = () => {
     fetchExistingFlows();
   }, []);
 
-  useEffect(() => {
-    // Reset the flow when the component mounts
-    resetFlow();
-  }, [resetFlow]);
+  // useEffect(() => {
+  //   // Reset the flow when the component mounts
+  //   resetFlow();
+  // }, [resetFlow]);
 
   const handleFlowSelect = useCallback(async (e) => {
     const flowId = e.target.value;
@@ -659,6 +549,7 @@ const FlowBuilderContent = () => {
               connectionMode="loose"
               defaultEdgeOptions={{
                 type: 'smoothstep',
+                animated: true,
               }}
               connectOnClick={false}
             >

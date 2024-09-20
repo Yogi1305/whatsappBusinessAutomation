@@ -427,15 +427,15 @@ const BroadcastPage = () => {
     }
   };
 
-  const handleDateFilter = () => {
-    const filtered = broadcastHistory.filter(broadcast => {
-      const broadcastDate = new Date(broadcast.date);
-      const fromDate = dateFrom ? new Date(dateFrom) : new Date(0);
-      const toDate = dateTo ? new Date(dateTo) : new Date();
-      return broadcastDate >= fromDate && broadcastDate <= toDate;
-    });
-    setFilteredBroadcastHistory(filtered);
-  };
+  // const handleDateFilter = () => {
+  //   const filtered = broadcastHistory.filter(broadcast => {
+  //     const broadcastDate = new Date(broadcast.date);
+  //     const fromDate = dateFrom ? new Date(dateFrom) : new Date(0);
+  //     const toDate = dateTo ? new Date(dateTo) : new Date();
+  //     return broadcastDate >= fromDate && broadcastDate <= toDate;
+  //   });
+  //   setFilteredBroadcastHistory(filtered);
+  // };
 
 
   const sortContacts = (contactsToSort) => {
@@ -611,11 +611,6 @@ const BroadcastPage = () => {
         <div className="bp-broadcast-history">
           <h1 style={{fontSize:'36px', fontWeight:'600', fontFamily:'sans-serif'}}>Broadcast History</h1>
           <div className="bp-action-bar">
-            <div className="bp-date-filter">
-              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-              <button className="bp-btn-apply" onClick={handleDateFilter}>Apply</button>
-            </div>
             <button className="bp-btn-create" onClick={handleBroadcastMessage}>New Broadcast</button>
           </div>
       {showBroadcastPopup && (
@@ -705,7 +700,6 @@ const BroadcastPage = () => {
       <th>Read</th>
       <th>Replied</th>
       <th>Failed</th>
-      <th>Date</th>
       <th>Status</th>
     </tr>
   </thead>
@@ -718,7 +712,7 @@ const BroadcastPage = () => {
         <td>{broadcast.read}</td>
         <td>{broadcast.replied}</td>
         <td>{broadcast.failed}</td>
-        <td>{broadcast.date}</td>
+        {/* <td>{broadcast.date}</td> */}
         <td><span className={`bp-status bp-${broadcast.status.toLowerCase().replace(' ', '-')}`}>{broadcast.status}</span></td>
       </tr>
     ))}
