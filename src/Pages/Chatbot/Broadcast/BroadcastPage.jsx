@@ -268,21 +268,44 @@ const BroadcastPage = () => {
   const handleCreateTemplate = async (e) => {
     e.preventDefault();
     
-    const components = [
-      {
-        type: "HEADER",
-        format: headerType.toUpperCase(),
-        text: headerType === 'text' ? headerContent : undefined,
-        example: headerType === 'image' ? { header_handle: [headerMediaId] } : undefined,
-      },
-      {
+    const components = [];
+
+      if ((headerType === 'text' && headerContent.trim()) || (headerType === 'image' && headerMediaId)) {
+        components.push({
+          type: "HEADER",
+          format: headerType.toUpperCase(),
+          text: headerType === 'text' ? headerContent : undefined,
+          example: headerType === 'image' ? { header_handle: [headerMediaId] } : undefined,
+        });
+      }
+  
+      // components.push({
+      //   type: "BODY",
+      //   text: convertBodyTextToIndexedFormat(bodyText),
+      //   example: {
+      //     body_text: [bodyVariables.map(variable => `{{${variable}}}`)]
+      //   }
+      // });
+
+      const bodyComponent = {
         type: "BODY",
         text: convertBodyTextToIndexedFormat(bodyText),
-        example: {
+      };
+    
+      if (bodyVariables && bodyVariables.length > 0) {
+        bodyComponent.example = {
           body_text: [bodyVariables.map(variable => `{{${variable}}}`)]
-        }
+        };
       }
-    ];
+    
+      components.push(bodyComponent);
+  
+      if (footerText.trim()) {
+        components.push({
+          type: "FOOTER",
+          text: footerText
+        });
+      }
 
     if (footerText) {
       components.push({
@@ -521,9 +544,6 @@ const BroadcastPage = () => {
     }
   };
   
-  
-
-
   const formatPhoneNumber = (phoneNumber) => {
     // Remove all non-digit characters
     const digits = phoneNumber.replace(/\D/g, '');
@@ -598,60 +618,6 @@ const BroadcastPage = () => {
             </div>
             <button className="bp-btn-create" onClick={handleBroadcastMessage}>New Broadcast</button>
           </div>
-          {/* {showBroadcastPopup && (
-        <div className="cb-broadcast-popup">
-          <div className="cb-broadcast-content">
-            <h2>Broadcast Message</h2>
-            <input
-              type="text"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Enter group name (optional)"
-              className="cb-group-name-input"
-            />
-             <div className="bp-template-actions" style={{display:'flex', justifyContent:'space-between', marginBottom:'2rem'}}>
-              <select
-                value={selectedTemplate?.id || ''}
-                onChange={(e) => handleTemplateClick(templates.find(t => t.id === e.target.value))}
-              >
-                <option value="">Select Template</option>
-                {templates.map(template => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-              <button className="bp-btn-create" onClick={() => setShowTemplatePopup(true)}>Create Template</button>
-            </div>
-            <div className="cb-broadcast-contact-list">
-              <h3>Select Contacts:</h3>
-              {contacts.map(contact => (
-                <div key={contact.id} className="cb-broadcast-contact-item">
-                  <input
-                    type="checkbox"
-                    id={`contact-${contact.id}`}
-                    checked={selectedPhones.includes(contact.id)}
-                    onChange={() => handlePhoneSelection(contact.id)}
-                  />
-                  <label htmlFor={`contact-${contact.id}`}>
-                    {contact.first_name} {contact.last_name} ({contact.phone})
-                  </label>
-                </div>
-              ))}
-            </div>
-            <div className="cb-broadcast-actions">
-              <button 
-                onClick={handleSendBroadcast} 
-                // disabled={isSendingBroadcast || selectedPhones.length === 0 || !broadcastMessage.trim()}
-                className="cb-send-broadcast-btn"
-              >
-                {isSendingBroadcast ? "Sending..." : "Send Broadcast"}
-              </button>
-              <button onClick={handleCloseBroadcastPopup} className="cb-cancel-broadcast-btn">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )} */}
       {showBroadcastPopup && (
   <div className="cb-broadcast-popup">
     <div className="cb-broadcast-content">
@@ -797,7 +763,7 @@ const BroadcastPage = () => {
           </div>
         )}
       </div>
-      {showTemplatePopup && (
+       {showTemplatePopup && (
         <div className="bp-popup-overlay">
           <div className="bp-popup bp-template-popup">
             <h2>{isEditing ? 'Edit' : 'Create'} WhatsApp Template Message</h2>
@@ -825,36 +791,38 @@ const BroadcastPage = () => {
                   </select>
                 </div>
                 <div className="bp-form-group">
-            <label>Header (Optional)</label>
-            <select value={headerType} onChange={(e) => setHeaderType(e.target.value)}>
-              <option value="text">Text</option>
-              <option value="image">Image</option>
-            </select>
-            {headerType === 'text' ? (
-              <input
-                type="text"
-                value={headerContent}
-                onChange={(e) => setHeaderContent(e.target.value)}
-                placeholder="Header Text"
-              />
-            ) : (
-              <>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ display: 'none' }}
-                  ref={fileInputRef}
-                />
-                <button type="button" onClick={() => fileInputRef.current.click()}>
-                  Upload Image
-                </button>
-                {headerImage && <span>{headerImage.name}</span>}
-                {uploadProgress > 0 && <progress value={uploadProgress} max="100" />}
-              </>
-            )}
-          </div>
-          <div className="bp-form-group">
+                  <label>Header (Optional)</label>
+                  <select value={headerType} onChange={(e) => setHeaderType(e.target.value)}>
+                    <option value="">No header</option>
+                    <option value="text">Text</option>
+                    <option value="image">Image</option>
+                  </select>
+                  {headerType === 'text' && (
+                    <input
+                      type="text"
+                      value={headerContent}
+                      onChange={(e) => setHeaderContent(e.target.value)}
+                      placeholder="Header Text"
+                    />
+                  )}
+                  {headerType === 'image' && (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ display: 'none' }}
+                        ref={fileInputRef}
+                      />
+                      <button type="button" onClick={() => fileInputRef.current.click()} className="bp-btn-upload">
+                        Upload Image
+                      </button>
+                      {headerImage && <span className="bp-file-name">{headerImage.name}</span>}
+                      {uploadProgress > 0 && <progress value={uploadProgress} max="100" className="bp-upload-progress" />}
+                    </>
+                  )}
+                </div>
+                <div className="bp-form-group">
                   <label>Body Text</label>
                   <MentionTextArea
                     value={convertMentionsForFrontend(bodyText)}
@@ -931,11 +899,7 @@ const BroadcastPage = () => {
               </form>
               <div className="bp-template-preview">
                 <div className="bp-whatsapp-preview">
-                  <h3 style={{
-zIndex:'9',
-color:'white',
-marginBottom:'3rem'
-                  }}>WhatsApp Template Preview</h3>
+                  <h3>WhatsApp Template Preview</h3>
                   <div className="bp-message-container">
                     {headerType === 'text' && headerContent && (
                       <div className="bp-message-header">{headerContent}</div>
@@ -944,7 +908,7 @@ marginBottom:'3rem'
                       <img src={headerContent} alt="Header" className="bp-message-header-image" />
                     )}
                     <div className="bp-message-body">
-                    {convertMentionsForFrontend(bodyText)}
+                      {convertMentionsForFrontend(bodyText)}
                     </div>
                     {footerText && <div className="bp-message-footer">{footerText}</div>}
                     {buttons.length > 0 && (

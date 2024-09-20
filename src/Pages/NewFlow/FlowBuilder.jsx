@@ -57,7 +57,37 @@ const FlowBuilderContent = () => {
   const navigate = useNavigate();
   const [errorNodes,setErrorNodes]=useState();
   const { authenticated } = useAuth();
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [flowToDelete, setFlowToDelete] = useState(null);
 
+  const handleDeleteClick = (flowId) => {
+    setFlowToDelete(flowId);
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDelete = async () => {
+    if (flowToDelete) {
+      try {
+        await axiosInstance.delete(`/node-templates/${flowToDelete}/`);
+        toast.success("Flow deleted successfully");
+        fetchExistingFlows();
+        if (selectedFlow === flowToDelete) {
+          resetFlow();
+          setSelectedFlow('');
+        }
+      } catch (error) {
+        console.error('Error deleting flow:', error);
+        toast.error("Failed to delete flow");
+      }
+    }
+    setShowDeleteConfirmation(false);
+    setFlowToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirmation(false);
+    setFlowToDelete(null);
+  };
 
 
   const startNode = {
@@ -225,24 +255,135 @@ const FlowBuilderContent = () => {
     },
     [reactFlowInstance, setNodes]
   );
-
-
  
 
+  // const validateNodes = useCallback(() => {
+  //   console.log('Starting node validation');
+  //   let isValid = true;
+  //   let newErrorNodes = [];
 
- 
+  //   const startNodeConnected = edges.some(edge => edge.source === 'start');
+  //   if (!startNodeConnected) {
+  //     console.log('Error: Start node is not connected');
+  //     isValid = false;
+  //     newErrorNodes.push('start');
+  //     toast.error("Please connect the Start node to another node");
+  //   }
+  
+  //   const updatedNodes = nodes.map(node => {
+  //     console.log(`Validating node: ${node.id}, Type: ${node.type}`);
+  //     let hasError = false;
+      
+  //     if (node.type === 'askQuestion') {
+  //       console.log('Ask Question node data:', node.data);
+  //       if (!node.data.question || !node.data.question.trim()) {
+  //         console.log(`Error: Empty question in node ${node.id}`);
+  //         hasError = true;
+  //         isValid = false;
+  //       }
+  //       if (Array.isArray(node.data.options)) {
+  //         node.data.options.forEach((option, index) => {
+  //           console.log(`Validating option ${index}:`, option);
+  //           if (!option || !option.trim()) {
+  //             console.log(`Error: Empty option ${index} in node ${node.id}`);
+  //             hasError = true;
+  //             isValid = false;
+  //           } else if (option.length > 24) {
+  //             console.log(`Error: Option ${index} in node ${node.id} exceeds 24 characters`);
+  //             hasError = true;
+  //             isValid = false;
+  //             toast.error(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
+  //           }
+  //         });
+  //       } else {
+  //         console.log(`Warning: options is not an array in node ${node.id}`);
+  //       }
+  //     } else if (node.type === 'sendMessage') {
+  //       console.log('Send Message node data:', node.data);
+  //       if (node.data.fields && typeof node.data.fields === 'object') {
+  //         const { type, content } = node.data.fields;
+          
+  //         switch (type) {
+  //           case 'text':
+  //             if (!content.text || !content.text.trim()) {
+  //               console.log(`Error: Empty message content in node ${node.id}`);
+  //               hasError = true;
+  //               isValid = false;
+  //               toast.error(`Please enter a message for the Send Message node ${node.id}`);
+  //             }
+  //             break;
+  //           case 'Image':
+  //           case 'Video':
+  //           case 'Document':
+  //             if (!content.med_id) {
+  //               console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
+  //               hasError = true;
+  //               isValid = false;
+  //               toast.error(`Please upload a ${type.toLowerCase()} for the Send Message node ${node.id}`);
+  //             }
+  //             break;
+  //           default:
+  //             console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
+  //             hasError = true;
+  //             isValid = false;
+  //             toast.error(`Invalid message type in Send Message node ${node.id}`);
+  //         }
+  //       } else {
+  //         console.log(`Error: Invalid fields structure in Send Message node ${node.id}`);
+  //         hasError = true;
+  //         isValid = false;
+  //       }
+  //     } else if (node.type === 'setCondition') {
+  //       console.log('Set Condition node data:', node.data);
+  //       if (!node.data.condition || !node.data.condition.trim()) {
+  //         console.log(`Error: Empty condition in node ${node.id}`);
+  //         hasError = true;
+  //         isValid = false;
+  //       }
+  //     }
+      
+  //     if (hasError) {
+  //       console.log(`Adding node ${node.id} to error nodes`);
+  //       newErrorNodes.push(node.id);
+  //     }
+  
+  //     return {
+  //       ...node,
+  //       style: {
+  //         ...node.style,
+  //         border: hasError ? '2px solid red' : undefined,
+  //       },
+  //     };
+  //   });
+  
+  //   console.log('Updated nodes:', updatedNodes);
+  //   console.log('Error nodes:', newErrorNodes);
+  //   console.log('Is valid:', isValid);
+  
+  //   setNodes(updatedNodes);
+  //   setErrorNodes(newErrorNodes);
+  //   return isValid;
+  // }, [nodes, edges,setNodes]);
+
 
   const validateNodes = useCallback(() => {
     console.log('Starting node validation');
     let isValid = true;
     let newErrorNodes = [];
-
+  
     const startNodeConnected = edges.some(edge => edge.source === 'start');
     if (!startNodeConnected) {
       console.log('Error: Start node is not connected');
       isValid = false;
       newErrorNodes.push('start');
       toast.error("Please connect the Start node to another node");
+    }
+  
+    // Validate fallback message
+    if (!fallbackMessage || !fallbackMessage.trim()) {
+      console.log('Error: Fallback message is empty');
+      isValid = false;
+      toast.error("Please enter a fallback message");
     }
   
     const updatedNodes = nodes.map(node => {
@@ -255,19 +396,29 @@ const FlowBuilderContent = () => {
           console.log(`Error: Empty question in node ${node.id}`);
           hasError = true;
           isValid = false;
+          toast.error(`Please enter a question for node ${node.id}`);
         }
         if (Array.isArray(node.data.options)) {
+          const optionTexts = new Set();
           node.data.options.forEach((option, index) => {
             console.log(`Validating option ${index}:`, option);
             if (!option || !option.trim()) {
               console.log(`Error: Empty option ${index} in node ${node.id}`);
               hasError = true;
               isValid = false;
+              toast.error(`Please enter text for option ${index + 1} in node ${node.id}`);
             } else if (option.length > 24) {
               console.log(`Error: Option ${index} in node ${node.id} exceeds 24 characters`);
               hasError = true;
               isValid = false;
               toast.error(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
+            } else if (optionTexts.has(option.toLowerCase())) {
+              console.log(`Error: Duplicate option ${option} in node ${node.id}`);
+              hasError = true;
+              isValid = false;
+              toast.error(`Duplicate option "${option}" in node ${node.id}`);
+            } else {
+              optionTexts.add(option.toLowerCase());
             }
           });
         } else {
@@ -314,6 +465,7 @@ const FlowBuilderContent = () => {
           console.log(`Error: Empty condition in node ${node.id}`);
           hasError = true;
           isValid = false;
+          toast.error(`Please enter a condition for node ${node.id}`);
         }
       }
       
@@ -338,7 +490,8 @@ const FlowBuilderContent = () => {
     setNodes(updatedNodes);
     setErrorNodes(newErrorNodes);
     return isValid;
-  }, [nodes, edges,setNodes]);
+  }, [nodes, edges, setNodes, fallbackMessage]);
+
 
   const saveFlow = useCallback(async () => {
     if (!authenticated) {
@@ -529,6 +682,22 @@ const FlowBuilderContent = () => {
                 <option key={flow.id} value={flow.id}>{flow.name}</option>
               ))}
             </select>
+            {selectedFlow && selectedFlow !== 'create_new' && (
+              <button 
+                onClick={() => handleDeleteClick(selectedFlow)}
+                style={{
+                  backgroundColor: '#ff4d4d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '5px 10px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  marginBottom: '1rem'
+                }}
+              >
+                Delete Selected Flow
+              </button>
+            )}
             <div style={{marginBottom:'2rem'}}>
               <label htmlFor="fallbackMessage">Fallback Message:</label>
               <input
@@ -564,6 +733,13 @@ const FlowBuilderContent = () => {
           fallbackMessage={fallbackMessage}
           fallbackCount={fallbackCount}
         />
+      )}
+       {showDeleteConfirmation && (
+        <div className="delete-confirmation-popup">
+          <p>Are you sure you want to delete this flow?</p>
+          <button onClick={confirmDelete}>Yes, delete</button>
+          <button onClick={cancelDelete}>Cancel</button>
+        </div>
       )}
     </div>
   );
