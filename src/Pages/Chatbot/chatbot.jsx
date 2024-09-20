@@ -292,20 +292,20 @@ const Chatbot = () => {
 
 
 
-  // useEffect(() => {
-  //   const fetchTenantData = async () => {
-  //     try {
-  //       // const business_phone_number_id = 241683569037594;
-  //       const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${business_phone_number_id}`);
-  //       setAccessToken(response.data.access_token);
-  //       setBusinessPhoneNumberId(response.data.business_phone_number_id);
-  //     } catch (error) {
-  //       console.error('Error fetching tenant data:', error);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchTenantData = async () => {
+      try {
+        // const business_phone_number_id = 241683569037594;
+        const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${businessPhoneNumberId}`);
+        setAccessToken(response.data.access_token);
+        setBusinessPhoneNumberId(response.data.business_phone_number_id);
+      } catch (error) {
+        console.error('Error fetching tenant data:', error);
+      }
+    };
     
-  //   fetchTenantData();
-  // }, []);
+    fetchTenantData();
+  }, []);
 
   const handleFileSelect = async (event) => {
     const file = event.target.files[0];
