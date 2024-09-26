@@ -260,7 +260,6 @@ const Chatbot = () => {
 
   const fetchProfileImage = async (contactId) => {
     try {
-        
         console.log('Tenant ID:', tenantId);
         console.log("this is id", contactId);
 
@@ -275,12 +274,26 @@ const Chatbot = () => {
             console.log('Found profile image:', profileImage);
             setProfileImage(profileImage);
         } else {
-            console.log('No profile image found.');
-            setProfileImage(null); // Set a default image URL or null if no image found
+            const initials = getInitials(contact.name, contact.last_name);
+            const avatarColorClass = getAvatarColor(initials);
+            console.log('No profile image found. Using initials:', initials);
+            setProfileImage(initials);
+            setAvatarColorClass(avatarColorClass);
         }
     } catch (error) {
         console.error('Error fetching profile image:', error);
     }
+};
+
+const getInitials = (firstName, lastName) => {
+    const firstInitial = firstName && firstName.charAt(0) ? firstName.charAt(0).toUpperCase() : '';
+    const lastInitial = lastName && lastName.charAt(0) ? lastName.charAt(0).toUpperCase() : '';
+    return firstInitial + lastInitial || '??';
+};
+
+const getAvatarColor = (initials) => {
+    const charCode = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
+    return `avatar-bg-${(charCode % 10) + 1}`;
 };
 
   useEffect(() => {
@@ -723,6 +736,7 @@ const Chatbot = () => {
     }));
   };
 
+
   
 
     const handleRedirect = () => {
@@ -899,19 +913,21 @@ const handleNewChat = async () => {
       <div className="cb-main">
       {selectedContact && (
    <div className="cb-chat-header">
-   {selectedContact && (
-     <div className="cb-chat-contact-info">
-       {profileImage ? (
-         <img src={profileImage} alt="Profile" className="cb-profile-icon" />
-       ) : (
-         <span className="cb-default-avatar">{selectedContact.first_name && selectedContact.first_name[0]}</span>
-       )}
-       <div className="cb-contact-details">
-         <span className="cb-contact-name">{selectedContact.name} {selectedContact.last_name}</span>
-         <span className="cb-contact-phone">{selectedContact.phone}</span>
-       </div>
-     </div>
-   )}
+  {selectedContact && (
+  <div className="cb-chat-contact-info">
+    {profileImage && typeof profileImage === 'string' ? (
+      <img src={profileImage} alt="Profile" className="cb-profile-icon" />
+    ) : (
+      <div className={`cb-default-avatar`}>
+        {getInitials(selectedContact.name, selectedContact.last_name)}
+      </div>
+    )}
+    <div className="cb-contact-details">
+      <span className="cb-contact-name">{selectedContact.name} {selectedContact.last_name}</span>
+      <span className="cb-contact-phone">{selectedContact.phone}</span>
+    </div>
+  </div>
+)}
  </div>
 )}
       <div className="cb-message-container">
@@ -939,7 +955,7 @@ const handleNewChat = async () => {
           // Handle non-string message formats
           return renderMessageContent(message);
         }
-        return <div className="error">Invalid message format</div>;
+        return <div className="error">Please Select a contact</div>;
       })()}
     </div>
   ))}
@@ -979,7 +995,9 @@ const handleNewChat = async () => {
         )}
       </div>
       <div className="cb-details-panel">
-      <button className="cb-signup-btn" onClick={handleRedirect}>Sign Up</button>
+       <button className="cb-signup-btn" onClick={handleRedirect}>
+      {businessPhoneNumberId ? businessPhoneNumberId : 'Sign Up'}
+    </button>
     
       <button onClick={() => navigate(`/${tenantId}/broadcast`)} className="cb-action-btn" style={{marginTop:'1rem'}}>
   Broadcast History
@@ -988,11 +1006,14 @@ const handleNewChat = async () => {
         {selectedContact && (
   <div className="cb-contact-full-details">
     <div className="cb-profile-section">
-      {profileImage ? (
-        <img src={profileImage} alt="Profile" className="cb-profile-image" />
-      ) : (
-        <span className="cb-default-avatar-large">{selectedContact.first_name && selectedContact.first_name[0]}</span>
-      )}
+
+{profileImage && typeof profileImage === 'string' ? (
+      <img src={profileImage} alt="Profile" className="cb-profile-image" />
+    ) : (
+      <div className={`cb-default-avatar-large`}>
+        {getInitials(selectedContact.name, selectedContact.last_name)}
+      </div>
+    )}
       <h2>{selectedContact.name} {selectedContact.last_name}</h2>
     </div>
     <div className="cb-contact-info-details">

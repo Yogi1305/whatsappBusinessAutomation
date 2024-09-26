@@ -85,6 +85,11 @@
   font-size: 14px;
 }
 
+.bp-btn-create{
+  display: flex;
+  
+}
+
 .bp-btn-create,
 .bp-btn-apply,
 .bp-btn-send,

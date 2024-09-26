@@ -282,13 +282,42 @@ const FlowBuilderContent = () => {
       
       if (node.type === 'askQuestion') {
         console.log('Ask Question node data:', node.data);
-        if (!node.data.question || !node.data.question.trim()) {
-          console.log(`Error: Empty question in node ${node.id}`);
+        if (!node.data.field || !node.data.field.content) {
+          console.log(`Error: Invalid field structure in node ${node.id}`);
           hasError = true;
           isValid = false;
-          toast.error(`Please enter a question for node ${node.id}`);
+          toast.error(`Invalid field structure in Ask Question node ${node.id}`);
+        } else {
+          const { type, content } = node.data.field;
+          
+          switch (type) {
+            case 'Message':
+              if (!content.text || !content.text.trim()) {
+                console.log(`Error: Empty question in node ${node.id}`);
+                hasError = true;
+                isValid = false;
+                toast.error(`Please enter a question for node ${node.id}`);
+              }
+              break;
+            case 'Image':
+            case 'Video':
+            case 'Document':
+              if (!content.med_id) {
+                console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
+                hasError = true;
+                isValid = false;
+                toast.error(`Please upload a ${type.toLowerCase()} for the Ask Question node ${node.id}`);
+              }
+              break;
+            default:
+              console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
+              hasError = true;
+              isValid = false;
+              toast.error(`Invalid message type in Ask Question node ${node.id}`);
+          }
         }
-        if (Array.isArray(node.data.options)) {
+  
+        if (node.data.optionType !== 'Text' && Array.isArray(node.data.options)) {
           const optionTexts = new Set();
           node.data.options.forEach((option, index) => {
             console.log(`Validating option ${index}:`, option);
@@ -297,11 +326,12 @@ const FlowBuilderContent = () => {
               hasError = true;
               isValid = false;
               toast.error(`Please enter text for option ${index + 1} in node ${node.id}`);
-            } else if (option.length > 24) {
-              console.log(`Error: Option ${index} in node ${node.id} exceeds 24 characters`);
+            } else if ((node.data.optionType === 'Buttons' && option.length > 20) || 
+                       (node.data.optionType === 'Lists' && option.length > 24)) {
+              console.log(`Error: Option ${index} in node ${node.id} exceeds character limit`);
               hasError = true;
               isValid = false;
-              toast.error(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
+              toast.error(`Option ${index + 1} in node ${node.id} exceeds ${node.data.optionType === 'Buttons' ? 20 : 24} characters`);
             } else if (optionTexts.has(option.toLowerCase())) {
               console.log(`Error: Duplicate option ${option} in node ${node.id}`);
               hasError = true;
@@ -311,8 +341,13 @@ const FlowBuilderContent = () => {
               optionTexts.add(option.toLowerCase());
             }
           });
-        } else {
-          console.log(`Warning: options is not an array in node ${node.id}`);
+        }
+  
+        if (node.data.variable && !node.data.dataType) {
+          console.log(`Error: Data type not set for variable in node ${node.id}`);
+          hasError = true;
+          isValid = false;
+          toast.error(`Please select a data type for the variable in node ${node.id}`);
         }
       } else if (node.type === 'sendMessage') {
         console.log('Send Message node data:', node.data);
@@ -320,7 +355,7 @@ const FlowBuilderContent = () => {
           const { type, content } = node.data.fields;
           
           switch (type) {
-            case 'text':
+            case 'Message':
               if (!content.text || !content.text.trim()) {
                 console.log(`Error: Empty message content in node ${node.id}`);
                 hasError = true;
@@ -381,7 +416,6 @@ const FlowBuilderContent = () => {
     setErrorNodes(newErrorNodes);
     return isValid;
   }, [nodes, edges, setNodes, fallbackMessage]);
-
 
   const saveFlow = useCallback(async () => {
     if (!authenticated) {

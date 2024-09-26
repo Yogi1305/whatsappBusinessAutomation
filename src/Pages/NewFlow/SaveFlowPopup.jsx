@@ -161,65 +161,102 @@ const SaveFlowPopup = ({ onSave, onCancel, fallbackMessage, fallbackCount }) => 
   const validateNodes = useCallback(() => {
     let isValid = true;
     let errorMessages = [];
-
+  
     // Check if start node is connected
     const startNodeConnected = edges.some(edge => edge.source === 'start');
     if (!startNodeConnected) {
       isValid = false;
       errorMessages.push("Please connect the Start node to another node");
     }
-
+  
     nodes.forEach(node => {
-      if (node.type === 'askQuestion') {
-        if (!node.data.question || !node.data.question.trim()) {
-          isValid = false;
-          errorMessages.push(`Empty question in node ${node.id}`);
-        }
-        if (Array.isArray(node.data.options)) {
-          node.data.options.forEach((option, index) => {
-            if (!option || !option.trim()) {
-              isValid = false;
-              errorMessages.push(`Empty option ${index + 1} in node ${node.id}`);
-            } else if (option.length > 24) {
-              isValid = false;
-              errorMessages.push(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
-            }
-          });
-        }
-      } else if (node.type === 'sendMessage') {
-        if (node.data.fields && typeof node.data.fields === 'object') {
-          const { type, content } = node.data.fields;
-          switch (type) {
-            case 'text':
-              if (!content.text || !content.text.trim()) {
-                isValid = false;
-                errorMessages.push(`Empty message content in node ${node.id}`);
-              }
-              break;
-            case 'Image':
-            case 'Video':
-            case 'Document':
-              if (!content.med_id) {
-                isValid = false;
-                errorMessages.push(`No ${type.toLowerCase()} uploaded in node ${node.id}`);
-              }
-              break;
-            default:
-              isValid = false;
-              errorMessages.push(`Invalid message type in Send Message node ${node.id}`);
-          }
-        } else {
-          isValid = false;
-          errorMessages.push(`Invalid fields structure in Send Message node ${node.id}`);
-        }
-      } else if (node.type === 'setCondition') {
+      // if (node.type === 'askQuestion') {
+      //   if (!node.data.field || !node.data.field.content) {
+      //     isValid = false;
+      //     errorMessages.push(`Invalid field structure in Ask Question node ${node.id}`);
+      //   } else {
+      //     const { type, content } = node.data.field;
+          
+      //     switch (type) {
+      //       case 'Message':
+      //         if (!content.text || !content.text.trim()) {
+      //           isValid = false;
+      //           errorMessages.push(`Empty question in node ${node.id}`);
+      //         }
+      //         break;
+      //       case 'Image':
+      //       case 'Video':
+      //       case 'Document':
+      //         if (!content.med_id) {
+      //           isValid = false;
+      //           errorMessages.push(`No ${type.toLowerCase()} uploaded in Ask Question node ${node.id}`);
+      //         }
+      //         break;
+      //       default:
+      //         isValid = false;
+      //         errorMessages.push(`Invalid message type in Ask Question node ${node.id}`);
+      //     }
+      //   }
+  
+      //   if (node.data.optionType !== 'Text' && Array.isArray(node.data.options)) {
+      //     const optionTexts = new Set();
+      //     node.data.options.forEach((option, index) => {
+      //       if (!option || !option.trim()) {
+      //         isValid = false;
+      //         errorMessages.push(`Empty option ${index + 1} in node ${node.id}`);
+      //       } else if ((node.data.optionType === 'Buttons' && option.length > 20) || 
+      //                  (node.data.optionType === 'Lists' && option.length > 24)) {
+      //         isValid = false;
+      //         errorMessages.push(`Option ${index + 1} in node ${node.id} exceeds ${node.data.optionType === 'Buttons' ? 20 : 24} characters`);
+      //       } else if (optionTexts.has(option.toLowerCase())) {
+      //         isValid = false;
+      //         errorMessages.push(`Duplicate option "${option}" in node ${node.id}`);
+      //       } else {
+      //         optionTexts.add(option.toLowerCase());
+      //       }
+      //     });
+      //   }
+  
+      //   if (node.data.variable && !node.data.dataType) {
+      //     isValid = false;
+      //     errorMessages.push(`Data type not set for variable in node ${node.id}`);
+      //   }
+      // }
+      //   if (node.type === 'sendMessage') {
+      //   if (node.data.fields && typeof node.data.fields === 'object') {
+      //     const { type, content } = node.data.fields;
+      //     switch (type) {
+      //       case 'Message':
+      //         if (!content.text || !content.text.trim()) {
+      //           isValid = false;
+      //           errorMessages.push(`Empty message content in node ${node.id}`);
+      //         }
+      //         break;
+      //       case 'Image':
+      //       case 'Video':
+      //       case 'Document':
+      //         if (!content.med_id) {
+      //           isValid = false;
+      //           errorMessages.push(`No ${type.toLowerCase()} uploaded in node ${node.id}`);
+      //         }
+      //         break;
+      //       default:
+      //         isValid = false;
+      //         errorMessages.push(`Invalid message type in Send Message node ${node.id}`);
+      //     }
+      //   } else {
+      //     isValid = false;
+      //     errorMessages.push(`Invalid fields structure in Send Message node ${node.id}`);
+      //   }
+      // } 
+       if (node.type === 'setCondition') {
         if (!node.data.condition || !node.data.condition.trim()) {
           isValid = false;
           errorMessages.push(`Empty condition in node ${node.id}`);
         }
       }
     });
-
+  
     return { isValid, errorMessages };
   }, [nodes, edges]);
 

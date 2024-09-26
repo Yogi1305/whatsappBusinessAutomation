@@ -1,143 +1,455 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { MessageSquare, GitBranch, ArrowRight, Users, BarChart, Send, Workflow } from 'lucide-react';
-import "./Homepage.css"
-import hero_img from "../../assets/hero_img.png"
-import hero2 from "../../assets/hero2.png"
- 
-const FeatureCard = ({ icon, title, description }) => (
-  <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-    <div className="flex items-center justify-center w-12 h-12 bg-green-100 text-green-600 rounded-full mb-4">
-      {icon}
-    </div>
-    <h3 className="text-xl font-semibold mb-2">{title}</h3>
-    <p className="text-gray-600">{description}</p>
-  </div>
-);
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useSpring, animated } from 'react-spring';
+import { MessageCircle, Users, Zap, BarChart2, Send, Star, Shield, Rocket, Check, ChevronDown } from 'lucide-react';
+import HeroSlider from './HeroSlider';
+import VideoSection from './Videocardcanvas';
+import birds from "../../assets/birds.mp4";
+import man from "../../assets/man.png";
+import connection from "../../assets/connection.png";
+import "./Homepage.css";
+import CalendlySection from './Calendly';
+import ChatbotDemoSection from './ChatbotDemo';
+
+const FeatureCard = ({ icon: Icon, title, description }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const springProps = useSpring({
+    scale: isHovered ? 1.05 : 1,
+    boxShadow: isHovered
+      ? '0 10px 30px rgba(0, 230, 118, 0.2)'
+      : '0 5px 15px rgba(0, 0, 0, 0.1)',
+  });
+
+  return (
+    <animated.div
+      style={springProps}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="bg-white rounded-lg p-6 text-gray-800 transition-all duration-300 hover:bg-green-50"
+    >
+      <Icon className="w-12 h-12 mb-4 text-green-500" />
+      <h3 className="text-xl font-bold mb-2">{title}</h3>
+      <p className="text-gray-600">{description}</p>
+    </animated.div>
+  );
+};
+
+const AnimatedCounter = ({ value, duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = null;
+    const step = (timestamp) => {
+      if (!start) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      setCount(Math.floor(progress * value));
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [value, duration]);
+
+  return <span>{count.toLocaleString()}</span>;
+};
+
+const ScrollAnimatedSection = ({ children }) => {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(ref.current);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, []);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 50 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5 }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const FloatingElement = ({ children, yOffset = 20, duration = 3 }) => {
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], [0, yOffset]);
+
+  return (
+    <motion.div
+      style={{ y }}
+      animate={{ y: [0, yOffset, 0] }}
+      transition={{ repeat: Infinity, duration, ease: "easeInOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 const Homepage = () => {
+  const { scrollYProgress } = useScroll();
+
   return (
-    <div className="flex flex-col min-h-screen main-homepage">
-      <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-r from-green-500 to-blue-500 text-white py-20">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-center">
-              <div className="md:w-1/2 mb-8 md:mb-0">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">Transform Your WhatsApp Business</h1>
-                <p className="text-xl mb-6">NurenAI: The ultimate WhatsApp management system for broadcasting, flow creation, and AI-powered chatbots.</p>
-                <Link to="/login" className="bg-white text-green-600 font-semibold py-2 px-6 rounded-full hover:bg-green-100 transition duration-300">
-                  Get Started
-                </Link>
-              </div>
-              <div className="md:w-1/2">
-                <img src={hero_img} alt="WhatsApp Management Dashboard" className="rounded-lg hero-img" />
-              </div>
-            </div>
-          </div>
-        </section>
+    <div className="bg-gray-100 min-h-screen overflow-x-hidden w-full main-homepage" style={{width:'98.9vw'}}>
+      {/* Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-2 bg-green-500 z-50"
+        style={{ scaleX: scrollYProgress }}
+      />
 
-        {/* Features Section */}
-        <section className="py-16 bg-gray-100">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Powerful Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <FeatureCard
-                icon={<Send size={24} />}
-                title="Smart Broadcasting"
-                description="Reach your audience efficiently with targeted WhatsApp broadcasts. Segment your contacts and send personalized messages at scale."
+      {/* Hero Section */}
+      <section className="relative">
+        <HeroSlider />
+      </section>
+
+      <ChatbotDemoSection />
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <ScrollAnimatedSection>
+            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Powerful Features</h2>
+          </ScrollAnimatedSection>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {[
+              { icon: MessageCircle, title: "AI-Powered Chatbots", description: "Automate customer interactions with intelligent chatbots that understand context and intent." },
+              { icon: Users, title: "Advanced Segmentation", description: "Target the right audience with precision using our advanced customer segmentation tools." },
+              { icon: Zap, title: "Quick Responses", description: "Create and manage a library of quick responses to common queries, saving time and ensuring consistency." },
+              { icon: Star, title: "Personalized Experiences", description: "Deliver tailored messages and recommendations based on customer behavior and preferences." },
+              { icon: Shield, title: "Secure & Compliant", description: "Ensure data privacy and comply with regulations using our robust security measures." },
+              { icon: Rocket, title: "Scalable Solutions", description: "Grow your business effortlessly with our scalable WhatsApp marketing solutions." },
+            ].map((feature, index) => (
+              <ScrollAnimatedSection key={index}>
+                <FeatureCard {...feature} />
+              </ScrollAnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+     
+
+      {/* How It Works Section */}
+      <section className="py-20 bg-gray-100 relative overflow-hidden">
+        <FloatingElement yOffset={30} duration={5}>
+          <div className="absolute top-10 left-10 w-20 h-20 bg-green-200 rounded-full opacity-50" />
+        </FloatingElement>
+        <FloatingElement yOffset={-20} duration={4}>
+          <div className="absolute bottom-10 right-10 w-16 h-16 bg-blue-200 rounded-full opacity-50" />
+        </FloatingElement>
+        <div className="container mx-auto px-4">
+          <ScrollAnimatedSection>
+            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">How NurenAI Works</h2>
+          </ScrollAnimatedSection>
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="w-full md:w-1/2 mb-8 md:mb-0">
+              <img
+                src={man}
+                alt="NurenAI Illustration"
+                className="w-full h-auto object-cover"
               />
-              <FeatureCard
-                icon={<Workflow size={24} />}
-                title="Intuitive Flow Builder"
-                description="Create complex conversation flows with our easy-to-use visual builder. Design interactive experiences for your customers without coding."
-              />
-              <FeatureCard
-                icon={<MessageSquare size={24} />}
-                title="AI-Powered Chatbot"
-                description="Enhance customer support with our intelligent chatbot system. Automate responses and provide 24/7 assistance to your WhatsApp contacts."
-              />
+            </div>
+            <div className="w-full md:w-1/2 md:ml-12">
+              {[
+                "Connect your WhatsApp Business API",
+                "Set up AI-powered chatbots and flows",
+                "Create targeted broadcast lists",
+                "Launch automated campaigns",
+                "Analyze performance and optimize",
+              ].map((step, index) => (
+                <ScrollAnimatedSection key={index}>
+                  <motion.div
+                    className="flex items-center mb-8"
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <div className="bg-green-500 text-white rounded-full w-12 h-12 flex items-center justify-center mr-6 text-xl font-bold shadow-lg">
+                      {index + 1}
+                    </div>
+                    <p className="text-xl text-gray-800">{step}</p>
+                  </motion.div>
+                </ScrollAnimatedSection>
+              ))}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* How It Works Section */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">How NurenAI Works</h2>
-            <div className="flex flex-col md:flex-row items-center justify-between">
-              <div className="md:w-1/2 mb-8 md:mb-0">
-                <img src={hero2} alt="NurenAI Workflow" className="rounded-lg " />
-              </div>
-              <div className="md:w-1/2 md:pl-12">
-                <ol className="space-y-4">
-                  <li className="flex items-center">
-                    <span className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4">1</span>
-                    <span>Connect your WhatsApp Business account to NurenAI</span>
-                  </li>
-                  <li className="flex items-center">
-                    <span className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4">2</span>
-                    <span>Set up broadcast lists or design conversation flows</span>
-                  </li>
-                  <li className="flex items-center">
-                    <span className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4">3</span>
-                    <span>Customize and train your AI chatbot</span>
-                  </li>
-                  <li className="flex items-center">
-                    <span className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4">4</span>
-                    <span>Launch your automated WhatsApp communication system</span>
-                  </li>
-                  <li className="flex items-center">
-                    <span className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4">5</span>
-                    <span>Monitor performance and optimize your strategies</span>
-                  </li>
-                </ol>
-              </div>
+      <VideoSection 
+        videoSrc={birds}
+        title="Experience NurenAI in Action"
+        description="See how NurenAI transforms WhatsApp business communication with AI-powered chatbots, automated campaigns, and advanced analytics. Our cutting-edge technology helps businesses engage customers more effectively, save time, and drive growth."
+      />
+
+
+<CalendlySection />
+
+      {/* Connection Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <ScrollAnimatedSection>
+            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Connecting You with Your Customers</h2>
+          </ScrollAnimatedSection>
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="w-full md:w-1/2 mb-8 md:mb-0">
+              <ScrollAnimatedSection>
+                <img
+                  src={connection}
+                  alt="Connection Illustration"
+                  className="w-full h-auto object-cover "
+                />
+              </ScrollAnimatedSection>
+            </div>
+            <div className="w-full md:w-1/2 md:ml-12">
+              <ScrollAnimatedSection>
+                <p className="text-xl text-gray-600 mb-8">
+                  NurenAI bridges the gap between businesses and customers, creating meaningful connections through intelligent, personalized communication. Our AI-driven platform ensures that every interaction is valuable, timely, and aligned with your brand voice.
+                </p>
+              </ScrollAnimatedSection>
+              <ScrollAnimatedSection>
+                <ul className="space-y-4">
+                  {[
+                    "Understand customer needs with AI-powered sentiment analysis",
+                    "Deliver personalized content at scale",
+                    "Build lasting relationships through consistent, meaningful interactions",
+                    "Seamlessly transition between AI and human support",
+                  ].map((item, index) => (
+                    <motion.li
+                      key={index}
+                      className="flex items-center"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <Check className="text-green-500 mr-2" size={20} />
+                      <span>{item}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </ScrollAnimatedSection>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Benefits Section */}
-        <section className="py-16 bg-gray-100">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Why Choose NurenAI?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="flex items-start">
-                <Users className="text-green-500 mr-4" size={24} />
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Improved Customer Engagement</h3>
-                  <p className="text-gray-600">Interact with your customers on their preferred platform, providing quick and efficient support.</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <BarChart className="text-green-500 mr-4" size={24} />
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Increased Efficiency</h3>
-                  <p className="text-gray-600">Automate routine tasks and handle multiple conversations simultaneously, saving time and resources.</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <GitBranch className="text-green-500 mr-4" size={24} />
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Scalable Solution</h3>
-                  <p className="text-gray-600">Easily manage growing customer bases and adapt to changing business needs with our flexible platform.</p>
-                </div>
-              </div>
+      {/* Stats Section */}
+      <section className="py-20 bg-gradient-to-r from-green-500 to-blue-500 text-white relative overflow-hidden">
+        <FloatingElement yOffset={40} duration={6}>
+          <div className="absolute top-20 right-20 w-32 h-32 bg-white rounded-full opacity-10" />
+        </FloatingElement>
+        <FloatingElement yOffset={-30} duration={5}>
+          <div className="absolute bottom-20 left-20 w-24 h-24 bg-white rounded-full opacity-10" />
+        </FloatingElement>
+        <div className="container mx-auto px-4">
+          <ScrollAnimatedSection>
+            <h2 className="text-5xl font-bold text-center mb-16">NurenAI in Numbers</h2>
+          </ScrollAnimatedSection>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+            {[
+              { icon: Send, value: 1000000, label: 'Messages Sent Daily' },
+              { icon: Users, value: 10000, label: 'Active Businesses' },
+              { icon: BarChart2, value: 95, label: 'Customer Satisfaction' },
+            ].map(({ icon: Icon, value, label }, index) => (
+              <ScrollAnimatedSection key={index}>
+                <motion.div
+                  className="bg-white bg-opacity-20 rounded-lg p-8 backdrop-blur-sm"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Icon className="w-16 h-16 mx-auto mb-6" />
+                  <h3 className="text-5xl font-bold mb-4">
+                    <AnimatedCounter value={value} />
+                    {label === 'Customer Satisfaction' && '%'}
+                  </h3>
+                  <p className="text-2xl">{label}</p>
+                </motion.div>
+              </ScrollAnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 bg-gray-100">
+        <div className="container mx-auto px-4">
+          <ScrollAnimatedSection>
+            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Simple, Transparent Pricing</h2>
+          </ScrollAnimatedSection><div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { plan: "Starter", price: "$99", features: ["1,000 messages/month", "Basic chatbot", "Email support"] },
+              { plan: "Pro", price: "$299", features: ["10,000 messages/month", "Advanced AI chatbot", "Priority support", "Custom integrations"] },
+              { plan: "Enterprise", price: "Custom", features: ["Unlimited messages", "Full AI suite", "Dedicated account manager", "Custom development"] },
+            ].map((tier, index) => (
+              <ScrollAnimatedSection key={index}>
+                <motion.div
+                  className="bg-white rounded-lg shadow-lg overflow-hidden"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <div className="p-8 bg-green-500 text-white text-center">
+                    <h3 className="text-3xl font-bold mb-2">{tier.plan}</h3>
+                    <p className="text-4xl font-bold">{tier.price}</p>
+                    <p className="text-sm opacity-75">per month</p>
+                  </div>
+                  <ul className="p-8">
+                    {tier.features.map((feature, idx) => (
+                      <li key={idx} className="mb-4 flex items-center">
+                        <Check className="text-green-500 mr-2" size={20} />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="px-8 pb-8">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition duration-300"
+                    >
+                      {tier.plan === "Enterprise" ? "Contact Sales" : "Get Started"}
+                    </motion.button>
+                  </div>
+                </motion.div>
+              </ScrollAnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <ScrollAnimatedSection>
+            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">What Our Customers Say</h2>
+          </ScrollAnimatedSection>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { name: "John Doe", company: "Tech Innovators", quote: "NurenAI has revolutionized our customer service. Our response times have improved by 80%, and customer satisfaction is at an all-time high." },
+              { name: "Jane Smith", company: "Global Retail", quote: "The personalization capabilities of NurenAI have helped us increase our sales by 25%. It's like having a personal shopper for each customer." },
+              { name: "Alex Johnson", company: "StartUp Solutions", quote: "As a startup, NurenAI has been a game-changer. It's like having an entire customer service team at a fraction of the cost." },
+            ].map((testimonial, index) => (
+              <ScrollAnimatedSection key={index}>
+                <motion.div
+                  className="bg-gray-100 p-6 rounded-lg shadow-md"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <p className="text-gray-600 mb-4">"{testimonial.quote}"</p>
+                  <p className="font-bold">{testimonial.name}</p>
+                  <p className="text-sm text-gray-500">{testimonial.company}</p>
+                </motion.div>
+              </ScrollAnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-gray-100">
+        <div className="container mx-auto px-4">
+          <ScrollAnimatedSection>
+            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Frequently Asked Questions</h2>
+          </ScrollAnimatedSection>
+          <div className="max-w-3xl mx-auto">
+            {[
+              { question: "How does NurenAI integrate with WhatsApp Business API?", answer: "NurenAI seamlessly integrates with your existing WhatsApp Business API account. Our platform acts as an intelligent layer on top of the API, providing advanced features like AI chatbots, automated campaigns, and analytics." },
+              { question: "Is NurenAI compliant with data protection regulations?", answer: "Yes, NurenAI is fully compliant with GDPR, CCPA, and other major data protection regulations. We implement strict security measures to ensure your data and your customers' data is always protected." },
+              { question: "Can I customize the AI chatbots to match my brand voice?", answer: "Absolutely! Our AI chatbots are highly customizable. You can train them with your specific brand voice, create custom flows, and even integrate them with your knowledge base to provide accurate, brand-specific responses." },
+              { question: "What kind of support does NurenAI offer?", answer: "We offer tiered support based on your plan. All customers receive email support, while Pro and Enterprise customers get priority support with faster response times. Enterprise customers also benefit from a dedicated account manager." },
+            ].map((faq, index) => (
+              <ScrollAnimatedSection key={index}>
+                <motion.div
+                  className="mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <h3 className="text-2xl font-bold mb-4 text-gray-800">{faq.question}</h3>
+                  <p className="text-gray-600">{faq.answer}</p>
+                </motion.div>
+              </ScrollAnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-green-500 to-blue-500 text-white relative overflow-hidden">
+        <FloatingElement yOffset={30} duration={5}>
+          <div className="absolute top-10 left-10 w-24 h-24 bg-white rounded-full opacity-10" />
+        </FloatingElement>
+        <FloatingElement yOffset={-20} duration={4}>
+          <div className="absolute bottom-10 right-10 w-16 h-16 bg-white rounded-full opacity-10" />
+        </FloatingElement>
+        <div className="container mx-auto px-4 text-center">
+          <ScrollAnimatedSection>
+            <h2 className="text-5xl font-bold mb-8">Ready to Transform Your WhatsApp Business?</h2>
+            <p className="text-2xl mb-12 max-w-3xl mx-auto">
+              Join thousands of businesses already using NurenAI to streamline their WhatsApp communication and boost customer engagement.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-white text-green-500 font-bold py-4 px-10 rounded-full text-xl shadow-lg hover:bg-green-100 transition duration-300"
+            >
+              Start Your Free Trial
+            </motion.button>
+          </ScrollAnimatedSection>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-2xl font-bold mb-4">NurenAI</h3>
+              <p className="text-gray-400">Revolutionizing WhatsApp business communication with AI-powered solutions.</p>
             </div>
+            {[
+              { title: "Product", links: ["Features", "Pricing", "Case Studies"] },
+              { title: "Company", links: ["About Us", "Careers", "Contact"] },
+              { title: "Legal", links: ["Privacy Policy", "Terms of Service", "GDPR Compliance"] },
+            ].map((column, index) => (
+              <div key={index}>
+                <h4 className="text-xl font-bold mb-4">{column.title}</h4>
+                <ul className="space-y-2">
+                  {column.links.map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      <a href="#" className="hover:text-green-500 transition duration-300">{link}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="bg-green-600 text-white py-16">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Revolutionize Your WhatsApp Management?</h2>
-            <p className="text-xl mb-8">Join thousands of businesses already using NurenAI to streamline their communication and boost customer satisfaction.</p>
-            <Link to="/ll/flow-builder" className="bg-white text-green-600 font-semibold py-3 px-8 rounded-full hover:bg-green-100 transition duration-300 inline-flex items-center">
-              Start Your Free Trial <ArrowRight className="ml-2" size={20} />
-            </Link>
+          <div className="mt-12 pt-8 border-t border-gray-700 text-center text-gray-400">
+            <p>&copy; 2024 NurenAI. All rights reserved.</p>
           </div>
-        </section>
-      </main>
+        </div>
+      </footer>
     </div>
   );
 };

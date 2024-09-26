@@ -161,22 +161,49 @@ const NodeWrapper = ({ children, style, type }) => {
 
 
 
-export const AskQuestionNode = ({id, data, isConnectable }) => {
-  const [question, setQuestion] = useState(data.question || '');
+export const AskQuestionNode = ({ id, data, isConnectable }) => {
+  const [field, setField] = useState(data.field || { type: 'Message', content: { text: '', caption: '', med_id: '' } });
   const [optionType, setOptionType] = useState(data.optionType || 'Buttons');
   const [options, setOptions] = useState(data.options || []);
   const [variable, setVariable] = useState(data.variable || '');
   const [dataType, setDataType] = useState(data.dataType || '');
   const [errors, setErrors] = useState({});
   const { updateNodeData } = useFlow();
+  const { userId } = useAuth();
+  const tenantId = getTenantIdFromUrl();
+  const [accessToken, setAccessToken] = useState('');
+  const fileInputRef = useRef(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const bpidResponse = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+          headers: {
+            'X-Tenant-ID': tenantId
+          }
+        });
+        const fetchedBusinessPhoneNumberId = bpidResponse.data.business_phone_number_id;
+        setBusinessPhoneNumberId(fetchedBusinessPhoneNumberId);
+
+        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${fetchedBusinessPhoneNumberId}`);
+        setAccessToken(tenantResponse.data.access_token);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [tenantId]);
 
   useEffect(() => {
     validateNode();
-  }, [question, options, variable, dataType]);
+  }, [field, options, variable, dataType]);
 
   const validateNode = () => {
     let newErrors = {};
-    if (!question.trim()) {
+    if (!field.content.text.trim() && field.type === 'Message') {
       newErrors.question = 'Question is required';
     }
     if (optionType !== 'Text') {
@@ -201,13 +228,20 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
 
   const handleQuestionChange = (e) => {
     const newQuestion = e.target.value;
-    setQuestion(newQuestion);
-    updateNodeData(id, { 
-      question: convertMentionsForBackend(newQuestion), 
-      optionType, 
-      options, 
-      dataType 
-    });
+    setField(prevField => ({
+      ...prevField,
+      content: { ...prevField.content, text: convertMentionsForBackend(newQuestion) }
+    }));
+    updateNodeData(id, { field, optionType, options, variable, dataType });
+  };
+
+  const handleCaptionChange = (e) => {
+    const newCaption = e.target.value;
+    setField(prevField => ({
+      ...prevField,
+      content: { ...prevField.content, caption: convertMentionsForBackend(newCaption) }
+    }));
+    updateNodeData(id, { field, optionType, options, variable, dataType });
   };
 
   const handleOptionTypeChange = (e) => {
@@ -220,23 +254,23 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
     }
     setOptionType(newOptionType);
     setOptions(newOptions);
-    updateNodeData(id, { question, optionType: newOptionType, options: newOptions, variable, dataType });
+    updateNodeData(id, { field, optionType: newOptionType, options: newOptions, variable, dataType });
   };
 
   const handleOptionChange = (index, value) => {
     const newOptions = options.map((opt, i) => i === index ? value : opt);
     setOptions(newOptions);
-    updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
+    updateNodeData(id, { field, optionType, options: newOptions, variable, dataType });
   };
 
   const handleVariableChange = (value) => {
     setVariable(value);
-    updateNodeData(id, { question, optionType, options, variable: value, dataType });
+    updateNodeData(id, { field, optionType, options, variable: value, dataType });
   };
 
   const handleDataTypeChange = (value) => {
     setDataType(value);
-    updateNodeData(id, { question, optionType, options, variable, dataType: value });
+    updateNodeData(id, { field, optionType, options, variable, dataType: value });
   };
 
   const addOption = () => {
@@ -244,49 +278,97 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
         (optionType === 'Lists' && options.length < 10)) {
       const newOptions = [...options, ''];
       setOptions(newOptions);
-      updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
+      updateNodeData(id, { field, optionType, options: newOptions, variable, dataType });
     }
   };
 
   const removeOption = (index) => {
     const newOptions = options.filter((_, i) => i !== index);
     setOptions(newOptions);
-    updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
+    updateNodeData(id, { field, optionType, options: newOptions, variable, dataType });
   };
 
-  const getOptionStyle = (type, index) => {
-    const baseStyle = {
-      ...inputStyles,
-      width: 'calc(100% - 60px)',
-    };
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', file.type.startsWith('image/') ? 'image' : 'document');
+        formData.append('messaging_product', 'whatsapp');
 
-    const errorStyle = errors[`option-${index}`] ? { borderColor: 'red' } : {};
+        const response = await axiosInstance.post(
+          `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`,
+          formData,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
 
-    switch (type) {
-      case 'Buttons':
-        return {
-          ...baseStyle,
-          ...errorStyle,
-          background: '#e6f7ff',
-          border: '1px solid #91d5ff',
-          borderRadius: '20px',
-          padding: '8px 15px',
-          cursor: 'pointer',
-          color: '#0050b3',
-          fontWeight: 'bold',
-        };
-      case 'Lists':
-        return {
-          ...baseStyle,
-          ...errorStyle,
-          background: '#f6ffed',
-          borderLeft: '3px solid #b7eb8f',
-          borderRadius: '0 6px 6px 0',
-          paddingLeft: '15px',
-          color: '#389e0d',
-        };
+        console.log('File uploaded to WhatsApp, ID:', response.data.id);
+        const blobUrl = await uploadToBlob(file, userId, tenantId);
+
+        setField({
+          type: file.type.startsWith('image/') ? 'Image' : file.type.startsWith('video/') ? 'Video' : 'Document',
+          content: {
+            url: blobUrl,
+            med_id: response.data.id,
+            text: '',
+            caption: ''
+          }
+        });
+
+        if (file.type.startsWith('image/')) {
+          setPreviewUrl(URL.createObjectURL(file));
+        }
+
+        updateNodeData(id, { field, optionType, options, variable, dataType });
+      } catch (error) {
+        console.error('Error uploading file to WhatsApp Media API:', error);
+      }
+    }
+  };
+
+  const renderInput = () => {
+    switch (field.type) {
+      case 'Image':
+      case 'Video':
+      case 'Document':
+        return (
+          <div>
+            {field.content && field.content.med_id && (
+              <div style={{ marginBottom: '10px' }}>
+                {field.type === 'Image' && previewUrl && (
+                  <img src={previewUrl} alt="Preview" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
+                )}
+              </div>
+            )}
+            <input
+              type="file"
+              accept={`${field.type.toLowerCase()}/*`}
+              onChange={handleFileChange}
+              style={fileInputStyles}
+              ref={fileInputRef}
+            />
+            <MentionTextArea
+              value={convertMentionsForFrontend(field.content?.caption || '')}
+              onChange={handleCaptionChange}
+              placeholder="Enter caption"
+            />
+          </div>
+        );
       default:
-        return { ...baseStyle, ...errorStyle };
+        return (
+          <MentionTextArea
+            value={convertMentionsForFrontend(field.content?.text || '')}
+            onChange={handleQuestionChange}
+            placeholder="Enter question"
+            style={errors.question ? { borderColor: 'red' } : {}}
+          />
+        );
     }
   };
 
@@ -329,6 +411,42 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
     }
   };
 
+  const getOptionStyle = (type, index) => {
+    const baseStyle = {
+      ...inputStyles,
+      width: 'calc(100% - 60px)',
+    };
+
+    const errorStyle = errors[`option-${index}`] ? { borderColor: 'red' } : {};
+
+    switch (type) {
+      case 'Buttons':
+        return {
+          ...baseStyle,
+          ...errorStyle,
+          background: '#e6f7ff',
+          border: '1px solid #91d5ff',
+          borderRadius: '20px',
+          padding: '8px 15px',
+          cursor: 'pointer',
+          color: '#0050b3',
+          fontWeight: 'bold',
+        };
+      case 'Lists':
+        return {
+          ...baseStyle,
+          ...errorStyle,
+          background: '#f6ffed',
+          borderLeft: '3px solid #b7eb8f',
+          borderRadius: '0 6px 6px 0',
+          paddingLeft: '15px',
+          color: '#389e0d',
+        };
+      default:
+        return { ...baseStyle, ...errorStyle };
+    }
+  };
+
   return (
     <NodeWrapper style={{ background: '#fff5f5', borderColor: errors.question ? 'red' : '#ffa39e' }} type="askQuestion">
       <Handle type="target" style={{
@@ -339,12 +457,21 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
         height: '12px',
       }} position={Position.Left} isConnectable={isConnectable} />
       <h3 style={{ marginBottom: '15px', color: '#cf1322' }}>Ask Question</h3>
-      <MentionTextArea
-        value={convertMentionsForFrontend(question)}
-        onChange={handleQuestionChange}
-        placeholder="Enter question"
-        style={errors.question ? { borderColor: 'red' } : {}}
-      />
+      <div style={{ marginBottom: '15px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+          <select 
+            value={field.type} 
+            onChange={(e) => setField({ type: e.target.value, content: { text: '', caption: '', med_id: '' } })}
+            style={{ ...selectStyles, width: '100%', marginRight: '10px', color: 'black' }}
+          >
+            <option value="Message">Message</option>
+            <option value="Image">Image</option>
+            <option value="Document">Document</option>
+            <option value="Video">Video</option>
+          </select>
+        </div>
+        {renderInput()}
+      </div>
       {errors.question && <div style={errorStyle}>{errors.question}</div>}
       <h4>Variables (Optional)</h4>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
