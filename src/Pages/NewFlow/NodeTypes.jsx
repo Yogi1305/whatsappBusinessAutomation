@@ -760,3 +760,61 @@ const handleConditionChange = (e) => {
     </NodeWrapper>
   );
 };
+
+
+// DelayNode
+export const DelayNode = ({ id, data, isConnectable }) => {
+  const [delay, setDelay] = useState(data.delay || 0);
+  const { updateNodeData } = useFlow();
+
+  const handleDelayChange = (e) => {
+    const newDelay = parseInt(e.target.value, 10) || 0;
+    setDelay(newDelay);
+    updateNodeData(id, { delay: newDelay });
+  };
+
+  return (
+    <div className="p-4 rounded-lg bg-yellow-100 border border-yellow-300">
+      <Handle type="target" position="top" isConnectable={isConnectable} />
+      <div className="mb-2 font-bold text-yellow-700">⏱️ Delay</div>
+      <input
+        type="number"
+        value={delay}
+        onChange={handleDelayChange}
+        className="w-full p-2 border rounded"
+        placeholder="Delay in seconds"
+        min="0"
+      />
+      <Handle type="source" position="bottom" isConnectable={isConnectable} />
+    </div>
+  );
+};
+
+// AINode
+export const AINode = ({ id, data, isConnectable }) => {
+  const [file, setFile] = useState(null);
+  const { updateNodeData } = useFlow();
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+    updateNodeData(id, { file: selectedFile });
+  };
+
+  return (
+    <div className="p-4 rounded-lg bg-purple-100 border border-purple-300">
+      <Handle type="target" position="top" isConnectable={isConnectable} />
+      <div className="mb-2 font-bold text-purple-700">🤖 AI</div>
+      <input
+        type="file"
+        onChange={handleFileChange}
+        className="w-full p-2 mb-2 border rounded"
+      />
+      <button className="w-full p-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+        Exit
+      </button>
+      <Handle type="source" position="bottom" isConnectable={isConnectable} />
+    </div>
+  );
+};
+
