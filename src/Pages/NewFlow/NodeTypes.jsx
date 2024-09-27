@@ -6,6 +6,10 @@ import uploadToBlob from "../../azureUpload.jsx";
 import { convertMentionsForBackend, convertMentionsForFrontend, MentionTextArea } from './MentionTextArea';
 import { useAuth } from '../../authContext.jsx';
 import axiosInstance from '../../api.jsx';
+import { Clock, LogOut, Upload } from 'lucide-react';
+import { Button, Card, Input } from 'antd';
+import { CardContent } from '@mui/material';
+import { CardHeader, CardTitle } from 'react-bootstrap';
 
 const nodeStyles = {
   padding: '20px',
@@ -761,8 +765,6 @@ const handleConditionChange = (e) => {
   );
 };
 
-
-// DelayNode
 export const DelayNode = ({ id, data, isConnectable }) => {
   const [delay, setDelay] = useState(data.delay || 0);
   const { updateNodeData } = useFlow();
@@ -774,26 +776,33 @@ export const DelayNode = ({ id, data, isConnectable }) => {
   };
 
   return (
-    <div className="p-4 rounded-lg bg-yellow-100 border border-yellow-300">
+    <Card className="w-64 bg-yellow-50 border-yellow-200">
       <Handle type="target" position="top" isConnectable={isConnectable} />
-      <div className="mb-2 font-bold text-yellow-700">⏱️ Delay</div>
-      <input
-        type="number"
-        value={delay}
-        onChange={handleDelayChange}
-        className="w-full p-2 border rounded"
-        placeholder="Delay in seconds"
-        min="0"
-      />
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold text-yellow-700 flex items-center">
+          <Clock className="w-5 h-5 mr-2" /> Delay
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Input
+          type="number"
+          value={delay}
+          onChange={handleDelayChange}
+          className="w-full bg-white"
+          placeholder="Delay in seconds"
+          min="0"
+        />
+      </CardContent>
       <Handle type="source" position="bottom" isConnectable={isConnectable} />
-    </div>
+    </Card>
   );
 };
 
-// AINode
 export const AINode = ({ id, data, isConnectable }) => {
   const [file, setFile] = useState(null);
   const { updateNodeData } = useFlow();
+
+
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -802,19 +811,27 @@ export const AINode = ({ id, data, isConnectable }) => {
   };
 
   return (
-    <div className="p-4 rounded-lg bg-purple-100 border border-purple-300">
+    <Card className="w-64 bg-purple-50 border-purple-200">
       <Handle type="target" position="top" isConnectable={isConnectable} />
-      <div className="mb-2 font-bold text-purple-700">🤖 AI</div>
-      <input
-        type="file"
-        onChange={handleFileChange}
-        className="w-full p-2 mb-2 border rounded"
-      />
-      <button className="w-full p-2 bg-purple-500 text-white rounded hover:bg-purple-600">
-        Exit
-      </button>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold text-purple-700 flex items-center">
+          <Upload className="w-5 h-5 mr-2" /> AI Upload
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <Input
+          type="file"
+          onChange={handleFileChange}
+          className="w-full bg-white cursor-pointer"
+        />
+        <Button 
+          className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+          onClick={() => console.log('Exit clicked')}
+        >
+          <LogOut className="w-4 h-4 mr-2" /> {data.exitButtonText || 'Exit'}
+        </Button>
+      </CardContent>
       <Handle type="source" position="bottom" isConnectable={isConnectable} />
-    </div>
+    </Card>
   );
 };
-
