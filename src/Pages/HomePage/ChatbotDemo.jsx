@@ -2,8 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, Smartphone } from 'lucide-react';
 import waqr from "../../assets/waqr.png";
-import WhatsAppQRCode from '../Chatbot/WhatsAppQRCode'; // Make sure this path is correct
-
+import WhatsAppQRCode from '../Chatbot/WhatsappQrCode';
 const ChatbotDemoSection = () => {
   return (
     <section className="py-20 bg-gray-50">
