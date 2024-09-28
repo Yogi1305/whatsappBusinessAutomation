@@ -14,7 +14,7 @@ import ReactFlow, {
   Position
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { AskQuestionNode, SendMessageNode, SetConditionNode,DelayNode, AINode  } from './NodeTypes';
+import { AskQuestionNode, SendMessageNode, SetConditionNode, AINode  } from './NodeTypes';
 import Sidebar from "./Sidebar";
 import "./FlowBuilder.css";
 import SaveFlowPopup from "./SaveFlowPopup";
@@ -24,6 +24,7 @@ import { useAuth } from "../../authContext";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import defaultFlow from "./DefaultFlow";
+import axios from "axios";
 
 let id = 0;
 const getId = () => `${id++}`;
@@ -258,6 +259,167 @@ const FlowBuilderContent = () => {
  
 
 
+  // const validateNodes = useCallback(() => {
+  //   console.log('Starting node validation');
+  //   let isValid = true;
+  //   let newErrorNodes = [];
+  
+  //   const startNodeConnected = edges.some(edge => edge.source === 'start');
+  //   if (!startNodeConnected) {
+  //     console.log('Error: Start node is not connected');
+  //     isValid = false;
+  //     newErrorNodes.push('start');
+  //     toast.error("Please connect the Start node to another node");
+  //   }
+  
+  //   // Validate fallback message
+  //   if (!fallbackMessage || !fallbackMessage.trim()) {
+  //     console.log('Error: Fallback message is empty');
+  //     isValid = false;
+  //     toast.error("Please enter a fallback message");
+  //   }
+  
+  //   const updatedNodes = nodes.map(node => {
+  //     console.log(`Validating node: ${node.id}, Type: ${node.type}`);
+  //     let hasError = false;
+      
+  //     if (node.type === 'askQuestion') {
+  //       console.log('Ask Question node data:', node.data);
+  //       if (!node.data.field || !node.data.field.content) {
+  //         console.log(`Error: Invalid field structure in node ${node.id}`);
+  //         hasError = true;
+  //         isValid = false;
+  //         toast.error(`Invalid field structure in Ask Question node ${node.id}`);
+  //       } else {
+  //         const { type, content } = node.data.field;
+          
+  //         switch (type) {
+  //           case 'Message':
+  //             if (!content.text || !content.text.trim()) {
+  //               console.log(`Error: Empty question in node ${node.id}`);
+  //               hasError = true;
+  //               isValid = false;
+  //               toast.error(`Please enter a question for node ${node.id}`);
+  //             }
+  //             break;
+  //           case 'Image':
+  //           case 'Video':
+  //           case 'Document':
+  //             if (!content.med_id) {
+  //               console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
+  //               hasError = true;
+  //               isValid = false;
+  //               toast.error(`Please upload a ${type.toLowerCase()} for the Ask Question node ${node.id}`);
+  //             }
+  //             break;
+  //           default:
+  //             console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
+  //             hasError = true;
+  //             isValid = false;
+  //             toast.error(`Invalid message type in Ask Question node ${node.id}`);
+  //         }
+  //       }
+  
+  //       if (node.data.optionType !== 'Text' && Array.isArray(node.data.options)) {
+  //         const optionTexts = new Set();
+  //         node.data.options.forEach((option, index) => {
+  //           console.log(`Validating option ${index}:`, option);
+  //           if (!option || !option.trim()) {
+  //             console.log(`Error: Empty option ${index} in node ${node.id}`);
+  //             hasError = true;
+  //             isValid = false;
+  //             toast.error(`Please enter text for option ${index + 1} in node ${node.id}`);
+  //           } else if ((node.data.optionType === 'Buttons' && option.length > 20) || 
+  //                      (node.data.optionType === 'Lists' && option.length > 24)) {
+  //             console.log(`Error: Option ${index} in node ${node.id} exceeds character limit`);
+  //             hasError = true;
+  //             isValid = false;
+  //             toast.error(`Option ${index + 1} in node ${node.id} exceeds ${node.data.optionType === 'Buttons' ? 20 : 24} characters`);
+  //           } else if (optionTexts.has(option.toLowerCase())) {
+  //             console.log(`Error: Duplicate option ${option} in node ${node.id}`);
+  //             hasError = true;
+  //             isValid = false;
+  //             toast.error(`Duplicate option "${option}" in node ${node.id}`);
+  //           } else {
+  //             optionTexts.add(option.toLowerCase());
+  //           }
+  //         });
+  //       }
+  
+  //       if (node.data.variable && !node.data.dataType) {
+  //         console.log(`Error: Data type not set for variable in node ${node.id}`);
+  //         hasError = true;
+  //         isValid = false;
+  //         toast.error(`Please select a data type for the variable in node ${node.id}`);
+  //       }
+  //     } else if (node.type === 'sendMessage') {
+  //       console.log('Send Message node data:', node.data);
+  //       if (node.data.fields && typeof node.data.fields === 'object') {
+  //         const { type, content } = node.data.fields;
+          
+  //         switch (type) {
+  //           case 'Message':
+  //             if (!content.text || !content.text.trim()) {
+  //               console.log(`Error: Empty message content in node ${node.id}`);
+  //               hasError = true;
+  //               isValid = false;
+  //               toast.error(`Please enter a message for the Send Message node ${node.id}`);
+  //             }
+  //             break;
+  //           case 'Image':
+  //           case 'Video':
+  //           case 'Document':
+  //             if (!content.med_id) {
+  //               console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
+  //               hasError = true;
+  //               isValid = false;
+  //               toast.error(`Please upload a ${type.toLowerCase()} for the Send Message node ${node.id}`);
+  //             }
+  //             break;
+  //           default:
+  //             console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
+  //             hasError = true;
+  //             isValid = false;
+  //             toast.error(`Invalid message type in Send Message node ${node.id}`);
+  //         }
+  //       } else {
+  //         console.log(`Error: Invalid fields structure in Send Message node ${node.id}`);
+  //         hasError = true;
+  //         isValid = false;
+  //       }
+  //     } else if (node.type === 'setCondition') {
+  //       console.log('Set Condition node data:', node.data);
+  //       if (!node.data.condition || !node.data.condition.trim()) {
+  //         console.log(`Error: Empty condition in node ${node.id}`);
+  //         hasError = true;
+  //         isValid = false;
+  //         toast.error(`Please enter a condition for node ${node.id}`);
+  //       }
+  //     }
+      
+  //     if (hasError) {
+  //       console.log(`Adding node ${node.id} to error nodes`);
+  //       newErrorNodes.push(node.id);
+  //     }
+  
+  //     return {
+  //       ...node,
+  //       style: {
+  //         ...node.style,
+  //         border: hasError ? '2px solid red' : undefined,
+  //       },
+  //     };
+  //   });
+  
+  //   console.log('Updated nodes:', updatedNodes);
+  //   console.log('Error nodes:', newErrorNodes);
+  //   console.log('Is valid:', isValid);
+  
+  //   setNodes(updatedNodes);
+  //   setErrorNodes(newErrorNodes);
+  //   return isValid;
+  // }, [nodes, edges, setNodes, fallbackMessage]);
+
   const validateNodes = useCallback(() => {
     console.log('Starting node validation');
     let isValid = true;
@@ -271,7 +433,6 @@ const FlowBuilderContent = () => {
       toast.error("Please connect the Start node to another node");
     }
   
-    // Validate fallback message
     if (!fallbackMessage || !fallbackMessage.trim()) {
       console.log('Error: Fallback message is empty');
       isValid = false;
@@ -282,119 +443,120 @@ const FlowBuilderContent = () => {
       console.log(`Validating node: ${node.id}, Type: ${node.type}`);
       let hasError = false;
       
-      if (node.type === 'askQuestion') {
-        console.log('Ask Question node data:', node.data);
-        if (!node.data.field || !node.data.field.content) {
-          console.log(`Error: Invalid field structure in node ${node.id}`);
-          hasError = true;
-          isValid = false;
-          toast.error(`Invalid field structure in Ask Question node ${node.id}`);
-        } else {
-          const { type, content } = node.data.field;
+      // if (node.type === 'askQuestion') {
+      //   console.log('Ask Question node data:', node.data);
+      //   if (!node.data.field || typeof node.data.field !== 'object') {
+      //     console.log(`Error: Invalid field structure in node ${node.id}`);
+      //     hasError = true;
+      //     isValid = false;
+      //     toast.error(`Invalid field structure in Ask Question node ${node.id}`);
+      //   } else {
+      //     const { type, content } = node.data.field;
           
-          switch (type) {
-            case 'Message':
-              if (!content.text || !content.text.trim()) {
-                console.log(`Error: Empty question in node ${node.id}`);
-                hasError = true;
-                isValid = false;
-                toast.error(`Please enter a question for node ${node.id}`);
-              }
-              break;
-            case 'Image':
-            case 'Video':
-            case 'Document':
-              if (!content.med_id) {
-                console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
-                hasError = true;
-                isValid = false;
-                toast.error(`Please upload a ${type.toLowerCase()} for the Ask Question node ${node.id}`);
-              }
-              break;
-            default:
-              console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
-              hasError = true;
-              isValid = false;
-              toast.error(`Invalid message type in Ask Question node ${node.id}`);
-          }
-        }
+      //     switch (type) {
+      //       case 'Message':
+      //         if (!content || !content.text || !content.text.trim()) {
+      //           console.log(`Error: Empty question in node ${node.id}`);
+      //           hasError = true;
+      //           isValid = false;
+      //           toast.error(`Please enter a question for node ${node.id}`);
+      //         }
+      //         break;
+      //       case 'Image':
+      //       case 'Video':
+      //       case 'Document':
+      //         if (!content || !content.med_id) {
+      //           console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
+      //           hasError = true;
+      //           isValid = false;
+      //           toast.error(`Please upload a ${type.toLowerCase()} for the Ask Question node ${node.id}`);
+      //         }
+      //         break;
+      //       default:
+      //         console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
+      //         hasError = true;
+      //         isValid = false;
+      //         toast.error(`Invalid message type in Ask Question node ${node.id}`);
+      //     }
+      //   }
   
-        if (node.data.optionType !== 'Text' && Array.isArray(node.data.options)) {
-          const optionTexts = new Set();
-          node.data.options.forEach((option, index) => {
-            console.log(`Validating option ${index}:`, option);
-            if (!option || !option.trim()) {
-              console.log(`Error: Empty option ${index} in node ${node.id}`);
-              hasError = true;
-              isValid = false;
-              toast.error(`Please enter text for option ${index + 1} in node ${node.id}`);
-            } else if ((node.data.optionType === 'Buttons' && option.length > 20) || 
-                       (node.data.optionType === 'Lists' && option.length > 24)) {
-              console.log(`Error: Option ${index} in node ${node.id} exceeds character limit`);
-              hasError = true;
-              isValid = false;
-              toast.error(`Option ${index + 1} in node ${node.id} exceeds ${node.data.optionType === 'Buttons' ? 20 : 24} characters`);
-            } else if (optionTexts.has(option.toLowerCase())) {
-              console.log(`Error: Duplicate option ${option} in node ${node.id}`);
-              hasError = true;
-              isValid = false;
-              toast.error(`Duplicate option "${option}" in node ${node.id}`);
-            } else {
-              optionTexts.add(option.toLowerCase());
-            }
-          });
-        }
+      //   if (node.data.optionType !== 'Text' && Array.isArray(node.data.options)) {
+      //     const optionTexts = new Set();
+      //     node.data.options.forEach((option, index) => {
+      //       console.log(`Validating option ${index}:`, option);
+      //       if (!option || typeof option !== 'string' || !option.trim()) {
+      //         console.log(`Error: Empty option ${index} in node ${node.id}`);
+      //         hasError = true;
+      //         isValid = false;
+      //         toast.error(`Please enter text for option ${index + 1} in node ${node.id}`);
+      //       } else if ((node.data.optionType === 'Buttons' && option.length > 20) || 
+      //                  (node.data.optionType === 'Lists' && option.length > 24)) {
+      //         console.log(`Error: Option ${index} in node ${node.id} exceeds character limit`);
+      //         hasError = true;
+      //         isValid = false;
+      //         toast.error(`Option ${index + 1} in node ${node.id} exceeds ${node.data.optionType === 'Buttons' ? 20 : 24} characters`);
+      //       } else if (optionTexts.has(option.toLowerCase())) {
+      //         console.log(`Error: Duplicate option ${option} in node ${node.id}`);
+      //         hasError = true;
+      //         isValid = false;
+      //         toast.error(`Duplicate option "${option}" in node ${node.id}`);
+      //       } else {
+      //         optionTexts.add(option.toLowerCase());
+      //       }
+      //     });
+      //   }
   
-        if (node.data.variable && !node.data.dataType) {
-          console.log(`Error: Data type not set for variable in node ${node.id}`);
-          hasError = true;
-          isValid = false;
-          toast.error(`Please select a data type for the variable in node ${node.id}`);
-        }
-      } else if (node.type === 'sendMessage') {
-        console.log('Send Message node data:', node.data);
-        if (node.data.fields && typeof node.data.fields === 'object') {
-          const { type, content } = node.data.fields;
+      //   if (node.data.variable && !node.data.dataType) {
+      //     console.log(`Error: Data type not set for variable in node ${node.id}`);
+      //     hasError = true;
+      //     isValid = false;
+      //     toast.error(`Please select a data type for the variable in node ${node.id}`);
+      //   }
+      // } else if (node.type === 'sendMessage') {
+      //   console.log('Send Message node data:', node.data);
+      //   if (!node.data.fields || typeof node.data.fields !== 'object') {
+      //     console.log(`Error: Invalid fields structure in Send Message node ${node.id}`);
+      //     hasError = true;
+      //     isValid = false;
+      //     toast.error(`Invalid fields structure in Send Message node ${node.id}`);
+      //   } else {
+      //     const { type, content } = node.data.fields;
           
-          switch (type) {
-            case 'Message':
-              if (!content.text || !content.text.trim()) {
-                console.log(`Error: Empty message content in node ${node.id}`);
-                hasError = true;
-                isValid = false;
-                toast.error(`Please enter a message for the Send Message node ${node.id}`);
-              }
-              break;
-            case 'Image':
-            case 'Video':
-            case 'Document':
-              if (!content.med_id) {
-                console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
-                hasError = true;
-                isValid = false;
-                toast.error(`Please upload a ${type.toLowerCase()} for the Send Message node ${node.id}`);
-              }
-              break;
-            default:
-              console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
-              hasError = true;
-              isValid = false;
-              toast.error(`Invalid message type in Send Message node ${node.id}`);
-          }
-        } else {
-          console.log(`Error: Invalid fields structure in Send Message node ${node.id}`);
-          hasError = true;
-          isValid = false;
-        }
-      } else if (node.type === 'setCondition') {
-        console.log('Set Condition node data:', node.data);
-        if (!node.data.condition || !node.data.condition.trim()) {
-          console.log(`Error: Empty condition in node ${node.id}`);
-          hasError = true;
-          isValid = false;
-          toast.error(`Please enter a condition for node ${node.id}`);
-        }
-      }
+      //     switch (type) {
+      //       case 'Message':
+      //         if (!content || !content.text || !content.text.trim()) {
+      //           console.log(`Error: Empty message content in node ${node.id}`);
+      //           hasError = true;
+      //           isValid = false;
+      //           toast.error(`Please enter a message for the Send Message node ${node.id}`);
+      //         }
+      //         break;
+      //       case 'Image':
+      //       case 'Video':
+      //       case 'Document':
+      //         if (!content || !content.med_id) {
+      //           console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
+      //           hasError = true;
+      //           isValid = false;
+      //           toast.error(`Please upload a ${type.toLowerCase()} for the Send Message node ${node.id}`);
+      //         }
+      //         break;
+      //       default:
+      //         console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
+      //         hasError = true;
+      //         isValid = false;
+      //         toast.error(`Invalid message type in Send Message node ${node.id}`);
+      //     }
+      //   }
+      // } else if (node.type === 'setCondition') {
+      //   console.log('Set Condition node data:', node.data);
+      //   if (!node.data.condition || typeof node.data.condition !== 'string' || !node.data.condition.trim()) {
+      //     console.log(`Error: Empty condition in node ${node.id}`);
+      //     hasError = true;
+      //     isValid = false;
+      //     toast.error(`Please enter a condition for node ${node.id}`);
+      //   }
+      // }
       
       if (hasError) {
         console.log(`Adding node ${node.id} to error nodes`);
@@ -418,6 +580,7 @@ const FlowBuilderContent = () => {
     setErrorNodes(newErrorNodes);
     return isValid;
   }, [nodes, edges, setNodes, fallbackMessage]);
+
 
   const saveFlow = useCallback(async () => {
     if (!authenticated) {
@@ -459,10 +622,10 @@ const FlowBuilderContent = () => {
     try {
       let response;
       if (isExistingFlow) {
-        response = await axiosInstance.put(`/node-templates/${selectedFlow}/`, flow);
+        response = await axiosInstance.put(`https://8twdg37p-8000.inc1.devtunnels.ms/node-templates/${selectedFlow}/`, flow);
         toast.success("Flow updated successfully");
       } else {
-        response = await axiosInstance.post('/node-templates/', flow);
+        response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/node-templates/', flow);
         toast.success("New flow created successfully");
         setIsExistingFlow(true);
         setSelectedFlow(response.data.id);

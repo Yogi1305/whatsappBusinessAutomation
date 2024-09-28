@@ -34,10 +34,10 @@ const Sidebar = () => {
     ...nodeStyle,
     padding: '5px',
     fontSize: '15px',
-    // marginLeft: '20px',
+    marginLeft: '10px',
     marginBottom: '5px',
-    width:'6rem',
-    height:'6rem',
+    width:'5rem',
+    height:'3rem',
     display:'flex',
     alignItems:'center',
     justifyContent:'center'
@@ -85,14 +85,6 @@ const Sidebar = () => {
         <div style={{fontSize: '12px', fontWeight: 'normal'}}>Send message(s) based on logical condition(s)</div>
       </div>
       <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
-      <div 
-        style={{...smallNodeStyle, backgroundColor: '#FFB347'}}
-        onDragStart={(event) => onDragStart(event, 'delay')} 
-        draggable
-        >
-        <span style={smallIconStyle}>⏱️</span>
-        Delay
-      </div>
 
       <div 
         style={{...smallNodeStyle, backgroundColor: '#6495ED'}}

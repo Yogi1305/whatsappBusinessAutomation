@@ -174,6 +174,7 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
   const [errors, setErrors] = useState({});
   const { updateNodeData } = useFlow();
   const { userId } = useAuth();
+  const [delay, setDelay] = useState(data.delay || '0');
   const tenantId = getTenantIdFromUrl();
   const [accessToken, setAccessToken] = useState('');
   const fileInputRef = useRef(null);
@@ -290,6 +291,12 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
     const newOptions = options.filter((_, i) => i !== index);
     setOptions(newOptions);
     updateNodeData(id, { field, optionType, options: newOptions, variable, dataType });
+  };
+
+  const handleDelayChange = (e) => {
+    const newDelay = e.target.value;
+    setDelay(newDelay);
+    updateNodeData(id, { field, optionType, variable, dataType, delay: newDelay });
   };
 
   const handleFileChange = async (e) => {
@@ -460,7 +467,21 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
         width: '12px',
         height: '12px',
       }} position={Position.Left} isConnectable={isConnectable} />
+      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
       <h3 style={{ marginBottom: '15px', color: '#cf1322' }}>Ask Question</h3>
+      <div style={{ marginBottom: '15px' }}>
+        <label htmlFor="delay-input" style={{ display: 'block', marginBottom: '5px', color: '#531dab' }}>Delay(s) (Optional):</label>
+        <Input
+          id="delay-input"
+          type="number"
+          value={delay}
+          onChange={handleDelayChange}
+          placeholder="Enter delay in seconds"
+          style={{width:'5rem'}}
+          min="0"
+          />
+      </div>
+       </div>
       <div style={{ marginBottom: '15px' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
           <select 
@@ -468,7 +489,7 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
             onChange={(e) => setField({ type: e.target.value, content: { text: '', caption: '', med_id: '' } })}
             style={{ ...selectStyles, width: '100%', marginRight: '10px', color: 'black' }}
           >
-            <option value="Message">Message</option>
+            <option value="Message">Question</option>
             <option value="Image">Image</option>
             <option value="Document">Document</option>
             <option value="Video">Video</option>
@@ -538,8 +559,25 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
+  const [delay, setDelay] = useState(data.delay || '0');
+  const [errors, setErrors] = useState({});
 
-  
+  useEffect(() => {
+    validateNode();
+  }, [field]);
+
+  const validateNode = () => {
+    let newErrors = {};
+    if (field.type === 'Message' && !field.content.text.trim()) {
+      newErrors.message = 'Message is required';
+    }
+    if ((field.type === 'Image' || field.type === 'Video' || field.type === 'Document') && !field.content.med_id) {
+      newErrors.media = 'Please upload a file';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -565,9 +603,10 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   }, [tenantId]);
 
 
-  const updateNodeDataSafely = (newFields) => {
-    console.log(id,newFields,"pippity bpi");
-    updateNodeData(id, { fields: newFields });
+  const updateNodeDataSafely = (newFields, newDelay) => {
+    if (validateNode()) {
+      updateNodeData(id, { fields: newFields, delay: newDelay });
+    }
   };
 
 
@@ -622,6 +661,11 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
     }));
   };
 
+  const handleDelayChange = (e) => {
+    const newDelay = e.target.value;
+    setDelay(newDelay);
+    updateNodeDataSafely(field, newDelay);
+  };
 
   const handleCaptionChange = (e) => {
     const { value } = e.target;
@@ -682,7 +726,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   };
 
   return (
-    <NodeWrapper style={{ background: '#e6fffb', borderColor: '#87e8de' }} type="sendMessage">
+    <NodeWrapper style={{ background: '#e6fffb', borderColor: errors.message || errors.media ? 'red' : '#87e8de' }} type="sendMessage">
       <Handle type="target" style={{
         top: '50%',
         left: '-5px',
@@ -690,7 +734,21 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         width: '12px',
         height: '12px',
       }} position={Position.Left} isConnectable={isConnectable} />
-      <h3 style={{ marginBottom: '15px', color: '#006d75' }}>Send Message</h3>
+       <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <h3 style={{ marginBottom: '15px', color: '#006d75' }}>Send Message</h3>
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="delay-input" style={{ display: 'block', marginBottom: '5px', color: '#531dab' }}>Delay(s) (Optional):</label>
+          <Input
+            id="delay-input"
+            type="number"
+            value={delay}
+            onChange={handleDelayChange}
+            placeholder="Enter delay in seconds"
+            style={{width:'5rem'}}
+            min="0"
+          />
+        </div>
+      </div>
       <div style={{ marginBottom: '15px' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
           <select 
@@ -706,6 +764,8 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         </div>
         {renderInput()}
       </div>
+      {errors.message && <div style={errorStyle}>{errors.message}</div>}
+      {errors.media && <div style={errorStyle}>{errors.media}</div>}
       <Handle type="source" style={{
         top: '50%',
         right: '-5px',
@@ -723,19 +783,42 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
 export const SetConditionNode = ({ id,data, isConnectable }) => {
   const [condition, setCondition] = useState(data.condition || '');
  // const { id } = data;
+ const [delay, setDelay] = useState(data.delay || '0');
   console.log("this is a GOAT",id);
 const { updateNodeData } = useFlow();
+const [errors, setErrors] = useState({});
 
+
+
+useEffect(() => {
+  validateNode();
+}, [condition]);
+
+const validateNode = () => {
+  let newErrors = {};
+  if (!condition.trim()) {
+    newErrors.condition = 'Condition is required';
+  }
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
 const handleConditionChange = (e) => {
   const newCondition = e.target.value;
-  console.log(newCondition,id,"lookity look");
   setCondition(newCondition);
-  updateNodeData(id, { condition: convertMentionsForBackend(newCondition) });
+  if (validateNode()) {
+    updateNodeData(id, { condition: convertMentionsForBackend(newCondition), delay });
+  }
+};
+
+const handleDelayChange = (e) => {
+  const newDelay = e.target.value;
+  setDelay(newDelay);
+  updateNodeData(id, { condition: convertMentionsForBackend(condition), delay: newDelay });
 };
 
   return (
-    <NodeWrapper style={{ background: '#f9f0ff', borderColor: '#d3adf7' }} type="setCondition">
+    <NodeWrapper style={{ background: '#f9f0ff', borderColor: errors.condition ? 'red' : '#d3adf7' }} type="setCondition">
       <Handle type="target"  style={{
                         
                         top: '50%',
@@ -744,12 +827,27 @@ const handleConditionChange = (e) => {
                         width: '12px',
                         height: '12px',
                     }} position={Position.Left} isConnectable={isConnectable} />
-      <h3 style={{ marginBottom: '15px', color: '#531dab' }}>Set Condition</h3>
+       <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <h3 style={{ marginBottom: '15px', color: '#531dab' }}>Set Condition</h3>
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="delay-input" style={{ display: 'block', marginBottom: '5px', color: '#531dab' }}>Delay(s) (Optional):</label>
+          <Input
+            id="delay-input"
+            type="number"
+            value={delay}
+            onChange={handleDelayChange}
+            placeholder="Enter delay in seconds"
+            style={{width:'5rem'}}
+            min="0"
+          />
+        </div>
+      </div>
       <MentionTextArea
         value={convertMentionsForFrontend(condition)}
         onChange={handleConditionChange}
         placeholder="Enter condition"
       />
+      {errors.condition && <div style={errorStyle}>{errors.condition}</div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px' }}>
         <div style={{ background: '#d9f7be', padding: '5px 10px', borderRadius: '4px', color: '#389e0d' }}>True</div>
         <div style={{ background: '#ffccc7', padding: '5px 10px', borderRadius: '4px', color: '#cf1322' }}>False</div>
@@ -765,53 +863,13 @@ const handleConditionChange = (e) => {
   );
 };
 
-export const DelayNode = ({ id, data, isConnectable }) => {
-  const [delay, setDelay] = useState(data.delay || 0);
-  const { updateNodeData } = useFlow();
-
-  const handleDelayChange = (e) => {
-    const newDelay = parseInt(e.target.value, 10) || 0;
-    setDelay(newDelay);
-    updateNodeData(id, { delay: newDelay });
-  };
-
-  return (
-    <Card className="w-64 bg-yellow-50 border-yellow-200">
-      <Handle type="target" position="top" isConnectable={isConnectable} />
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-yellow-700 flex items-center">
-          <Clock className="w-5 h-5 mr-2" /> Delay
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Input
-          type="number"
-          value={delay}
-          onChange={handleDelayChange}
-          className="w-full bg-white"
-          placeholder="Delay in seconds"
-          min="0"
-        />
-      </CardContent>
-      <Handle type="source" position="bottom" isConnectable={isConnectable} />
-    </Card>
-  );
-};
 
 export const AINode = ({ id, data, isConnectable }) => {
-  const [file, setFile] = useState(null);
   const { updateNodeData } = useFlow();
 
 
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile);
-    updateNodeData(id, { file: selectedFile });
-  };
-
   return (
-    <Card className="w-64 bg-purple-50 border-purple-200">
+    <Card className="w-34 border-purple-200">
       <Handle type="target" position="top" isConnectable={isConnectable} />
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold text-purple-700 flex items-center">
@@ -819,17 +877,7 @@ export const AINode = ({ id, data, isConnectable }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <Input
-          type="file"
-          onChange={handleFileChange}
-          className="w-full bg-white cursor-pointer"
-        />
-        <Button 
-          className="w-full bg-purple-500 hover:bg-purple-600 text-white"
-          onClick={() => console.log('Exit clicked')}
-        >
-          <LogOut className="w-4 h-4 mr-2" /> {data.exitButtonText || 'Exit'}
-        </Button>
+        <input type="text" placeholder='type your message' style={{padding:'5px', border:'1px grey solid', borderRadius:'5px'}} />    
       </CardContent>
       <Handle type="source" position="bottom" isConnectable={isConnectable} />
     </Card>

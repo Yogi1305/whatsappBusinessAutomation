@@ -21,10 +21,11 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid'; 
 
 import io from 'socket.io-client';
-import { PhoneIcon, PlusIcon } from 'lucide-react';
+import { PhoneIcon, PlusCircle, PlusIcon, Upload, X } from 'lucide-react';
 import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
+import { Button, Input } from 'antd';
 
 const socket = io('https://whatsappbotserver.azurewebsites.net');
 
@@ -48,9 +49,9 @@ const Chatbot = () => {
   const [selectedContact, setSelectedContact] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [messageTemplates, setMessageTemplates] = useState({});
-
+  const [buttons, setButtons] = useState([]);
   const [showSmileys, setShowSmileys] = useState(false);
- 
+  const [inputFields, setInputFields] = useState([{ type: 'text', value: '' }]);
   const [profileImage, setProfileImage] = useState(null); 
   const [conversation, setConversation] = useState(['']);
   const [flows, setFlows] = useState([]);
@@ -82,7 +83,10 @@ const Chatbot = () => {
   const [authPopupp, setAuthPopupp] = useState(false);
   const navigate = useNavigate();
   const [prioritizedContacts, setPrioritizedContacts] = useState([]);
-
+  const [file, setFile] = useState(null);
+  // const [inputFields, setInputFields] = useState([{ value: '' }]);
+  // const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
 
   const handleCloseAuthPopupp = () => {
     setAuthPopupp(false);
@@ -376,6 +380,21 @@ const getAvatarColor = (initials) => {
   };
 
 
+  const handleAddField = () => {
+    setInputFields([...inputFields, { type: 'text', value: '' }]);
+  };
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleInputChange = (index, e) => {
+    const newInputFields = [...inputFields];
+    newInputFields[index].value = e.target.value;
+    setInputFields(newInputFields);
+  };
+
+
   const handleImageSend = async () => {
     if (!imageToSend || !selectedContact) return;
     let phoneNumber = selectedContact.phone;
@@ -523,11 +542,7 @@ const getAvatarColor = (initials) => {
       socket.off('temp_user');
     };
   }, [selectedContact]);
-  
-
- 
-
- 
+   
 
   
   
@@ -676,9 +691,16 @@ const getAvatarColor = (initials) => {
       console.error('Error fetching data from backend:', error);
     }
   };
+
+  const addInputField = () => {
+    setInputFields([...inputFields, { value: '' }]);
+  };
   
 
-
+  const deleteInputField = (index) => {
+    const newInputFields = inputFields.filter((_, i) => i !== index);
+    setInputFields(newInputFields);
+  };
   
  
   useEffect(() => {
@@ -739,6 +761,38 @@ const getAvatarColor = (initials) => {
   };
 
 
+  const handleUpload = async () => {
+    if (!file) {
+      setUploadStatus('Please select a file to upload.');
+      return;
+    }
+  
+    setIsUploading(true);
+    setUploadStatus('Uploading...');
+  
+    const jsonData = {};
+    inputFields.forEach((field, index) => {
+      jsonData[`description_${index}`] = field.value;
+    });
+  
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('jsonData', JSON.stringify(jsonData));
+  
+    try {
+      const response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/upload/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setUploadStatus('File uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setUploadStatus('Error uploading file. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
   
 
     const handleRedirect = () => {
@@ -860,6 +914,9 @@ const handleNewChat = async () => {
    <div className="cb-container">
       <div className="cb-sidebar">
         <div className="cb-sidebar-header">
+        <button className="cb-signup-btn" onClick={handleRedirect}>
+      {businessPhoneNumberId ? businessPhoneNumberId : 'Sign Up'}
+    </button>
         <h1 className='cb-sidebar-title'>
       {/* <ArrowBackIcon className="cb-back-icon" onClick={handleBack} />  */}
           Contacts 
@@ -997,14 +1054,7 @@ const handleNewChat = async () => {
         )}
       </div>
       <div className="cb-details-panel">
-       <button className="cb-signup-btn" onClick={handleRedirect}>
-      {businessPhoneNumberId ? businessPhoneNumberId : 'Sign Up'}
-    </button>
-    
-      <button onClick={() => navigate(`/${tenantId}/broadcast`)} className="cb-action-btn" style={{marginTop:'1rem'}}>
-  Broadcast History
-</button>
-        <h1 className='cb-details-title' style={{textAlign:'center'}}>Contact Details</h1>
+      
         {selectedContact && (
   <div className="cb-contact-full-details">
     <div className="cb-profile-section">
@@ -1031,7 +1081,7 @@ const handleNewChat = async () => {
   </div>
 )}
         <div className="cb-actions">
-          <button onClick={handleCreateFlow} className="cb-action-btn">Create Flow</button>
+          {/* <button onClick={handleCreateFlow} className="cb-action-btn">Create Flow</button> */}
           <select value={selectedFlow} onChange={handleFlowChange} className="cb-flow-select">
             <option value="" disabled>Select a flow</option>
             {flows.map(flow => (
@@ -1049,6 +1099,49 @@ const handleNewChat = async () => {
           </button>
          
         </div>
+
+        <div className="ai-content-container">
+      <h1 className="ai-content-title">AI Content</h1>
+      <div className="ai-content-fields flex flex-col items-center space-y-4 p-4">
+      <Input
+        type="file"
+        onChange={handleFileChange}
+        className="ai-content-file-input w-full"
+      />
+      {inputFields.map((field, index) => (
+        <div key={index} className="flex items-center space-x-2 w-full">
+          <Input
+            type="text"
+            value={field.value}
+            onChange={(e) => handleInputChange(index, e)}
+            placeholder="Enter content description"
+            className="flex-grow"
+          />
+          <Button
+            type="button"
+            onClick={() => deleteInputField(index)}
+            variant="outline"
+            size="icon"
+            className="text-red-500 hover:bg-red-100"
+            aria-label="Delete"
+          >
+            <X size={18} />
+          </Button>
+        </div>
+      ))}
+      <Button onClick={addInputField} variant="outline" style={{backgroundColor:'#4299e1', color:'white'}}  className="w-full">
+        Add Description Field
+      </Button>
+      <Button onClick={handleUpload} disabled={isUploading} style={{backgroundColor:'green', color:'white'}} className="w-full">
+        {isUploading ? 'Uploading...' : 'Upload'}
+      </Button>
+      {uploadStatus && (
+        <p className={uploadStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}>
+          {uploadStatus}
+        </p>
+      )}
+    </div>
+      </div>
       </div>
       {showImagePreview && (
       <div className="cb-image-preview-overlay">

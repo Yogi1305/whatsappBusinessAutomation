@@ -143,6 +143,8 @@
 .cb-sidebar-header{
   display: flex;
   justify-content: space-around;
+  flex-direction: column;
+  margin-top: 2rem;
 }
 
 .cb-profile-icon {
@@ -312,7 +314,7 @@
 .cb-info-item {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
   color: var(--text-color);
 }
 
@@ -544,7 +546,7 @@
 
 .cb-signup-btn,
 .open-popup-button-cb {
-  padding: 10px 15px;
+  padding: 10px 13px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -1023,4 +1025,73 @@
 .error {
   color: red;
   font-style: italic;
+}
+
+
+.ai-content-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  /* background-color: #f0f4f8; */
+  border-radius: 8px;
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
+}
+.ai-content-title {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+.ai-content-fields {
+  width: 100%;
+  max-width: 500px;
+}
+.ai-content-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  
+}
+.ai-content-file-input,
+.ai-content-text-input {
+  padding: 0.5rem;
+  /* border: 1px solid #cbd5e0; */
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+.ai-content-file-input {
+  background-color: #edf2f7;
+}
+.ai-content-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.ai-content-add-btn,
+.ai-content-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.ai-content-add-btn {
+  background-color: #4299e1;
+  color: white;
+}
+.ai-content-add-btn:hover {
+  background-color: #3182ce;
+}
+.ai-content-upload-btn {
+  background-color: #48bb78;
+  color: white;
+}
+.ai-content-upload-btn:hover {
+  background-color: #38a169;
 }
