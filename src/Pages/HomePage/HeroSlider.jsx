@@ -96,7 +96,7 @@ const HeroSlider = () => {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden bg-gradient-to-br from-green-100 to-blue-100">
+    <div className="relative h-screen overflow-hidden bg-black">
       {/* Particle background */}
       {[...Array(20)].map((_, i) => (
         <Particle

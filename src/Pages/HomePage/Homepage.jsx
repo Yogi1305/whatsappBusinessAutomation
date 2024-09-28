@@ -10,6 +10,7 @@ import connection from "../../assets/connection.png";
 import "./Homepage.css";
 import CalendlySection from './Calendly';
 import ChatbotDemoSection from './ChatbotDemo';
+import ad from '../../assets/slider/ad.mp4';
 
 const FeatureCard = ({ icon: Icon, title, description }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -108,6 +109,12 @@ const FloatingElement = ({ children, yOffset = 20, duration = 3 }) => {
 
 const Homepage = () => {
   const { scrollYProgress } = useScroll();
+  const handlePlayVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  };
+  const videoRef = useRef(null);
 
   return (
     <div className="bg-gray-100 min-h-screen overflow-x-hidden w-full main-homepage" style={{width:'98.9vw'}}>
@@ -118,6 +125,18 @@ const Homepage = () => {
       />
 
       {/* Hero Section */}
+      <VideoSection 
+        videoSrc={ad}
+        title="Experience NurenAI in Action"
+        description="See how NurenAI transforms WhatsApp business communication with AI-powered chatbots, automated campaigns, and advanced analytics. Our cutting-edge technology helps businesses engage customers more effectively, save time, and drive growth."
+      />
+
+      <section>
+      <video ref={videoRef} src={ad} loop width="30%" height="auto">
+        Your browser does not support the video tag.
+      </video>
+      <button onClick={handlePlayVideo}>Play Video</button>
+    </section>
       <section className="relative">
         <HeroSlider />
       </section>
@@ -146,10 +165,10 @@ const Homepage = () => {
         </div>
       </section>
 
-     
+
 
       {/* How It Works Section */}
-      <section className="py-20 bg-gray-100 relative overflow-hidden">
+      <section className="py-20 bg-black relative overflow-hidden">
         <FloatingElement yOffset={30} duration={5}>
           <div className="absolute top-10 left-10 w-20 h-20 bg-green-200 rounded-full opacity-50" />
         </FloatingElement>
@@ -195,17 +214,12 @@ const Homepage = () => {
         </div>
       </section>
 
-      <VideoSection 
-        videoSrc={birds}
-        title="Experience NurenAI in Action"
-        description="See how NurenAI transforms WhatsApp business communication with AI-powered chatbots, automated campaigns, and advanced analytics. Our cutting-edge technology helps businesses engage customers more effectively, save time, and drive growth."
-      />
-
+    
 
 <CalendlySection />
 
       {/* Connection Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-black">
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
             <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Connecting You with Your Customers</h2>
@@ -421,7 +435,7 @@ const Homepage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12">
+      <footer className="bg-black text-white py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>

@@ -98,7 +98,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   }, [socket, isAuthenticated, navigate, sessionId]);
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-black">
       <div className="container mx-auto px-4">
         <motion.h2
           className="text-5xl font-bold text-center mb-16 text-gray-800"
