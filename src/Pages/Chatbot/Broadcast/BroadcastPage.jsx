@@ -307,12 +307,12 @@ const BroadcastPage = () => {
         });
       }
 
-    if (footerText) {
-      components.push({
-        type: "FOOTER",
-        text: footerText
-      });
-    }
+    // if (footerText) {
+    //   components.push({
+    //     type: "FOOTER",
+    //     text: footerText
+    //   });
+    // }
 
     if (buttons.length > 0) {
       components.push({
