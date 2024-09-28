@@ -17,7 +17,8 @@ const VideoSection = ({ videoSrc, title, description }) => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-green-500 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg hover:bg-green-600 transition duration-300"
+              style={{backgroundColor:"#4a90e2"}}
+              className="text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg hover:bg-green-600 transition duration-300"
             >
               Learn More
             </motion.button>

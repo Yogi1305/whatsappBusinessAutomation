@@ -131,12 +131,7 @@ const Homepage = () => {
         description="See how NurenAI transforms WhatsApp business communication with AI-powered chatbots, automated campaigns, and advanced analytics. Our cutting-edge technology helps businesses engage customers more effectively, save time, and drive growth."
       />
 
-      <section>
-      <video ref={videoRef} src={ad} loop width="30%" height="auto">
-        Your browser does not support the video tag.
-      </video>
-      <button onClick={handlePlayVideo}>Play Video</button>
-    </section>
+      
       <section className="relative">
         <HeroSlider />
       </section>
