@@ -17,8 +17,8 @@ const FeatureCard = ({ icon: Icon, title, description }) => {
   const springProps = useSpring({
     scale: isHovered ? 1.05 : 1,
     boxShadow: isHovered
-      ? '0 10px 30px rgba(0, 230, 118, 0.2)'
-      : '0 5px 15px rgba(0, 0, 0, 0.1)',
+      ? '0 10px 30px rgba(37, 211, 102, 0.3)'
+      : '0 5px 15px rgba(0, 0, 0, 0.2)',
   });
 
   return (
@@ -26,11 +26,11 @@ const FeatureCard = ({ icon: Icon, title, description }) => {
       style={springProps}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="bg-white rounded-lg p-6 text-gray-800 transition-all duration-300 hover:bg-green-50"
+      className="bg-gray-800 rounded-lg p-6 text-white transition-all duration-300 hover:bg-gray-700"
     >
-      <Icon className="w-12 h-12 mb-4 text-green-500" />
+      <Icon className="w-12 h-12 mb-4 text-green-400" />
       <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <p className="text-gray-300">{description}</p>
     </animated.div>
   );
 };
@@ -117,10 +117,10 @@ const Homepage = () => {
   const videoRef = useRef(null);
 
   return (
-    <div className="bg-gray-100 min-h-screen overflow-x-hidden w-full main-homepage" style={{width:'98.9vw'}}>
+    <div className="bg-gray-900 min-h-screen overflow-x-hidden w-full main-homepage" style={{width:'98.9vw'}}>
       {/* Progress Bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-2 bg-green-500 z-50"
+        className="fixed top-0 left-0 right-0 h-2 bg-green-400 z-50"
         style={{ scaleX: scrollYProgress }}
       />
 
@@ -138,10 +138,10 @@ const Homepage = () => {
 
       <ChatbotDemoSection />
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-800">
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Powerful Features</h2>
+            <h2 className="text-5xl font-bold text-center mb-16 text-white">Powerful Features</h2>
           </ScrollAnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
@@ -163,23 +163,23 @@ const Homepage = () => {
 
 
       {/* How It Works Section */}
-      <section className="py-20 bg-black relative overflow-hidden">
+      <section className="py-20 bg-gray-900 relative overflow-hidden">
         <FloatingElement yOffset={30} duration={5}>
-          <div className="absolute top-10 left-10 w-20 h-20 bg-green-200 rounded-full opacity-50" />
+          <div className="absolute top-10 left-10 w-20 h-20 bg-green-400 rounded-full opacity-10" />
         </FloatingElement>
         <FloatingElement yOffset={-20} duration={4}>
-          <div className="absolute bottom-10 right-10 w-16 h-16 bg-blue-200 rounded-full opacity-50" />
+          <div className="absolute bottom-10 right-10 w-16 h-16 bg-blue-400 rounded-full opacity-10" />
         </FloatingElement>
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">How NurenAI Works</h2>
+            <h2 className="text-5xl font-bold text-center mb-16 text-white">How NurenAI Works</h2>
           </ScrollAnimatedSection>
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="w-full md:w-1/2 mb-8 md:mb-0">
               <img
                 src={man}
                 alt="NurenAI Illustration"
-                className="w-full h-auto object-cover"
+                className="w-full h-auto object-cover rounded-lg"
               />
             </div>
             <div className="w-full md:w-1/2 md:ml-12">
@@ -197,10 +197,10 @@ const Homepage = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                   >
-                    <div className="bg-green-500 text-white rounded-full w-12 h-12 flex items-center justify-center mr-6 text-xl font-bold shadow-lg">
+                    <div className="bg-green-400 text-gray-900 rounded-full w-12 h-12 flex items-center justify-center mr-6 text-xl font-bold shadow-lg">
                       {index + 1}
                     </div>
-                    <p className="text-xl text-gray-800">{step}</p>
+                    <p className="text-xl text-white">{step}</p>
                   </motion.div>
                 </ScrollAnimatedSection>
               ))}
@@ -209,15 +209,13 @@ const Homepage = () => {
         </div>
       </section>
 
-    
-
-<CalendlySection />
+      <CalendlySection />
 
       {/* Connection Section */}
-      <section className="py-20 bg-black">
+      <section className="py-20 bg-gray-800">
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Connecting You with Your Customers</h2>
+            <h2 className="text-5xl font-bold text-center mb-16 text-white">Connecting You with Your Customers</h2>
           </ScrollAnimatedSection>
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="w-full md:w-1/2 mb-8 md:mb-0">
@@ -225,13 +223,13 @@ const Homepage = () => {
                 <img
                   src={connection}
                   alt="Connection Illustration"
-                  className="w-full h-auto object-cover "
+                  className="w-full h-auto object-cover rounded-lg"
                 />
               </ScrollAnimatedSection>
             </div>
             <div className="w-full md:w-1/2 md:ml-12">
               <ScrollAnimatedSection>
-                <p className="text-xl text-gray-600 mb-8">
+                <p className="text-xl text-gray-300 mb-8">
                   NurenAI bridges the gap between businesses and customers, creating meaningful connections through intelligent, personalized communication. Our AI-driven platform ensures that every interaction is valuable, timely, and aligned with your brand voice.
                 </p>
               </ScrollAnimatedSection>
@@ -250,8 +248,8 @@ const Homepage = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                     >
-                      <Check className="text-green-500 mr-2" size={20} />
-                      <span>{item}</span>
+                      <Check className="text-green-400 mr-2" size={20} />
+                      <span className="text-white">{item}</span>
                     </motion.li>
                   ))}
                 </ul>
@@ -262,7 +260,7 @@ const Homepage = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 bg-gradient-to-r from-green-500 to-blue-500 text-white relative overflow-hidden">
+      <section className="py-20 bg-gradient-to-r from-green-600 to-blue-600 text-white relative overflow-hidden">
         <FloatingElement yOffset={40} duration={6}>
           <div className="absolute top-20 right-20 w-32 h-32 bg-white rounded-full opacity-10" />
         </FloatingElement>
@@ -300,11 +298,12 @@ const Homepage = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 bg-gray-100">
+      <section className="py-20 bg-gray-800">
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Simple, Transparent Pricing</h2>
-          </ScrollAnimatedSection><div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <h2 className="text-5xl font-bold text-center mb-16 text-white">Simple, Transparent Pricing</h2>
+          </ScrollAnimatedSection>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { plan: "Starter", price: "$99", features: ["1,000 messages/month", "Basic chatbot", "Email support"] },
               { plan: "Pro", price: "$299", features: ["10,000 messages/month", "Advanced AI chatbot", "Priority support", "Custom integrations"] },
@@ -312,20 +311,20 @@ const Homepage = () => {
             ].map((tier, index) => (
               <ScrollAnimatedSection key={index}>
                 <motion.div
-                  className="bg-white rounded-lg shadow-lg overflow-hidden"
+                  className="bg-gray-700 rounded-lg shadow-lg overflow-hidden"
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <div className="p-8 bg-green-500 text-white text-center">
+                  <div className="p-8 bg-green-600 text-white text-center">
                     <h3 className="text-3xl font-bold mb-2">{tier.plan}</h3>
                     <p className="text-4xl font-bold">{tier.price}</p>
                     <p className="text-sm opacity-75">per month</p>
                   </div>
                   <ul className="p-8">
                     {tier.features.map((feature, idx) => (
-                      <li key={idx} className="mb-4 flex items-center">
-                        <Check className="text-green-500 mr-2" size={20} />
+                      <li key={idx} className="mb-4 flex items-center text-white">
+                        <Check className="text-green-400 mr-2" size={20} />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -347,10 +346,10 @@ const Homepage = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-900">
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">What Our Customers Say</h2>
+            <h2 className="text-5xl font-bold text-center mb-16 text-white">What Our Customers Say</h2>
           </ScrollAnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
@@ -359,27 +358,27 @@ const Homepage = () => {
               { name: "Alex Johnson", company: "StartUp Solutions", quote: "As a startup, NurenAI has been a game-changer. It's like having an entire customer service team at a fraction of the cost." },
             ].map((testimonial, index) => (
               <ScrollAnimatedSection key={index}>
-                <motion.div
-                  className="bg-gray-100 p-6 rounded-lg shadow-md"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <p className="text-gray-600 mb-4">"{testimonial.quote}"</p>
-                  <p className="font-bold">{testimonial.name}</p>
-                  <p className="text-sm text-gray-500">{testimonial.company}</p>
-                </motion.div>
-              </ScrollAnimatedSection>
-            ))}
-          </div>
+              <motion.div
+                className="bg-gray-800 p-6 rounded-lg shadow-md"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <p className="text-gray-300 mb-4">"{testimonial.quote}"</p>
+                <p className="font-bold text-white">{testimonial.name}</p>
+                <p className="text-sm text-gray-400">{testimonial.company}</p>
+              </motion.div>
+            </ScrollAnimatedSection>
+          ))}
         </div>
-      </section>
+      </div>
+    </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-gray-100">
+      <section className="py-20 bg-gray-800">
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Frequently Asked Questions</h2>
+            <h2 className="text-5xl font-bold text-center mb-16 text-white">Frequently Asked Questions</h2>
           </ScrollAnimatedSection>
           <div className="max-w-3xl mx-auto">
             {[
@@ -395,8 +394,8 @@ const Homepage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <h3 className="text-2xl font-bold mb-4 text-gray-800">{faq.question}</h3>
-                  <p className="text-gray-600">{faq.answer}</p>
+                  <h3 className="text-2xl font-bold mb-4 text-green-400">{faq.question}</h3>
+                  <p className="text-gray-300">{faq.answer}</p>
                 </motion.div>
               </ScrollAnimatedSection>
             ))}
@@ -405,7 +404,7 @@ const Homepage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-green-500 to-blue-500 text-white relative overflow-hidden">
+      <section className="py-20 bg-gradient-to-r from-green-600 to-blue-600 text-white relative overflow-hidden">
         <FloatingElement yOffset={30} duration={5}>
           <div className="absolute top-10 left-10 w-24 h-24 bg-white rounded-full opacity-10" />
         </FloatingElement>
@@ -421,7 +420,7 @@ const Homepage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white text-green-500 font-bold py-4 px-10 rounded-full text-xl shadow-lg hover:bg-green-100 transition duration-300"
+              className="bg-white text-green-600 font-bold py-4 px-10 rounded-full text-xl shadow-lg hover:bg-gray-100 transition duration-300"
             >
               Start Your Free Trial
             </motion.button>
@@ -430,7 +429,7 @@ const Homepage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black text-white py-12">
+      <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
@@ -447,14 +446,14 @@ const Homepage = () => {
                 <ul className="space-y-2">
                   {column.links.map((link, linkIndex) => (
                     <li key={linkIndex}>
-                      <a href="#" className="hover:text-green-500 transition duration-300">{link}</a>
+                      <a href="#" className="text-gray-400 hover:text-green-400 transition duration-300">{link}</a>
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
           </div>
-          <div className="mt-12 pt-8 border-t border-gray-700 text-center text-gray-400">
+          <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400">
             <p>&copy; 2024 NurenAI. All rights reserved.</p>
           </div>
         </div>

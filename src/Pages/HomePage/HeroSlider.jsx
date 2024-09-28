@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import broadcast from '../../assets/slider/broadcast.png';
 import whatsapp from '../../assets/slider/whatsapp.png';
 import flow from '../../assets/slider/flow.png';
-import birds from '../../assets/birds.mp4'
 import ad from '../../assets/slider/ad.mp4';
 
 const slides = [
@@ -14,14 +13,14 @@ const slides = [
     title: "Experience NurenAI in Action",
     description: "See how NurenAI transforms WhatsApp business communication with AI-powered chatbots, automated campaigns, and advanced analytics. Our cutting-edge technology helps businesses engage customers more effectively, save time, and drive growth.",
     buttonText: "Get Started",
-    buttonColor: "indigo",
+    buttonColor: "green",
     video: ad,
   },
   {
     title: "Broadcast with Precision",
     description: "Reach your audience with targeted messages at scale. Our advanced broadcasting features ensure your message lands with impact.",
     buttonText: "Learn More",
-    buttonColor: "indigo",
+    buttonColor: "green",
     image: broadcast,
   },
   {
@@ -35,14 +34,14 @@ const slides = [
     title: "Bulk Messaging Made Easy",
     description: "Send personalized messages to thousands in minutes. Our powerful bulk messaging tool saves time without sacrificing personalization.",
     buttonText: "Get Started",
-    buttonColor: "indigo",
+    buttonColor: "green",
     image: flow,
   },
 ];
 
 const Particle = ({ animate }) => (
   <motion.div
-    className="absolute rounded-full bg-blue-300 opacity-50"
+    className="absolute rounded-full bg-green-400 opacity-20"
     animate={animate}
     transition={{
       duration: Math.random() * 10 + 20,
@@ -96,7 +95,7 @@ const HeroSlider = () => {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black">
+    <div className="relative h-screen overflow-hidden bg-gray-900">
       {/* Particle background */}
       {[...Array(20)].map((_, i) => (
         <Particle
@@ -139,7 +138,7 @@ const HeroSlider = () => {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.8 }}
-                className="text-4xl md:text-5xl font-bold mb-6 text-gray-800"
+                className="text-4xl md:text-5xl font-bold mb-6 text-white"
               >
                 {slides[page].title}
               </motion.h2>
@@ -147,7 +146,7 @@ const HeroSlider = () => {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
-                className="text-xl mb-8 text-gray-600"
+                className="text-xl mb-8 text-gray-300"
               >
                 {slides[page].description}
               </motion.p>
@@ -155,9 +154,9 @@ const HeroSlider = () => {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.8 }}
-                whileHover={{ scale: 1.05, boxShadow: "0px 0px 8px rgba(0,0,0,0.2)" }}
+                whileHover={{ scale: 1.05, boxShadow: "0px 0px 8px rgba(0,230,118,0.4)" }}
                 whileTap={{ scale: 0.95 }}
-                className={`bg-${slides[page].buttonColor}-600 text-white font-bold py-3 px-8 rounded-full hover:bg-${slides[page].buttonColor}-700 transition duration-300`}
+                className={`bg-green-500 text-white font-bold py-3 px-8 rounded-full hover:bg-green-600 transition duration-300`}
               >
                 {slides[page].buttonText}
               </motion.button>
@@ -169,16 +168,27 @@ const HeroSlider = () => {
                 transition={{ delay: 0.2, duration: 0.8 }}
                 className="relative z-10"
               >
-                <img
-                  src={slides[page].image}
-                  alt={slides[page].title}
-                  className="w-full h-auto rounded-lg shadow-2xl"
-                />
+                {slides[page].video ? (
+                  <video
+                    src={slides[page].video}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-auto rounded-lg shadow-2xl"
+                  />
+                ) : (
+                  <img
+                    src={slides[page].image}
+                    alt={slides[page].title}
+                    className="w-full h-auto rounded-lg shadow-2xl"
+                  />
+                )}
               </motion.div>
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-indigo-200 to-purple-200 rounded-lg"
+                className="absolute inset-0 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg"
                 initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 0.5 }}
+                animate={{ scale: 1, opacity: 0.2 }}
                 transition={{ delay: 0.1, duration: 1 }}
                 style={{ filter: "blur(20px)", transform: "rotate(5deg)" }}
               />
@@ -189,20 +199,20 @@ const HeroSlider = () => {
 
       {/* Navigation arrows */}
       <motion.button
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg z-10"
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800 p-2 rounded-full shadow-lg z-10"
         onClick={() => paginate(-1)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        <ChevronLeft className="w-6 h-6 text-gray-800" />
+        <ChevronLeft className="w-6 h-6 text-white" />
       </motion.button>
       <motion.button
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg z-10"
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800 p-2 rounded-full shadow-lg z-10"
         onClick={() => paginate(1)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        <ChevronRight className="w-6 h-6 text-gray-800" />
+        <ChevronRight className="w-6 h-6 text-white" />
       </motion.button>
 
       {/* Slide indicators */}
@@ -215,7 +225,7 @@ const HeroSlider = () => {
               setPage(index);
             }}
             className={`w-3 h-3 rounded-full ${
-              index === page ? 'bg-indigo-600' : 'bg-gray-300'
+              index === page ? 'bg-green-500' : 'bg-gray-600'
             }`}
             whileHover={{ scale: 1.2 }}
             whileTap={{ scale: 0.8 }}

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import qrbg from "../../assets/qrbg.png";
 import WhatsAppQRCode from '../Chatbot/WhatsappQrCode';
 import axios from 'axios';
 import camera from "../../assets/camera.png";
+
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
@@ -98,59 +98,61 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   }, [socket, isAuthenticated, navigate, sessionId]);
 
   return (
-    <section className="py-20 bg-black">
-  <div className="container mx-auto px-4">
-    <motion.h2
-      className="text-5xl font-bold text-center mb-16 text-gray-800"
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      Experience Our Chatbot Demo
-    </motion.h2>
-
-    {/* Flex container for the image on the left and QR code on the right */}
-    <div className="flex flex-col md:flex-row items-center justify-between">
-      {/* Left side: Image */}
-      <div className="w-full md:w-1/4 mb-12 md:mb-0" style={{marginLeft:'15%'}}>
-        <motion.div
-         
+    <section className="py-20 bg-gray-900 text-white min-h-screen flex items-center">
+      <div className="container mx-auto px-4">
+        <motion.h2
+          className="text-4xl md:text-5xl font-bold text-center mb-16 text-purple-300"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <img
-            src={camera} // Replace with your image source
-            alt="Chatbot Demo"
-          />
-        </motion.div>
-      </div>
+          Experience Our Chatbot Demo
+        </motion.h2>
 
-      {/* Right side: Background image and QR code */}
-      <div className="w-full md:w-1/2 md:pl-12">
-        <motion.div
-          className="relative p-4 rounded-lg inline-block"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <img
-            src={qrbg}
-            alt="Background"
-            className="w-full h-auto rounded-lg"
-            style={{ width: '252px', height: '100px' }} // Double size of the background image
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-white p-2 rounded-lg shadow-xl">
-              <WhatsAppQRCode sessionId={sessionId} />
+        <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+          <motion.div
+            className="w-full md:w-1/3 max-w-md"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="p-8 ">
+              <img
+                src={camera}
+                alt="Chatbot Demo"
+                className="w-full h-auto rounded-lg mb-4"
+              />
+              <p className="text-gray-300 text-center">
+                Scan the QR code to start chatting with our AI assistant
+              </p>
             </div>
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  </div>
-</section>
+          </motion.div>
 
+          <motion.div
+            className="w-full md:w-1/3 max-w-md"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <div className="relative p-8 rounded-lg shadow-xl">
+              <img
+                src={qrbg}
+                alt="Background"
+                className="w-full h-auto rounded-lg opacity-30"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-white p-6 rounded-lg shadow-xl" style={{ width: '80%', height: '80%' }}>
+                  <WhatsAppQRCode sessionId={sessionId} />
+                </div>
+              </div>
+            </div>
+            <p className="mt-4 text-gray-300 text-center">
+              Scan this QR code with your phone's camera to begin the demo
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    </section>
   );
 };
 

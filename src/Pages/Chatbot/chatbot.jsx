@@ -780,7 +780,7 @@ const getAvatarColor = (initials) => {
     formData.append('jsonData', JSON.stringify(jsonData));
   
     try {
-      const response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/upload/', formData, {
+      const response = await axiosInstance.post('/upload/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

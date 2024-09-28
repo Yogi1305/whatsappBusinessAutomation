@@ -622,10 +622,10 @@ const FlowBuilderContent = () => {
     try {
       let response;
       if (isExistingFlow) {
-        response = await axiosInstance.put(`https://8twdg37p-8000.inc1.devtunnels.ms/node-templates/${selectedFlow}/`, flow);
+        response = await axiosInstance.put(`/node-templates/${selectedFlow}/`, flow);
         toast.success("Flow updated successfully");
       } else {
-        response = await axiosInstance.post('https://8twdg37p-8000.inc1.devtunnels.ms/node-templates/', flow);
+        response = await axiosInstance.post('/node-templates/', flow);
         toast.success("New flow created successfully");
         setIsExistingFlow(true);
         setSelectedFlow(response.data.id);
