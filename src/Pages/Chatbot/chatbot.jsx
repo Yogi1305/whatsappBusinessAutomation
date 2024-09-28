@@ -429,6 +429,7 @@ const getAvatarColor = (initials) => {
   }, [conversation]);
 
 
+  
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -675,6 +676,7 @@ const getAvatarColor = (initials) => {
       console.error('Error fetching data from backend:', error);
     }
   };
+  
 
 
   

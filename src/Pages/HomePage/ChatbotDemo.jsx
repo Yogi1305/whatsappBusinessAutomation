@@ -1,9 +1,102 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, Smartphone } from 'lucide-react';
-import waqr from "../../assets/waqr.png";
+import { useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
+import qrbg from "../../assets/qrbg.png";
 import WhatsAppQRCode from '../Chatbot/WhatsappQrCode';
-const ChatbotDemoSection = () => {
+import axios from 'axios';
+
+const getTenantIdFromUrl = () => {
+  const pathArray = window.location.pathname.split('/');
+  if (pathArray.length >= 2) {
+    var tenant_id = pathArray[1];
+    if (tenant_id == "demo") tenant_id = 'll';
+    return tenant_id;
+  }
+  return null;
+};
+
+const ChatbotDemoSection = ({ isAuthenticated }) => {
+  const navigate = useNavigate();
+  const [socket, setSocket] = useState(null);
+  const tenantId = getTenantIdFromUrl();
+  const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
+  const [sessionId, setSessionId] = useState(null);
+
+  useEffect(() => {
+    const fetchBusinessPhoneId = async () => {
+      try {
+        const response = await axios.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+          headers: {
+            'X-Tenant-Id': "ll"
+          }
+        });
+        setBusinessPhoneNumberId(response.data.business_phone_number_id);
+      } catch (error) {
+        console.error('Error fetching business phone ID:', error);
+      }
+    };
+
+    fetchBusinessPhoneId();
+  }, [tenantId]);
+
+  useEffect(() => {
+    const newSocket = io('https://whatsappbotserver.azurewebsites.net');
+    setSocket(newSocket);
+
+    const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);
+    setSessionId(generatedSessionId);
+    localStorage.setItem('sessionId', generatedSessionId);
+
+    return () => newSocket.close();
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = (message) => {
+      if (message && !isAuthenticated) {
+        localStorage.setItem('homepageQRScanned', 'true');
+        localStorage.setItem('chatbotContactPhone', message.contactPhone);
+        navigate(`/demo/chatbot/`, { 
+          state: { 
+            contactPhone: message.contactPhone,
+            fromHomepage: true,
+            sessionId: sessionId
+          } 
+        });
+      }
+    };
+
+    const handleTempUser = (message) => {
+      if (message && !isAuthenticated) {
+        const storedSessionId = localStorage.getItem('sessionId');
+        const formattedMessageTempUser = `*/${message.temp_user}`;
+        
+        if (formattedMessageTempUser === storedSessionId) {
+          localStorage.setItem('homepageQRScanned', 'true');
+          localStorage.setItem('chatbotContactPhone', message.contactPhone);
+          navigate(`/demo/chatbot/`, { 
+            state: { 
+              contactPhone: message.contactPhone,
+              fromHomepage: true,
+              sessionId: storedSessionId
+            } 
+          });
+        }
+      }
+    };
+
+    socket.on('new-message', handleNewMessage);
+    socket.on('temp-user', handleTempUser);
+
+    return () => {
+      socket.off('new-message', handleNewMessage);
+      socket.off('temp-user', handleTempUser);
+    };
+  }, [socket, isAuthenticated, navigate, sessionId]);
+
   return (
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -43,13 +136,10 @@ const ChatbotDemoSection = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* Background image */}
-              <img src={waqr} alt="Background" className="w-74 h-84" />
-              
-              {/* Overlay container for QR code */}
+              <img src={qrbg} alt="Background" className="w-63 h-50" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white p-2 rounded-lg">
-                  <WhatsAppQRCode />
+                <div className="bg-white p-2 rounded-lg shadow-xl">
+                  <WhatsAppQRCode sessionId={sessionId} />
                 </div>
               </div>
             </motion.div>

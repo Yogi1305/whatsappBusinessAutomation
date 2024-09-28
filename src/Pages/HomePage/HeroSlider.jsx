@@ -7,8 +7,16 @@ import broadcast from '../../assets/slider/broadcast.png';
 import whatsapp from '../../assets/slider/whatsapp.png';
 import flow from '../../assets/slider/flow.png';
 import birds from '../../assets/birds.mp4'
+import ad from '../../assets/slider/ad.mp4';
 
 const slides = [
+  {
+    title: "Experience NurenAI in Action",
+    description: "See how NurenAI transforms WhatsApp business communication with AI-powered chatbots, automated campaigns, and advanced analytics. Our cutting-edge technology helps businesses engage customers more effectively, save time, and drive growth.",
+    buttonText: "Get Started",
+    buttonColor: "indigo",
+    video: ad,
+  },
   {
     title: "Broadcast with Precision",
     description: "Reach your audience with targeted messages at scale. Our advanced broadcasting features ensure your message lands with impact.",
@@ -29,13 +37,6 @@ const slides = [
     buttonText: "Get Started",
     buttonColor: "indigo",
     image: flow,
-  },
-  {
-    title: "Experience NurenAI in Action",
-    description: "See how NurenAI transforms WhatsApp business communication with AI-powered chatbots, automated campaigns, and advanced analytics. Our cutting-edge technology helps businesses engage customers more effectively, save time, and drive growth.",
-    buttonText: "Get Started",
-    buttonColor: "indigo",
-    // image: birds,
   },
 ];
 
