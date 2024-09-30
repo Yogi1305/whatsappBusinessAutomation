@@ -5,7 +5,7 @@ import { CheckCircle, MessageSquare, Users, Send, BarChart2 } from 'lucide-react
 const steps = [
   {
     title: "Connect WhatsApp Business API",
-    description: "Seamlessly integrate your WhatsApp Business account with NurenAI.",
+    description: "Seamlessly integrate your WhatsApp Business account with Nuren AI.",
     icon: <MessageSquare className="w-8 h-8" />
   },
   {
@@ -40,7 +40,7 @@ const HowNurenAIWorks = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          How NurenAI Works
+          How Nuren AI Works
         </motion.h2>
         <div className="max-w-5xl mx-auto">
           {steps.map((step, index) => (

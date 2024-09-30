@@ -18,8 +18,9 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
   const handleNewMessage = (message) => {
-    console.log(message,"amrit");
+    console.log(message, "amrit");
     const newNotification = {
       id: Date.now(),
       text: `New message from ${message.contactPhone}: ${message.message.text.body}`,
@@ -28,19 +29,18 @@ const Navbar = () => {
     setNotifications(prev => [newNotification, ...prev]);
     setUnreadCount(prev => prev + 1);
   };
-    useEffect(() => {
-      const handleNewSocketMessage = (message) => {
-        if (message) {
-          handleNewMessage(message);
-        }
-      };
-      socket.on('new-message', handleNewSocketMessage);
-      return () => {
-        socket.off('new-message');
-      };
-    }, []);
 
-   
+  useEffect(() => {
+    const handleNewSocketMessage = (message) => {
+      if (message) {
+        handleNewMessage(message);
+      }
+    };
+    socket.on('new-message', handleNewSocketMessage);
+    return () => {
+      socket.off('new-message');
+    };
+  }, []);
 
   const handleNotificationClick = () => {
     setShowNotifications(!showNotifications);
@@ -81,10 +81,10 @@ const Navbar = () => {
 
   return (
     <nav className="bg-black p-4 transition-colors duration-300">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link style={{display:'flex', alignItems:'center'}} className="text-white text-2xl font-bold" to="/">
-          <img style={{height:'2.5rem', marginRight:'2px'}} src={logo} alt="" />
-          NurenAI
+      <div className="container mx-auto flex justify-between items-center px-6 lg:px-12"> {/* Added consistent padding */}
+        <Link style={{ display: 'flex', alignItems: 'center' }} className="text-white text-2xl font-gliker" to="/">
+          <img style={{ height: '2.5rem', marginRight: '2px' }} src={logo} alt="" />
+          Nuren AI
         </Link>
         <div className="hidden md:flex space-x-4 items-center">
           {authenticated && (

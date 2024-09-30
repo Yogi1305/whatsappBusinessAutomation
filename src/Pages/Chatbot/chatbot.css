@@ -12,6 +12,14 @@
   --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+@font-face {
+  font-family: 'Gliker Expanded';
+  src: url('../../assets/Gliker-RegularSemiExpanded.woff2') format('woff'); /* Update with the correct path */
+}
+
+.font-gliker {
+  font-family: 'Gliker Expanded', sans-serif; /* Fallback to sans-serif */
+}
 .cb-container {
   display: flex;
   height: 90vh;

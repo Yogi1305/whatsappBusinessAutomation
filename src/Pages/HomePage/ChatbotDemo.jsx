@@ -98,10 +98,10 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   }, [socket, isAuthenticated, navigate, sessionId]);
 
   return (
-    <section className="py-20 bg-gray-900 text-white min-h-screen flex items-center">
+    <section className="py-20 bg-black text-white min-h-screen flex items-center">
       <div className="container mx-auto px-4">
         <motion.h2
-          className="text-4xl md:text-5xl font-bold text-center mb-16 text-purple-300"
+          className="text-4xl md:text-5xl font-bold text-center mb-16 font-gliker bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -123,7 +123,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
                 className="w-full h-auto rounded-lg mb-4"
               />
               <p className="text-gray-300 text-center">
-                Scan the QR code to start chatting with our AI assistant
+                Scan the QR code using the whatsapp camera icon or any other scanner
               </p>
             </div>
           </motion.div>
