@@ -274,7 +274,7 @@ const Homepage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
             {[
               { icon: Send, value: 6000, label: 'Messages Sent' },
-              { icon: Users, value: 10000, label: 'Active Businesses' },
+              { icon: Users, value: 60, label: 'Approved Templates' },
               { icon: BarChart2, value: 100, label: 'Customer Satisfaction' },
             ].map(({ icon: Icon, value, label }, index) => (
               <ScrollAnimatedSection key={index}>

@@ -360,7 +360,7 @@ export const AskQuestionNode = ({id, data, isConnectable }) => {
           style={{ ...selectStyles, width: '40%', borderColor: errors.dataType ? 'red' : undefined }}
         >
           <option value="">Select Type</option>
-          <option value="string">String</option>
+          <option value="string">Word/Sentence</option>
           <option value="number">Number</option>
           <option value="boolean">Boolean</option>
           <option value="date">Date</option>
