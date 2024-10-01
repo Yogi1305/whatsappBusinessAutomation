@@ -2,6 +2,23 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaVolumeMute, FaVolumeUp } from "react-icons/fa"; // Icons for mute and unmute
 
+// Particle component (copied from your slider component)
+const Particle = ({ animate }) => (
+  <motion.div
+    className="absolute rounded-full bg-green-400 opacity-20"
+    animate={animate}
+    transition={{
+      duration: Math.random() * 10 + 20,
+      repeat: Infinity,
+      repeatType: "reverse",
+    }}
+    style={{
+      width: Math.random() * 30 + 10,
+      height: Math.random() * 30 + 10,
+    }}
+  />
+);
+
 const VideoSection = ({ videoSrc, title, description }) => {
   const videoRef = useRef(null);
   const [isMuted, setIsMuted] = useState(true); // Track mute state
@@ -24,7 +41,18 @@ const VideoSection = ({ videoSrc, title, description }) => {
   }, [isMuted]); // Reset timeout on mute/unmute change
 
   return (
-    <section className="py-24 bg-black">
+    <section className="py-24 bg-black relative">
+      {/* Particle background */}
+      {[...Array(20)].map((_, i) => (
+        <Particle
+          key={i}
+          animate={{
+            x: [Math.random() * window.innerWidth, Math.random() * window.innerWidth],
+            y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
+          }}
+        />
+      ))}
+      
       <div className="container mx-auto px-6 lg:px-12">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <motion.div
@@ -54,9 +82,7 @@ const VideoSection = ({ videoSrc, title, description }) => {
             transition={{ duration: 0.5 }}
           >
             {/* Video */}
-            <div className="relative w-full" style={{marginTop:'-50px'}}>
- 
-</div>
+            <div className="relative w-full" style={{ marginTop: '-50px' }}>
               <video
                 ref={videoRef}
                 className="w-full h-auto rounded-lg shadow-2xl cursor-pointer"
@@ -69,18 +95,18 @@ const VideoSection = ({ videoSrc, title, description }) => {
                 Your browser does not support the video tag.
               </video>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-  <h2 style={{ fontFamily: 'Gliker', backgroundColor: 'black', color: 'white' }}>
-    Click For Sound
-  </h2>
-
+                <h2 style={{ fontFamily: 'Gliker', backgroundColor: 'black', color: 'white' }}>
+                  Click For Sound
+                </h2>
+              </div>
               {/* Mute/Unmute Icon */}
               {showIcon && (
                 <div className="absolute inset-0 flex justify-center items-center">
                   <div className="bg-gray-800 bg-opacity-70 p-4 rounded-full">
                     {isMuted ? (
-                      <FaVolumeMute className="text-white text-4xl" />
+                      <FaVolumeMute className="text-white text-3xl" />
                     ) : (
-                      <FaVolumeUp className="text-white text-4xl" />
+                      <FaVolumeUp className="text-white text-3xl" />
                     )}
                   </div>
                 </div>

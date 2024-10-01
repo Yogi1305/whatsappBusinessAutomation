@@ -26,11 +26,11 @@ const FeatureCard = ({ icon: Icon, title, description }) => {
       style={springProps}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="bg-gray-800 rounded-lg p-6 text-white transition-all duration-300 hover:bg-gray-700"
+      className="bg-gray-500 rounded-lg p-6 text-bluee transition-all duration-300 hover:bg-gray-600"
     >
       <Icon className="w-12 h-12 mb-4 text-green-400" />
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-gray-300">{description}</p>
+      <h3 className="text-xl font-gliker text-blue mb-2">{title}</h3>
+      <p className="text-white">{description}</p>
     </animated.div>
   );
 };
@@ -138,10 +138,10 @@ const Homepage = () => {
 
       <ChatbotDemoSection />
       {/* Features Section */}
-      <section className="py-20 bg-gray-800">
+      <section className="py-20 bg-black">
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16 text-white">Powerful Features</h2>
+            <h2 className="text-5xl font-gliker text-center mb-16 text-white">Powerful Features</h2>
           </ScrollAnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
@@ -163,7 +163,7 @@ const Homepage = () => {
 
 
       {/* How It Works Section */}
-      <section className="py-20 bg-gray-900 relative overflow-hidden">
+      <section className="py-20 bg-black relative overflow-hidden">
         <FloatingElement yOffset={30} duration={5}>
           <div className="absolute top-10 left-10 w-20 h-20 bg-green-400 rounded-full opacity-10" />
         </FloatingElement>
@@ -212,10 +212,10 @@ const Homepage = () => {
       <CalendlySection />
 
       {/* Connection Section */}
-      <section className="py-20 bg-gray-800">
+      <section className="py-20 bg-black">
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16 text-white">Connecting You with Your Customers</h2>
+            <h2 className="text-5xl font-gliker text-center mb-16 text-white">Connecting You with Your Customers</h2>
           </ScrollAnimatedSection>
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="w-full md:w-1/2 mb-8 md:mb-0">
@@ -259,8 +259,8 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-gradient-to-r from-green-600 to-blue-600 text-white relative overflow-hidden">
+      {/* Stats Section gradient-to-r from-green-600 to-blue-600*/}
+      <section className="py-20 bg-black text-blue-400 relative overflow-hidden">
         <FloatingElement yOffset={40} duration={6}>
           <div className="absolute top-20 right-20 w-32 h-32 bg-white rounded-full opacity-10" />
         </FloatingElement>
@@ -269,7 +269,7 @@ const Homepage = () => {
         </FloatingElement>
         <div className="container mx-auto px-4">
           <ScrollAnimatedSection>
-            <h2 className="text-5xl font-bold text-center mb-16">Nuren AI in Numbers</h2>
+            <h2 className="text-5xl font-gliker text-green-400 text-center mb-16">Nuren AI in Numbers</h2>
           </ScrollAnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
             {[
@@ -346,9 +346,9 @@ const Homepage = () => {
       </section>
  */}
       {/* Testimonials Section */}
-      <section className="py-20 bg-gray-900">
+       {/*<section className="py-20 bg-gray-900">
         <div className="container mx-auto px-4">
-          {/*<ScrollAnimatedSection>
+         <ScrollAnimatedSection>
             <h2 className="text-5xl font-bold text-center mb-16 text-white">What Our Customers Say</h2>
           </ScrollAnimatedSection>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -370,9 +370,9 @@ const Homepage = () => {
               </motion.div>
             </ScrollAnimatedSection>
           ))}
-        </div>*/}
+        </div>
       </div>
-    </section>
+    </section>*/}
 
       {/* FAQ Section
       <section className="py-20 bg-gray-800">

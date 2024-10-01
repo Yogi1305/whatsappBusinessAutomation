@@ -132,7 +132,7 @@
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.8 }}
-                    className="text-4xl md:text-5xl font-bold mb-6 text-green-500 font-gliker"
+                    className="text-4xl md:text-5xl font-bold mb-6 text-purple-500 font-gliker "
                   >
                     {slides[page].title}
                   </motion.h2>
@@ -150,7 +150,7 @@
                     transition={{ delay: 0.6, duration: 0.8 }}
                     whileHover={{ scale: 1.05, boxShadow: "0px 0px 8px rgba(0,230,118,0.4)" }}
                     whileTap={{ scale: 0.95 }}
-                    className={`bg-blue-500 text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300`}
+                    className={`bg-indigo-400 text-white font-bold py-3 px-8 rounded-full hover:bg-indigo-600 transition duration-300`}
                   >
                     {slides[page].buttonText}
                   </motion.button>

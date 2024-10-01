@@ -4,6 +4,7 @@ import { Menu, X, Bell, User, ChevronDown } from 'lucide-react';
 import { useAuth } from './authContext'; // Assuming you have this hook
 import logo from "./assets/logo.png";
 import io from 'socket.io-client';
+import axiosInstance from './api';
 
 const socket = io('https://whatsappbotserver.azurewebsites.net');
 
@@ -63,7 +64,8 @@ const Navbar = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async() => {
+    await axiosInstance.post('/logout/');
     logout();
     navigate('/');
   };
