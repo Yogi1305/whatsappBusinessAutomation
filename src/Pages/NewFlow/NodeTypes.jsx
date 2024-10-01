@@ -6,10 +6,6 @@ import uploadToBlob from "../../azureUpload.jsx";
 import { convertMentionsForBackend, convertMentionsForFrontend, MentionTextArea } from './MentionTextArea';
 import { useAuth } from '../../authContext.jsx';
 import axiosInstance from '../../api.jsx';
-import { Clock, LogOut, Upload } from 'lucide-react';
-import { Button, Card, Input } from 'antd';
-import { CardContent } from '@mui/material';
-import { CardHeader, CardTitle } from 'react-bootstrap';
 
 const nodeStyles = {
   padding: '20px',
@@ -165,50 +161,22 @@ const NodeWrapper = ({ children, style, type }) => {
 
 
 
-export const AskQuestionNode = ({ id, data, isConnectable }) => {
-  const [field, setField] = useState(data.field || { type: 'Message', content: { text: '', caption: '', med_id: '' } });
+export const AskQuestionNode = ({id, data, isConnectable }) => {
+  const [question, setQuestion] = useState(data.question || '');
   const [optionType, setOptionType] = useState(data.optionType || 'Buttons');
   const [options, setOptions] = useState(data.options || []);
   const [variable, setVariable] = useState(data.variable || '');
   const [dataType, setDataType] = useState(data.dataType || '');
   const [errors, setErrors] = useState({});
   const { updateNodeData } = useFlow();
-  const { userId } = useAuth();
-  const [delay, setDelay] = useState(data.delay || '0');
-  const tenantId = getTenantIdFromUrl();
-  const [accessToken, setAccessToken] = useState('');
-  const fileInputRef = useRef(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const bpidResponse = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
-          headers: {
-            'X-Tenant-ID': tenantId
-          }
-        });
-        const fetchedBusinessPhoneNumberId = bpidResponse.data.business_phone_number_id;
-        setBusinessPhoneNumberId(fetchedBusinessPhoneNumberId);
-
-        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${fetchedBusinessPhoneNumberId}`);
-        setAccessToken(tenantResponse.data.access_token);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, [tenantId]);
 
   useEffect(() => {
     validateNode();
-  }, [field, options, variable, dataType]);
+  }, [question, options, variable, dataType]);
 
   const validateNode = () => {
     let newErrors = {};
-    if (!field.content.text.trim() && field.type === 'Message') {
+    if (!question.trim()) {
       newErrors.question = 'Question is required';
     }
     if (optionType !== 'Text') {
@@ -233,20 +201,13 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
 
   const handleQuestionChange = (e) => {
     const newQuestion = e.target.value;
-    setField(prevField => ({
-      ...prevField,
-      content: { ...prevField.content, text: convertMentionsForBackend(newQuestion) }
-    }));
-    updateNodeData(id, { field, optionType, options, variable, dataType });
-  };
-
-  const handleCaptionChange = (e) => {
-    const newCaption = e.target.value;
-    setField(prevField => ({
-      ...prevField,
-      content: { ...prevField.content, caption: convertMentionsForBackend(newCaption) }
-    }));
-    updateNodeData(id, { field, optionType, options, variable, dataType });
+    setQuestion(newQuestion);
+    updateNodeData(id, { 
+      question: convertMentionsForBackend(newQuestion), 
+      optionType, 
+      options, 
+      dataType 
+    });
   };
 
   const handleOptionTypeChange = (e) => {
@@ -259,23 +220,23 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
     }
     setOptionType(newOptionType);
     setOptions(newOptions);
-    updateNodeData(id, { field, optionType: newOptionType, options: newOptions, variable, dataType });
+    updateNodeData(id, { question, optionType: newOptionType, options: newOptions, variable, dataType });
   };
 
   const handleOptionChange = (index, value) => {
     const newOptions = options.map((opt, i) => i === index ? value : opt);
     setOptions(newOptions);
-    updateNodeData(id, { field, optionType, options: newOptions, variable, dataType });
+    updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
   };
 
   const handleVariableChange = (value) => {
     setVariable(value);
-    updateNodeData(id, { field, optionType, options, variable: value, dataType });
+    updateNodeData(id, { question, optionType, options, variable: value, dataType });
   };
 
   const handleDataTypeChange = (value) => {
     setDataType(value);
-    updateNodeData(id, { field, optionType, options, variable, dataType: value });
+    updateNodeData(id, { question, optionType, options, variable, dataType: value });
   };
 
   const addOption = () => {
@@ -283,103 +244,49 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
         (optionType === 'Lists' && options.length < 10)) {
       const newOptions = [...options, ''];
       setOptions(newOptions);
-      updateNodeData(id, { field, optionType, options: newOptions, variable, dataType });
+      updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
     }
   };
 
   const removeOption = (index) => {
     const newOptions = options.filter((_, i) => i !== index);
     setOptions(newOptions);
-    updateNodeData(id, { field, optionType, options: newOptions, variable, dataType });
+    updateNodeData(id, { question, optionType, options: newOptions, variable, dataType });
   };
 
-  const handleDelayChange = (e) => {
-    const newDelay = e.target.value;
-    setDelay(newDelay);
-    updateNodeData(id, { field, optionType, variable, dataType, delay: newDelay });
-  };
+  const getOptionStyle = (type, index) => {
+    const baseStyle = {
+      ...inputStyles,
+      width: 'calc(100% - 60px)',
+    };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('type', file.type.startsWith('image/') ? 'image' : 'document');
-        formData.append('messaging_product', 'whatsapp');
+    const errorStyle = errors[`option-${index}`] ? { borderColor: 'red' } : {};
 
-        const response = await axiosInstance.post(
-          `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`,
-          formData,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
-
-        console.log('File uploaded to WhatsApp, ID:', response.data.id);
-        const blobUrl = await uploadToBlob(file, userId, tenantId);
-
-        setField({
-          type: file.type.startsWith('image/') ? 'Image' : file.type.startsWith('video/') ? 'Video' : 'Document',
-          content: {
-            url: blobUrl,
-            med_id: response.data.id,
-            text: '',
-            caption: ''
-          }
-        });
-
-        if (file.type.startsWith('image/')) {
-          setPreviewUrl(URL.createObjectURL(file));
-        }
-
-        updateNodeData(id, { field, optionType, options, variable, dataType });
-      } catch (error) {
-        console.error('Error uploading file to WhatsApp Media API:', error);
-      }
-    }
-  };
-
-  const renderInput = () => {
-    switch (field.type) {
-      case 'Image':
-      case 'Video':
-      case 'Document':
-        return (
-          <div>
-            {field.content && field.content.med_id && (
-              <div style={{ marginBottom: '10px' }}>
-                {field.type === 'Image' && previewUrl && (
-                  <img src={previewUrl} alt="Preview" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
-                )}
-              </div>
-            )}
-            <input
-              type="file"
-              accept={`${field.type.toLowerCase()}/*`}
-              onChange={handleFileChange}
-              style={fileInputStyles}
-              ref={fileInputRef}
-            />
-            <MentionTextArea
-              value={convertMentionsForFrontend(field.content?.caption || '')}
-              onChange={handleCaptionChange}
-              placeholder="Enter caption"
-            />
-          </div>
-        );
+    switch (type) {
+      case 'Buttons':
+        return {
+          ...baseStyle,
+          ...errorStyle,
+          background: '#e6f7ff',
+          border: '1px solid #91d5ff',
+          borderRadius: '20px',
+          padding: '8px 15px',
+          cursor: 'pointer',
+          color: '#0050b3',
+          fontWeight: 'bold',
+        };
+      case 'Lists':
+        return {
+          ...baseStyle,
+          ...errorStyle,
+          background: '#f6ffed',
+          borderLeft: '3px solid #b7eb8f',
+          borderRadius: '0 6px 6px 0',
+          paddingLeft: '15px',
+          color: '#389e0d',
+        };
       default:
-        return (
-          <MentionTextArea
-            value={convertMentionsForFrontend(field.content?.text || '')}
-            onChange={handleQuestionChange}
-            placeholder="Enter question"
-            style={errors.question ? { borderColor: 'red' } : {}}
-          />
-        );
+        return { ...baseStyle, ...errorStyle };
     }
   };
 
@@ -422,42 +329,6 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
     }
   };
 
-  const getOptionStyle = (type, index) => {
-    const baseStyle = {
-      ...inputStyles,
-      width: 'calc(100% - 60px)',
-    };
-
-    const errorStyle = errors[`option-${index}`] ? { borderColor: 'red' } : {};
-
-    switch (type) {
-      case 'Buttons':
-        return {
-          ...baseStyle,
-          ...errorStyle,
-          background: '#e6f7ff',
-          border: '1px solid #91d5ff',
-          borderRadius: '20px',
-          padding: '8px 15px',
-          cursor: 'pointer',
-          color: '#0050b3',
-          fontWeight: 'bold',
-        };
-      case 'Lists':
-        return {
-          ...baseStyle,
-          ...errorStyle,
-          background: '#f6ffed',
-          borderLeft: '3px solid #b7eb8f',
-          borderRadius: '0 6px 6px 0',
-          paddingLeft: '15px',
-          color: '#389e0d',
-        };
-      default:
-        return { ...baseStyle, ...errorStyle };
-    }
-  };
-
   return (
     <NodeWrapper style={{ background: '#fff5f5', borderColor: errors.question ? 'red' : '#ffa39e' }} type="askQuestion">
       <Handle type="target" style={{
@@ -467,36 +338,13 @@ export const AskQuestionNode = ({ id, data, isConnectable }) => {
         width: '12px',
         height: '12px',
       }} position={Position.Left} isConnectable={isConnectable} />
-      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
       <h3 style={{ marginBottom: '15px', color: '#cf1322' }}>Ask Question</h3>
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="delay-input" style={{ display: 'block', marginBottom: '5px', color: '#531dab' }}>Delay(s) (Optional):</label>
-        <Input
-          id="delay-input"
-          type="number"
-          value={delay}
-          onChange={handleDelayChange}
-          placeholder="Enter delay in seconds"
-          style={{width:'5rem'}}
-          min="0"
-          />
-      </div>
-       </div>
-      <div style={{ marginBottom: '15px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-          <select 
-            value={field.type} 
-            onChange={(e) => setField({ type: e.target.value, content: { text: '', caption: '', med_id: '' } })}
-            style={{ ...selectStyles, width: '100%', marginRight: '10px', color: 'black' }}
-          >
-            <option value="Message">Question</option>
-            <option value="Image">Image</option>
-            <option value="Document">Document</option>
-            <option value="Video">Video</option>
-          </select>
-        </div>
-        {renderInput()}
-      </div>
+      <MentionTextArea
+        value={convertMentionsForFrontend(question)}
+        onChange={handleQuestionChange}
+        placeholder="Enter question"
+        style={errors.question ? { borderColor: 'red' } : {}}
+      />
       {errors.question && <div style={errorStyle}>{errors.question}</div>}
       <h4>Variables (Optional)</h4>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
@@ -559,25 +407,8 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
-  const [delay, setDelay] = useState(data.delay || '0');
-  const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    validateNode();
-  }, [field]);
-
-  const validateNode = () => {
-    let newErrors = {};
-    if (field.type === 'Message' && !field.content.text.trim()) {
-      newErrors.message = 'Message is required';
-    }
-    if ((field.type === 'Image' || field.type === 'Video' || field.type === 'Document') && !field.content.med_id) {
-      newErrors.media = 'Please upload a file';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -603,10 +434,9 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   }, [tenantId]);
 
 
-  const updateNodeDataSafely = (newFields, newDelay) => {
-    if (validateNode()) {
-      updateNodeData(id, { fields: newFields, delay: newDelay });
-    }
+  const updateNodeDataSafely = (newFields) => {
+    console.log(id,newFields,"pippity bpi");
+    updateNodeData(id, { fields: newFields });
   };
 
 
@@ -661,11 +491,6 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
     }));
   };
 
-  const handleDelayChange = (e) => {
-    const newDelay = e.target.value;
-    setDelay(newDelay);
-    updateNodeDataSafely(field, newDelay);
-  };
 
   const handleCaptionChange = (e) => {
     const { value } = e.target;
@@ -726,7 +551,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   };
 
   return (
-    <NodeWrapper style={{ background: '#e6fffb', borderColor: errors.message || errors.media ? 'red' : '#87e8de' }} type="sendMessage">
+    <NodeWrapper style={{ background: '#e6fffb', borderColor: '#87e8de' }} type="sendMessage">
       <Handle type="target" style={{
         top: '50%',
         left: '-5px',
@@ -734,21 +559,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         width: '12px',
         height: '12px',
       }} position={Position.Left} isConnectable={isConnectable} />
-       <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-        <h3 style={{ marginBottom: '15px', color: '#006d75' }}>Send Message</h3>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="delay-input" style={{ display: 'block', marginBottom: '5px', color: '#531dab' }}>Delay(s) (Optional):</label>
-          <Input
-            id="delay-input"
-            type="number"
-            value={delay}
-            onChange={handleDelayChange}
-            placeholder="Enter delay in seconds"
-            style={{width:'5rem'}}
-            min="0"
-          />
-        </div>
-      </div>
+      <h3 style={{ marginBottom: '15px', color: '#006d75' }}>Send Message</h3>
       <div style={{ marginBottom: '15px' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
           <select 
@@ -764,8 +575,6 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         </div>
         {renderInput()}
       </div>
-      {errors.message && <div style={errorStyle}>{errors.message}</div>}
-      {errors.media && <div style={errorStyle}>{errors.media}</div>}
       <Handle type="source" style={{
         top: '50%',
         right: '-5px',
@@ -783,42 +592,19 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
 export const SetConditionNode = ({ id,data, isConnectable }) => {
   const [condition, setCondition] = useState(data.condition || '');
  // const { id } = data;
- const [delay, setDelay] = useState(data.delay || '0');
   console.log("this is a GOAT",id);
 const { updateNodeData } = useFlow();
-const [errors, setErrors] = useState({});
 
-
-
-useEffect(() => {
-  validateNode();
-}, [condition]);
-
-const validateNode = () => {
-  let newErrors = {};
-  if (!condition.trim()) {
-    newErrors.condition = 'Condition is required';
-  }
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
 
 const handleConditionChange = (e) => {
   const newCondition = e.target.value;
+  console.log(newCondition,id,"lookity look");
   setCondition(newCondition);
-  if (validateNode()) {
-    updateNodeData(id, { condition: convertMentionsForBackend(newCondition), delay });
-  }
-};
-
-const handleDelayChange = (e) => {
-  const newDelay = e.target.value;
-  setDelay(newDelay);
-  updateNodeData(id, { condition: convertMentionsForBackend(condition), delay: newDelay });
+  updateNodeData(id, { condition: convertMentionsForBackend(newCondition) });
 };
 
   return (
-    <NodeWrapper style={{ background: '#f9f0ff', borderColor: errors.condition ? 'red' : '#d3adf7' }} type="setCondition">
+    <NodeWrapper style={{ background: '#f9f0ff', borderColor: '#d3adf7' }} type="setCondition">
       <Handle type="target"  style={{
                         
                         top: '50%',
@@ -827,27 +613,12 @@ const handleDelayChange = (e) => {
                         width: '12px',
                         height: '12px',
                     }} position={Position.Left} isConnectable={isConnectable} />
-       <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-        <h3 style={{ marginBottom: '15px', color: '#531dab' }}>Set Condition</h3>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="delay-input" style={{ display: 'block', marginBottom: '5px', color: '#531dab' }}>Delay(s) (Optional):</label>
-          <Input
-            id="delay-input"
-            type="number"
-            value={delay}
-            onChange={handleDelayChange}
-            placeholder="Enter delay in seconds"
-            style={{width:'5rem'}}
-            min="0"
-          />
-        </div>
-      </div>
+      <h3 style={{ marginBottom: '15px', color: '#531dab' }}>Set Condition</h3>
       <MentionTextArea
         value={convertMentionsForFrontend(condition)}
         onChange={handleConditionChange}
         placeholder="Enter condition"
       />
-      {errors.condition && <div style={errorStyle}>{errors.condition}</div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px' }}>
         <div style={{ background: '#d9f7be', padding: '5px 10px', borderRadius: '4px', color: '#389e0d' }}>True</div>
         <div style={{ background: '#ffccc7', padding: '5px 10px', borderRadius: '4px', color: '#cf1322' }}>False</div>
@@ -860,26 +631,5 @@ const handleDelayChange = (e) => {
                         width: '12px',
                         height: '12px', }} />
     </NodeWrapper>
-  );
-};
-
-
-export const AINode = ({ id, data, isConnectable }) => {
-  const { updateNodeData } = useFlow();
-
-
-  return (
-    <Card className="w-34 border-purple-200">
-      <Handle type="target" position="top" isConnectable={isConnectable} />
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-purple-700 flex items-center">
-          <Upload className="w-5 h-5 mr-2" /> AI Upload
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <input type="text" placeholder='type your message' style={{padding:'5px', border:'1px grey solid', borderRadius:'5px'}} />    
-      </CardContent>
-      <Handle type="source" position="bottom" isConnectable={isConnectable} />
-    </Card>
   );
 };
