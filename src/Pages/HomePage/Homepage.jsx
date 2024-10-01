@@ -117,7 +117,7 @@ const Homepage = () => {
   const videoRef = useRef(null);
 
   return (
-    <div className="bg-gray-900 min-h-screen overflow-x-hidden w-full main-homepage" style={{width:'98.9vw'}}>
+    <div className="bg-black min-h-screen overflow-x-hidden w-full main-homepage" style={{width:'98.9vw',paddingTop:'20px'}}>
       {/* Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-2 bg-green-400 z-50"
@@ -129,6 +129,8 @@ const Homepage = () => {
         videoSrc={ad}
         title="Market Where You Mingle!"
         description="See how Nuren AI transforms WhatsApp business communication with AI-powered chatbots, automated campaigns, and advanced analytics. Our cutting-edge technology helps businesses engage customers more effectively, save time, and drive growth."
+        style={{ borderBottom: '100px solid white' }}  
+   
       />
 
 
@@ -430,7 +432,7 @@ const Homepage = () => {
  */}
       {/* Footer */}
      {/* Footer */}
-<footer className="py-20 bg-gradient-to-r from-green-600 to-blue-600 text-white relative overflow-hidden">
+<footer className="py-20 bg-gradient-to-r from-blue-900 to-green-400 text-white relative overflow-hidden">
   <FloatingElement yOffset={30} duration={5}>
     <div className="absolute top-10 left-10 w-24 h-24 bg-white rounded-full opacity-10" />
   </FloatingElement>

@@ -32,10 +32,10 @@ const steps = [
 
 const HowNurenAIWorks = () => {
   return (
-    <section className="py-24 bg-gradient-to-b from-gray-50 to-white">
+    <section className="py-24 bg-gradient-to-b from-gray-50 to-white ">
       <div className="container mx-auto px-4">
         <motion.h2 
-          className="text-5xl font-bold text-center mb-16 text-gray-800"
+          className="text-5xl font-gliker text-center mb-16 text-gray-800"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
