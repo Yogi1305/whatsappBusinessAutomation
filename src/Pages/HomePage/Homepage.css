@@ -8,7 +8,7 @@
     width: 80%;
 }
 section {
-  /*  border-bottom: 30px solid transparent;  /* Transparent border as a base */
-   /* border-image: url('../../assets/border.png') 30 stretch;   Apply tribal image as the border */
-   /* border-image-slice: 80;  /* Adjust this value to fit the image properly */
+    border-bottom: 5px solid transparent;  /* Transparent border as a base */
+    border-image: url('../../assets/border.png') 30 stretch;  /* Apply tribal image as the border */
+    border-image-slice: 120;  /* Adjust this value to fit the image properly */
   }
