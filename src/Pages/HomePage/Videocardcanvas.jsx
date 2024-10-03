@@ -41,7 +41,7 @@ const VideoSection = ({ videoSrc, title, description }) => {
   }, [isMuted]); // Reset timeout on mute/unmute change
 
   return (
-    <section className="py-24 bg-black relative">
+    <div className="py-24 bg-black relative">
       {/* Particle background */}
       {[...Array(20)].map((_, i) => (
         <Particle
@@ -115,7 +115,7 @@ const VideoSection = ({ videoSrc, title, description }) => {
           </motion.div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
