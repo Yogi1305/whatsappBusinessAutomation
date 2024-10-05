@@ -1,3 +1,4 @@
+// Import necessary dependencies
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -7,16 +8,35 @@ import WhatsAppQRCode from '../Chatbot/WhatsappQrCode';
 import axios from 'axios';
 import camera from "../../assets/camera.png";
 
+// Function to get tenant ID from the URL
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
     var tenant_id = pathArray[1];
-    if (tenant_id == "demo") tenant_id = 'll';
+    if (tenant_id === "demo") tenant_id = 'll';
     return tenant_id;
   }
   return null;
 };
 
+// Particle animation component
+const Particle = ({ animate }) => (
+  <motion.div
+    className="absolute rounded-full bg-green-400 opacity-20"
+    animate={animate}
+    transition={{
+      duration: Math.random() * 10 + 20,
+      repeat: Infinity,
+      repeatType: "reverse",
+    }}
+    style={{
+      width: Math.random() * 30 + 10,
+      height: Math.random() * 30 + 10,
+    }}
+  />
+);
+
+// Main component for Chatbot Demo Section
 const ChatbotDemoSection = ({ isAuthenticated }) => {
   const navigate = useNavigate();
   const [socket, setSocket] = useState(null);
@@ -24,6 +44,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const [sessionId, setSessionId] = useState(null);
 
+  // Fetch business phone ID
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
@@ -41,6 +62,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
     fetchBusinessPhoneId();
   }, [tenantId]);
 
+  // Setup socket connection
   useEffect(() => {
     const newSocket = io('https://whatsappbotserver.azurewebsites.net');
     setSocket(newSocket);
@@ -52,6 +74,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
     return () => newSocket.close();
   }, []);
 
+  // Handle incoming messages from socket
   useEffect(() => {
     if (!socket) return;
 
@@ -59,12 +82,12 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
       if (message && !isAuthenticated) {
         localStorage.setItem('homepageQRScanned', 'true');
         localStorage.setItem('chatbotContactPhone', message.contactPhone);
-        navigate(`/demo/chatbot/`, { 
-          state: { 
+        navigate(`/demo/chatbot/`, {
+          state: {
             contactPhone: message.contactPhone,
             fromHomepage: true,
             sessionId: sessionId
-          } 
+          }
         });
       }
     };
@@ -77,12 +100,12 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
         if (formattedMessageTempUser === storedSessionId) {
           localStorage.setItem('homepageQRScanned', 'true');
           localStorage.setItem('chatbotContactPhone', message.contactPhone);
-          navigate(`/demo/chatbot/`, { 
-            state: { 
+          navigate(`/demo/chatbot/`, {
+            state: {
               contactPhone: message.contactPhone,
               fromHomepage: true,
               sessionId: storedSessionId
-            } 
+            }
           });
         }
       }
@@ -99,6 +122,15 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
 
   return (
     <section className="py-20 bg-black text-white min-h-screen flex items-center">
+      {[...Array(20)].map((_, i) => (
+        <Particle
+          key={i}
+          animate={{
+            x: [Math.random() * window.innerWidth, Math.random() * window.innerWidth],
+            y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
+          }}
+        />
+      ))}
       <div className="container mx-auto px-4">
         <motion.h2
           className="text-4xl md:text-5xl font-bold text-center mb-16 font-gliker bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600"
@@ -106,7 +138,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          Experience Our Chatbot Demo
+          EXPERIENCE OUR CHATBOT
         </motion.h2>
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-12">
@@ -123,7 +155,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
                 className="w-full h-auto rounded-lg mb-4"
               />
               <p className="text-gray-300 text-center">
-                Scan the QR code using the whatsapp camera icon or any other scanner
+                Scan the QR code using the WhatsApp camera icon or any other scanner
               </p>
             </div>
           </motion.div>
@@ -150,6 +182,22 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
               Scan this QR code with your phone's camera to begin the demo
             </p>
           </motion.div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="mt-12 text-center">
+          <motion.button
+            className="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-700 transition duration-300"
+            onClick={() => navigate('/demo/chatbot')}
+          >
+            Chat Now
+          </motion.button>
+          <motion.button
+            className="bg-blue-400 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ml-4"
+            onClick={() => navigate('/learn-more')}
+          >
+            Learn More
+          </motion.button>
         </div>
       </div>
     </section>
