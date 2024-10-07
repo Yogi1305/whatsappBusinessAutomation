@@ -11,7 +11,7 @@ const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
     var tenant_id = pathArray[1];
-    if (tenant_id == "demo") tenant_id = 'll';
+    if (tenant_id == "demo") tenant_id = 'tlb';
     return tenant_id;
   }
   return null;
@@ -27,9 +27,9 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+        const response = await axios.get('http://localhost:8000/get-bpid/', {
           headers: {
-            'X-Tenant-Id': "ll"
+            'X-Tenant-Id': 'tlb'
           }
         });
         setBusinessPhoneNumberId(response.data.business_phone_number_id);
@@ -42,7 +42,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   }, [tenantId]);
 
   useEffect(() => {
-    const newSocket = io('https://whatsappbotserver.azurewebsites.net');
+    const newSocket = io('http://localhost:8080');
     setSocket(newSocket);
 
     const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);

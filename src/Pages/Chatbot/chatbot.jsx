@@ -27,7 +27,7 @@ import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 import { Button, Input } from 'antd';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net');
+const socket = io('http://localhost:8080');
 
 
 const getTenantIdFromUrl = () => {
@@ -35,12 +35,16 @@ const getTenantIdFromUrl = () => {
 
   if (pathArray.length >= 2) {
     var tenant_id = pathArray[1]
-    if(tenant_id == "demo") tenant_id = 'll'
+    if(tenant_id == "demo") tenant_id = 'tlb'
     return tenant_id; // Assumes tenant_id is the first part of the path
   }
   return null; 
 };
 
+const setCSSVariable = (variable, value) => {
+  let root = document.documentElement;
+  root.style.setProperty(variable, value);
+};
 
 const Chatbot = () => {
   const tenantId=getTenantIdFromUrl();
@@ -108,7 +112,7 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+        const response = await axios.get('http://localhost:8000/get-bpid/', {
           headers: {
             'X-Tenant-Id': tenantId
           }
@@ -403,7 +407,7 @@ const getAvatarColor = (initials) => {
     }
     try {
       const response = await axiosInstance.post(
-        'https://whatsappbotserver.azurewebsites.net/send-message',
+        'http://localhost:8080/send-message',
         {
           phoneNumbers: [phoneNumber],
           messageType: "image",
@@ -547,6 +551,10 @@ const getAvatarColor = (initials) => {
   
   
   const handleSend = async () => {
+    const rgb = '0,75,120'
+    setCSSVariable('--sentiment-shadow', `0 4px 6px rgba(${rgb}, 0.8)`)
+    setCSSVariable('--sentiment-solid', `rgba(${rgb}, 0.8)`)
+    setCSSVariable('--sentiment-solid-light', `rgba(${rgb}, 0.4)`)
     if (!selectedContact || !messageTemplates[selectedContact.id]) {
       console.error('Message template or contact not selected');
       return;
@@ -569,7 +577,7 @@ const getAvatarColor = (initials) => {
           }
       
           return axios.post(
-            'https://whatsappbotserver.azurewebsites.net/send-message',
+            'http://localhost:8080/send-message',
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
@@ -586,7 +594,7 @@ const getAvatarColor = (initials) => {
           phoneNumber = phoneNumber.slice(2);
         }
         await axios.post(
-          'https://whatsappbotserver.azurewebsites.net/send-message',
+          'http://localhost:8080/send-message',
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
@@ -663,7 +671,7 @@ const getAvatarColor = (initials) => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
+      const response = await fetch(`http://localhost:8000/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
           'X-Tenant-ID': tenantId
@@ -805,7 +813,7 @@ const getAvatarColor = (initials) => {
   
     const fetchFlows = async () => {
       try {
-        const response = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/node-templates/', {
+        const response = await axiosInstance.get('/node-templates/', {
           headers: { token: localStorage.getItem('token') },
         });
         // Ensure each flow has an id property
@@ -863,7 +871,7 @@ const getAvatarColor = (initials) => {
           business_phone_number_id: businessPhoneNumberId,
         };
         console.log('Sending flow data:', dataToSend);
-        const response = await axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/insert-data/', dataToSend, {
+        const response = await axiosInstance.post('/insert-data/', dataToSend, {
           headers: {
             'Content-Type': 'application/json',
             token: localStorage.getItem('token'),
@@ -889,7 +897,7 @@ const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-    const response = await axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/contacts/', {
+    const response = await axiosInstance.post('/contacts/', {
       phone: newPhoneNumber,
       tenant: tenantId,
       // Add other required fields for creating a new contact

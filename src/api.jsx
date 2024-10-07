@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net',  // Adjust this to your Django backend URL
+  baseURL: 'http://localhost:8000',  // Adjust this to your Django backend URL
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,7 +10,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const tenantId = getTenantIdFromUrl();  // Get tenantId from the URL
-    console.log(tenantId);
+    console.log("tenant id is: ",tenantId);
     if (tenantId) {
       config.headers['X-Tenant-Id'] = tenantId;
      

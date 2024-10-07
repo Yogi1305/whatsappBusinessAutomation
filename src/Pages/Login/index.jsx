@@ -37,7 +37,7 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await fetch('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/login/', {
+      const response = await fetch('http://localhost:8000/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

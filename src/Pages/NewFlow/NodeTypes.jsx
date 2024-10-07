@@ -414,7 +414,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
     const fetchData = async () => {
       try {
         // Fetch the business phone ID
-        const bpidResponse = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+        const bpidResponse = await axiosInstance.get('http://localhost:8000/get-bpid/', {
           headers: {
             'X-Tenant-ID': tenantId
           }

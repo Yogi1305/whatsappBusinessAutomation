@@ -17,9 +17,9 @@ const Chatbotredirect = () => {
         if (code) {
           // Send the auth code to the backend
           const response = await axios.post(
-            'https://whatsappbotserver.azurewebsites.net/login-flow',
+            'http://localhost:8080/login-flow',
             { code },  // This is the body of the request
-            { headers: { 'X-Tenant-Id': 'll' } }  // This is the headers object
+            { headers: { 'X-Tenant-Id': 'tlb' } }  // This is the headers object
           );
 
           // Handle the response (you can save token or do other logic here)
