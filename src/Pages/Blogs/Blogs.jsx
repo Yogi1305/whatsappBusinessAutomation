@@ -1,6 +1,6 @@
 import React from 'react';
 import './Blogs.css'; // Importing CSS styles
-import WhatsappChatbot from '../../assets/Chatbot.jpeg';
+import WhatsappChatbot from '../../assets/chatbot.jpeg';
 import WhatsappEngage from '../../assets/WhatsappEngage.jpeg';
 import BusinessGrowth from '../../assets/BusinessGrowth.jpeg';
 import Feedback from '../../assets/Feedback.png';
