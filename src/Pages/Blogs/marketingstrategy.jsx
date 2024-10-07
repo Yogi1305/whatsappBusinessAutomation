@@ -1,6 +1,7 @@
 import React from "react";
 import './new.css'; // Ensure this is the correct path to your CSS file
 import { motion, useScroll, useTransform } from 'framer-motion';
+import Footer from "../footer";
 const WhatsAppMarketingStrategies = () => {
   const FloatingElement = ({ children, yOffset = 20, duration = 3 }) => {
     const { scrollYProgress } = useScroll();
@@ -124,6 +125,7 @@ const WhatsAppMarketingStrategies = () => {
           </div>
         </section>
       </main>
+      <Footer/>
     </div>
   );
 };

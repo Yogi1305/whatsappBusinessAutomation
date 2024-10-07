@@ -16,6 +16,7 @@ import CalendlySection from './Calendly';
 import ChatbotDemoSection from './ChatbotDemo';
 import ad from '../../assets/slider/ad.mp4';
 import { Link } from 'react-router-dom';
+import Footer from '../footer';
 
 const FeatureCard = ({ icon: Icon, title, description }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -342,41 +343,7 @@ const Homepage = () => {
         </Link>
       </div>
     </section>
-<footer className="py-20 bg-black text-white relative overflow-hidden">
-  <FloatingElement yOffset={30} duration={5}>
-    <div className="absolute top-10 left-10 w-24 h-24 bg-white rounded-full opacity-10" />
-  </FloatingElement>
-  <FloatingElement yOffset={-20} duration={4}>
-    <div className="absolute bottom-10 right-10 w-16 h-16 bg-white rounded-full opacity-10" />
-  </FloatingElement>
-  <div className="container mx-auto px-4">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-green-500">
-      <div>
-        <h3 className="text-2xl font-gliker mb-4">Nuren AI</h3>
-        <p className="text-white">Revolutionizing WhatsApp business communication with AI-powered solutions.</p>
-      </div>
-      {[
-        { title: "Product", links: ["Features", "Pricing", "Case Studies"] },
-        { title: "Company", links: ["About Us", "Careers", "Contact"] },
-        { title: "Legal", links: ["Privacy Policy", "Terms of Service", "GDPR Compliance"] },
-      ].map((column, index) => (
-        <div key={index}>
-          <h4 className="text-xl font-gliker mb-4 ">{column.title}</h4>
-          <ul className="space-y-2 ">
-            {column.links.map((link, linkIndex) => (
-              <li key={linkIndex}>
-                <a href="#" className="text-white hover:text-green-400 transition duration-300 ">{link}</a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-    <div className="mt-12 pt-8 border-t border-gray-800 text-center text-white font-gliker">
-      <p>&copy; 2024 Nu Renaissance Fabrica Pvt Ltd. All rights reserved.</p>
-    </div>
-  </div>
-</footer>
+<Footer/>
     </div>
   );
 };

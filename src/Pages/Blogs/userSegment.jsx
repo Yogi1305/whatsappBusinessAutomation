@@ -3,7 +3,7 @@ import './new.css'; // Ensure this is the correct path to your CSS file
 import Segment1 from '../../assets/connection.png';
 import Segment2 from '../../assets/segmentation.png';
 import { motion, useScroll, useTransform } from 'framer-motion';
-
+import Footer from "../footer";
 const UserExperienceSegmentation = () => {
   const FloatingElement = ({ children, yOffset = 20, duration = 3 }) => {
     const { scrollYProgress } = useScroll();
@@ -218,6 +218,7 @@ const UserExperienceSegmentation = () => {
           </div>
         </section>
       </main>
+      <Footer/>
     </div>
   );
 };

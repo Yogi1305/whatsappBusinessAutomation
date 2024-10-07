@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import Footer from "../footer";
 const pricingData = {
   Growth: {
     INR: { price: "₹1,999", perUser: "₹699" },
@@ -26,6 +26,7 @@ const PricingPage = () => {
   };
 
   return (
+    <div>
     <section className="pricing-page bg-gradient-to-r from-purple-600 to-blue-500 text-white py-20">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-5xl font-extrabold mb-6">
@@ -114,6 +115,7 @@ const PricingPage = () => {
         </div>
       </div>
     </section>
+    <Footer/></div>
   );
 };
 

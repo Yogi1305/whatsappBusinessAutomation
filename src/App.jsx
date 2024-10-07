@@ -23,7 +23,11 @@ import MaximizingCustomerEngagement from './Pages/Blogs/CustomerEngagement.jsx';
 import WhatsAppMarketingStrategies from './Pages/Blogs/marketingstrategy.jsx';
 import HandleCustomerFeedback from './Pages/Blogs/customerfeedback.jsx';
 import Blogs from './Pages/Blogs/Blogs.jsx';
-import PricingPage from './Pages/pricing.jsx';
+import PricingPage from './Pages/Misc/pricing.jsx';
+import PrivacyPolicy from './Pages/Misc/privacypolicy.jsx';
+import TermsAndConditions from './Pages/Misc/terms&conditions.jsx';
+import ContactUs from './Pages/Misc/contactus.jsx';
+
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
   return authenticated ? children : <Navigate to="/login" replace />;
@@ -72,6 +76,9 @@ const App = () => {
               </Routes>
             } />
               <Route path="*" element={<NotFound />} />
+              <Route path="contactus" element={<ContactUs/>} />
+              <Route path="privacypolicy" element={<PrivacyPolicy />} />
+              <Route path="termsandconditions" element={<TermsAndConditions />} />
               <Route path="pricing" element={<PricingPage />} />
               <Route path="blogs" element={<Blogs/>} />
               <Route path="blogs/learn-more" element={<Learn />} />

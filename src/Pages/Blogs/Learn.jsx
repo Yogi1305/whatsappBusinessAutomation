@@ -2,6 +2,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import "./new.css";
+import Footer from '../footer';
 const Learn = () => {
   const FloatingElement = ({ children, yOffset = 20, duration = 3 }) => {
     const { scrollYProgress } = useScroll();
