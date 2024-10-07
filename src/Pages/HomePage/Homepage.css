@@ -12,3 +12,11 @@ section {
     border-image: url('../../assets/border.png') 30 stretch;  /* Apply tribal image as the border */
     border-image-slice: 120;  /* Adjust this value to fit the image properly */
   }
+  .highlight {
+    position: relative;
+    display: inline-block;
+    color: #3b82f6; /* Default text color */
+  }
+  
+  
+/* Hide scrollbar for Chrome, Safari and Opera */

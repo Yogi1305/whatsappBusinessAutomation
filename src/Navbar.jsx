@@ -82,7 +82,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-black p-4 transition-colors duration-300">
+    <nav className="bg-black p-4 transition-colors duration-300"  >
       <div className="container mx-auto flex justify-between items-center px-6 lg:px-12"> {/* Added consistent padding */}
         <Link style={{ display: 'flex', alignItems: 'center' }} className="text-white text-2xl font-gliker" to="/">
           <img style={{ height: '2.5rem', marginRight: '2px' }} src={logo} alt="" />
@@ -95,6 +95,8 @@ const Navbar = () => {
               <Link to={getPath('/broadcast')} className="text-white hover:text-gray-300">Broadcast</Link>
             </>
           )}
+          <Link to={('/blogs')} className="text-white hover:text-gray-300">Blogs</Link>
+          <Link to={('/pricing')} className="text-white hover:text-gray-300">Pricing</Link>
           <Link to={getPath('/chatbot')} className="text-white hover:text-gray-300">Chatbot</Link>
           <Link to={getPath('/flow-builder')} className="text-white hover:text-gray-300">Flow Builder</Link>
           {authenticated ? (

@@ -29,7 +29,7 @@ const CalendlySection = () => {
         className="w-full md:w-1/2"
       >
         <h1 className="text-5xl font-gliker text-green-400 mb-4 leading-tight">
-          Ready to Transform <br /> Your Business?
+         TRANSFORM YOUR <br /> BUSINESS <span style={{color:''}}>NOW!</span>
         </h1>
         <p className="text-xl text-white-300 mb-6">
           Schedule your demo and start your journey with Nuren AI.
@@ -47,7 +47,7 @@ const CalendlySection = () => {
         <PopupButton
           url="https://calendly.com/adarsh1885/schedule-a-demo"
           rootElement={document.getElementById("root")}
-          text="Talk to the Founder"
+          text="TALK TO THE FOUNDER"
           className="bg-blue-500 hover:bg-blue-700 text-white font-gliker py-4 px-10 text-2xl rounded-full shadow-lg transition-transform duration-300 transform hover:scale-105"
         />  
       </motion.div>

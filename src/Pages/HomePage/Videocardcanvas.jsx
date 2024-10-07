@@ -42,80 +42,98 @@ const VideoSection = ({ videoSrc, title, description }) => {
 
   return (
     <div className="py-24 bg-black relative">
-      {/* Particle background */}
-      {[...Array(20)].map((_, i) => (
-        <Particle
-          key={i}
-          animate={{
-            x: [Math.random() * window.innerWidth, Math.random() * window.innerWidth],
-            y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
-          }}
-        />
-      ))}
-      
-      <div className="container mx-auto px-6 lg:px-12">
-        <div className="flex flex-col lg:flex-row items-center gap-12">
-          <motion.div
-            className="w-full lg:w-1/2 lg:pl-16"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <h2 className="text-7xl font-extrabold mb-6 text-green-500 font-gliker leading-tight">
-              {title} 
-            </h2>
-            <p className="text-xl text-white mb-10 leading-relaxed">{description}</p>
+    {/* Particle background */}
+    {[...Array(20)].map((_, i) => (
+      <Particle
+        key={i}
+        animate={{
+          x: [Math.random() * window.innerWidth, Math.random() * window.innerWidth],
+          y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
+        }}
+      />
+    ))}
+  
+    <div className="container mx-auto px-6 lg:px-12">
+      <div className="flex flex-col lg:flex-row items-center gap-12">
+        <motion.div
+          className="w-full lg:w-1/2 lg:pl-16"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <h2 className="text-7xl font-extrabold mb-6 text-green-500 font-gliker leading-tight">
+            {title} 
+          </h2>
+          <p className="text-xl text-white mb-10 leading-relaxed">{description}</p>
+  
+          {/* CTAs Section */}
+          <div className="flex flex-col md:flex-row gap-4">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              style={{ backgroundColor: "#4a90e2" }}
+              style={{ backgroundColor: "#f87171" }}
               className="text-white font-bold py-4 px-10 rounded-full text-lg shadow-lg hover:bg-green-600 transition duration-300"
+              onClick={() => window.location.href='/register'} // Link to Registration Page
             >
-              Learn More
+              Get Started Now
             </motion.button>
-          </motion.div>
+  
+            <motion.button
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  style={{ backgroundColor: "#4a90e2" }}
+  className="text-white font-bold py-4 px-10 rounded-full text-lg shadow-lg hover:bg-purple-600 transition duration-300"
+  onClick={() => window.open('https://calendly.com/adarsh1885/schedule-a-demo', '_blank')} // Open in new tab
+>
+  Book a Demo
+</motion.button>
 
-          <motion.div
-            className="w-full lg:w-1/2 mb-12 lg:mb-0 relative"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* Video */}
-            <div className="relative w-full" style={{ marginTop: '-50px' }}>
-              <video
-                ref={videoRef}
-                className="w-full h-auto rounded-lg shadow-2xl cursor-pointer"
-                autoPlay
-                muted={isMuted} // Set based on state
-                loop
-                onClick={handleVideoClick}
-              >
-                <source src={videoSrc} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <h2 style={{ fontFamily: 'Gliker', backgroundColor: 'black', color: 'white' }}>
-                  Click For Sound
-                </h2>
-              </div>
-              {/* Mute/Unmute Icon */}
-              {showIcon && (
-                <div className="absolute inset-0 flex justify-center items-center">
-                  <div className="bg-gray-800 bg-opacity-70 p-4 rounded-full">
-                    {isMuted ? (
-                      <FaVolumeMute className="text-white text-3xl" />
-                    ) : (
-                      <FaVolumeUp className="text-white text-3xl" />
-                    )}
-                  </div>
-                </div>
-              )}
+          </div>
+        </motion.div>
+  
+        <motion.div
+          className="w-full lg:w-1/2 mb-12 lg:mb-0 relative"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Video */}
+          <div className="relative w-full" style={{ marginTop: '-50px' }}>
+            <video
+              ref={videoRef}
+              className="w-full h-auto rounded-lg shadow-2xl cursor-pointer"
+              autoPlay
+              muted={isMuted} // Set based on state
+              loop
+              onClick={handleVideoClick}
+            >
+              <source src={videoSrc} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <h2 style={{ fontFamily: 'Gliker', backgroundColor: 'black', color: 'white' }}>
+                Click For Sound
+              </h2>
             </div>
-          </motion.div>
-        </div>
+            {/* Mute/Unmute Icon */}
+            {showIcon && (
+              <div className="absolute inset-0 flex justify-center items-center">
+                <div className="bg-gray-800 bg-opacity-70 p-4 rounded-full">
+                  {isMuted ? (
+                    <FaVolumeMute className="text-white text-3xl" />
+                  ) : (
+                    <FaVolumeUp className="text-white text-3xl" />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
       </div>
     </div>
+  </div>
+  
+  
   );
 };
 
