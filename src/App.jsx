@@ -9,12 +9,21 @@ import Chatbot from './Pages/Chatbot/chatbot';
 import FlowBuilder from "./Pages/NewFlow/FlowBuilder";
 import ContactPage from './Pages/ContactPage/ContactPage';
 import ProfilePage from './Pages/ProfilePage/ProfilePage';
-import HomePage from './Pages/HomePage/Homepage';
+import HomePage from './Pages/HomePage/Homepage.jsx';
+
+import AIChatbotsPage from './Pages/Blogs/AIChatbot.jsx';
 import Chatbotredirect from './Pages/Chatbot/Chatbotredirect';
 import Models from './Pages/Model/ModelTable';
-
+import Learn from './Pages/Blogs/Learn';
 import AssignContact from './Pages/assignContact/assignContact';
 import { NotFound } from './Pages/NotFound/NotFound';
+import BusinessOutreachBlog from './Pages/Blogs/BusinessOutreach.jsx';
+import UserExperienceSegmentation from './Pages/Blogs/userSegment.jsx';
+import MaximizingCustomerEngagement from './Pages/Blogs/CustomerEngagement.jsx';
+import WhatsAppMarketingStrategies from './Pages/Blogs/marketingstrategy.jsx';
+import HandleCustomerFeedback from './Pages/Blogs/customerfeedback.jsx';
+import Blogs from './Pages/Blogs/Blogs.jsx';
+import PricingPage from './Pages/pricing.jsx';
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
   return authenticated ? children : <Navigate to="/login" replace />;
@@ -63,6 +72,15 @@ const App = () => {
               </Routes>
             } />
               <Route path="*" element={<NotFound />} />
+              <Route path="pricing" element={<PricingPage />} />
+              <Route path="blogs" element={<Blogs/>} />
+              <Route path="blogs/learn-more" element={<Learn />} />
+              <Route path="blogs/chatbot" element={<AIChatbotsPage/>} />
+              <Route path="blogs/business-outreach" element={<BusinessOutreachBlog/>} />
+              <Route path="blogs/segmentation" element={<UserExperienceSegmentation/>} />
+              <Route path="blogs/whatsapp-engagement" element={<MaximizingCustomerEngagement/>} />
+              <Route path="blogs/marketing-strategy" element={<WhatsAppMarketingStrategies/>} />
+              <Route path="blogs/customer-feedback" element={<HandleCustomerFeedback/>} />
           </Routes>
 
         </main>

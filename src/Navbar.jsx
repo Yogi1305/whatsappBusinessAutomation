@@ -95,6 +95,8 @@ const Navbar = () => {
               <Link to={getPath('/broadcast')} className="text-white hover:text-gray-300">Broadcast</Link>
             </>
           )}
+          <Link to={('/blogs')} className="text-white hover:text-gray-300">Blogs</Link>
+          <Link to={('/pricing')} className="text-white hover:text-gray-300">Pricing</Link>
           <Link to={getPath('/chatbot')} className="text-white hover:text-gray-300">Chatbot</Link>
           <Link to={getPath('/flow-builder')} className="text-white hover:text-gray-300">Flow Builder</Link>
           {authenticated ? (

@@ -1,0 +1,101 @@
+/* Blogs Page Styles */
+.blogs-page {
+    font-family: 'Poppins', sans-serif; /* Stylish font for the page */
+    padding: 40px; /* General padding */
+    background: linear-gradient(135deg, #f2f2f2 30%, #e0e0e0 100%); /* Soft gradient background */
+}
+
+.blogs-title {
+    text-align: center; /* Center align title */
+    font-size: 2.8rem; /* Large title font size */
+    margin-bottom: 40px; /* Space below title */
+    color: #007bff; /* Blue color for the title */
+    text-shadow: 1px 1px 3px rgba(0, 123, 255, 0.5); /* Text shadow for depth */
+    letter-spacing: 1px; /* Space between letters */
+}
+
+.blogs-container {
+    display: grid; /* Use grid layout for cards */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive card grid */
+    gap: 30px; /* Space between cards */
+    animation: fadeIn 0.5s ease-in-out; /* Fade-in animation for the container */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.blog-card {
+    background: #ffffff; /* White background for cards */
+    border-radius: 20px; /* Rounded corners */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Deep shadow for depth */
+    overflow: hidden; /* Clip the content */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transform effect */
+    cursor: pointer; /* Pointer cursor on hover */
+    position: relative; /* For pseudo-elements positioning */
+    overflow: hidden; /* Ensure content stays within bounds */
+}
+
+.blog-card:hover {
+    transform: translateY(-10px); /* Lift effect on hover */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+}
+
+.blog-card::before {
+    content: ""; /* Pseudo-element for decorative effect */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 123, 255, 0.1); /* Light blue overlay */
+    transition: opacity 0.3s ease; /* Smooth transition */
+    z-index: 0; /* Behind card content */
+}
+
+.blog-card:hover::before {
+    opacity: 0.3; /* Increase opacity on hover */
+}
+
+.blog-image {
+    width: 100%; /* Full width for the image */
+    height: 200px; /* Fixed height for images */
+    object-fit: cover; /* Cover the card area */
+    transition: transform 0.3s ease; /* Smooth image transition */
+}
+
+.blog-card:hover .blog-image {
+    transform: scale(1.05); /* Scale effect on image hover */
+}
+
+.blog-header {
+    padding: 20px; /* Padding inside the card */
+    font-size: 1.5rem; /* Font size for blog title */
+    color: #333; /* Dark text color */
+    text-align: center; /* Center align text */
+    position: relative; /* For layering text */
+    z-index: 1; /* Ensure text is above the overlay */
+    transition: color 0.3s ease; /* Smooth color transition */
+}
+
+.blog-card:hover .blog-header {
+    color: #0056b3; /* Change header color on hover */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .blogs-title {
+        font-size: 2.5rem; /* Smaller title font size for mobile */
+    }
+
+    .blog-header {
+        font-size: 1.3rem; /* Smaller header font size for mobile */
+    }
+}

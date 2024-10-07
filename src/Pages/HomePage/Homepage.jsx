@@ -196,7 +196,7 @@ const Homepage = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="bg-blue-400 text-white font-bold py-3 px-6 rounded-lg shadow-lg mb-4 transition duration-300"
-        onClick={() => window.location.href='/learn-more'} // Link to Schedule a Demo page
+        onClick={() => window.location.href='/blogs'} // Link to Schedule a Demo page
       >
         Learn More
       </motion.button>
@@ -222,10 +222,7 @@ const Homepage = () => {
   
      
       {/* Features Section */}
-      <section 
-  className="relative py-20 bg-black text-white" 
-  
->
+      <section className="relative py-20 bg-black text-white">
   <div className="absolute inset-0 bg-black opacity-60"></div> {/* Overlay */}
 
   <div className="container mx-auto relative z-10 px-4">
@@ -234,34 +231,37 @@ const Homepage = () => {
     </ScrollAnimatedSection>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
       {[
-        { icon: MessageCircle, title: "AI-POWERED CHATBOTS", description: "Automate customer interactions with intelligent chatbots that understand context and intent.",backgroundImage: chatbot },
-        { icon: Users, title: "ADVANCED SEGMENTATION", description: "Target the right audience with precision using our advanced customer segmentation tools.", backgroundImage: connection },
-        { icon: Zap, title: "QUICK RESPONSES", description: "Create and manage a library of quick responses to common queries, saving time and ensuring consistency.",backgroundImage: chatbot },
-        { icon: Star, title: "PERSONALISED EXPERIENCES", description: "Deliver tailored messages and recommendations based on customer behavior and preferences.",backgroundImage: outreach },
-        { icon: Shield, title: "SECURE & COMPLIANT", description: "Ensure data privacy and comply with regulations using our robust security measures.",backgroundImage: security },
-        { icon: Rocket, title: "SCALABLE SOLUTIONS", description: "Grow your business effortlessly with our scalable WhatsApp marketing solutions." ,backgroundImage: outreach },
+        { icon: MessageCircle, title: "AI-POWERED CHATBOTS", description: "Automate customer interactions with intelligent chatbots that understand context and intent.", backgroundImage: chatbot, link: 'blogs/chatbot' },
+        { icon: Users, title: "ADVANCED SEGMENTATION", description: "Target the right audience with precision using our advanced customer segmentation tools.", backgroundImage: connection, link: 'blogs/segmentation' },
+        { icon: Zap, title: "QUICK RESPONSES", description: "Create and manage a library of quick responses to common queries, saving time and ensuring consistency.", backgroundImage: chatbot, link: 'blogs/quick-responses' },
+        { icon: Star, title: "PERSONALISED EXPERIENCES", description: "Deliver tailored messages and recommendations based on customer behavior and preferences.", backgroundImage: outreach, link: 'blogs/whatsapp-engagement' },
+        { icon: Shield, title: "SECURE & COMPLIANT", description: "Ensure data privacy and comply with regulations using our robust security measures.", backgroundImage: security, link: 'blogs/security-compliance' },
+        { icon: Rocket, title: "SCALABLE SOLUTIONS", description: "Grow your business effortlessly with our scalable WhatsApp marketing solutions.", backgroundImage: outreach, link: 'blogs/scalable-solutions' },
       ].map((feature, index) => (
         <ScrollAnimatedSection key={index}>
-          <div 
-            className={`p-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ${
-              feature.title === "AI-POWERED CHATBOTS" ? 'relative' : 'bg-gray-900'
-            }`}
-            style={{
-              backgroundImage: feature.backgroundImage ? `url(${feature.backgroundImage})` : 'none',
-              backgroundSize: feature.backgroundImage ? 'cover' : 'none',
-              backgroundPosition: feature.backgroundImage ? 'center' : 'none',
-            }}
-          >
-            {feature.backgroundImage && <div className="absolute inset-0 bg-black opacity-70 rounded-lg"></div>} {/* Overlay for image */}
-            <div className="relative z-10">
-              <FeatureCard {...feature} title={feature.title.toUpperCase()} /> {/* Apply uppercase */}
+          <a href={feature.link} className="block"> {/* Wrap in anchor tag */}
+            <div 
+              className={`p-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ${
+                feature.title === "AI-POWERED CHATBOTS" ? 'relative' : 'bg-gray-900'
+              }`}
+              style={{
+                backgroundImage: feature.backgroundImage ? `url(${feature.backgroundImage})` : 'none',
+                backgroundSize: feature.backgroundImage ? 'cover' : 'none',
+                backgroundPosition: feature.backgroundImage ? 'center' : 'none',
+              }}
+            >
+              {feature.backgroundImage && <div className="absolute inset-0 bg-black opacity-70 rounded-lg"></div>} {/* Overlay for image */}
+              <div className="relative z-10">
+                <FeatureCard {...feature} title={feature.title.toUpperCase()} /> {/* Apply uppercase */}
+              </div>
             </div>
-          </div>
+          </a>
         </ScrollAnimatedSection>
       ))}
     </div>
   </div>
 </section>
+
 
 
 
@@ -324,54 +324,7 @@ const Homepage = () => {
 
       <CalendlySection />
 
-      {/* Connection Section 
-      <section className="py-20 bg-black">
-        <div className="container mx-auto px-4">
-          <ScrollAnimatedSection>
-            <h2 className="text-5xl font-gliker text-center mb-16 text-white">Connecting You with Your Customers</h2>
-          </ScrollAnimatedSection>
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="w-full md:w-1/2 mb-8 md:mb-0">
-              <ScrollAnimatedSection>
-                <img
-                  src={connection}
-                  alt="Connection Illustration"
-                  className="w-full h-auto object-cover rounded-lg"
-                />
-              </ScrollAnimatedSection>
-            </div>
-            <div className="w-full md:w-1/2 md:ml-12">
-              <ScrollAnimatedSection>
-                <p className="text-xl text-gray-300 mb-8">
-                  Nuren AI bridges the gap between businesses and customers, creating meaningful connections through intelligent, personalized communication. Our AI-driven platform ensures that every interaction is valuable, timely, and aligned with your brand voice.
-                </p>
-              </ScrollAnimatedSection>
-              <ScrollAnimatedSection>
-                <ul className="space-y-4">
-                  {[
-                    "Understand customer needs with AI-powered sentiment analysis",
-                    "Deliver personalized content at scale",
-                    "Build lasting relationships through consistent, meaningful interactions",
-                    "Seamlessly transition between AI and human support",
-                  ].map((item, index) => (
-                    <motion.li
-                      key={index}
-                      className="flex items-center"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                    >
-                      <Check className="text-green-400 mr-2" size={20} />
-                      <span className="text-white">{item}</span>
-                    </motion.li>
-                  ))}
-                </ul>
-              </ScrollAnimatedSection>
-            </div>
-          </div>
-        </div>
-      </section>
-*/}
+    
       {/* Stats Section gradient-to-r from-green-600 to-blue-600*/}
       <section className="py-20 bg-black text-blue-400 relative overflow-hidden">
       <div className="container mx-auto px-4 text-center">

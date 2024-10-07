@@ -194,7 +194,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
           </motion.button>
           <motion.button
             className="bg-blue-400 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ml-4"
-            onClick={() => navigate('/learn-more')}
+            onClick={() => navigate('/blogs')}
           >
             Learn More
           </motion.button>
