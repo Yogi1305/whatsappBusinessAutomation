@@ -851,32 +851,54 @@ const getAvatarColor = (initials) => {
         return;
       }
 
-      const accountID = 397261306804870;
+     
     
       try {
         setIsSending(true);
         const dataToSend = {
           ...selectedFlowData,
-          // accountID: accountID,
-          // access_token:'EAAVZBobCt7AcBO8trGDsP8t4bTe2mRA7sNdZCQ346G9ZANwsi4CVdKM5MwYwaPlirOHAcpDQ63LoHxPfx81tN9h2SUIHc1LUeEByCzS8eQGH2J7wwe9tqAxZAdwr4SxkXGku2l7imqWY16qemnlOBrjYH3dMjN4gamsTikIROudOL3ScvBzwkuShhth0rR9P',
-          // firstInsert:'8',
           business_phone_number_id: businessPhoneNumberId,
         };
+      
         console.log('Sending flow data:', dataToSend);
-        const response = await axiosInstance.post('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/insert-data/', dataToSend, {
-          headers: {
-            'Content-Type': 'application/json',
-            token: localStorage.getItem('token'),
-          },
-        });
-        console.log('Flow data sent successfully:', response.data);
-        if (response.status === 200) {
-          // Add user feedback here (e.g., success message)
-          console.log('Flow data sent successfully');
+      
+        // First POST request to insert data
+        const insertResponse = await axiosInstance.post(
+          'https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/insert-data/',
+          dataToSend,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              token: localStorage.getItem('token'),
+            },
+          }
+        );
+      
+        console.log('Flow data sent successfully:', insertResponse.data);
+      
+        // Check if the first request is successful
+        if (insertResponse.status === 200) {
+          // Second POST request to reset the session
+          const resetSessionResponse = await axiosInstance.post(
+            'https://whatsappbotserver.azurewebsites.net/reset-session',
+            { business_phone_number_id: businessPhoneNumberId },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                token: localStorage.getItem('token'),
+              },
+            }
+          );
+      
+          console.log('Session reset successfully:', resetSessionResponse.data);
+      
+          if (resetSessionResponse.status === 200) {
+            console.log(`Session deleted successfully for ${businessPhoneNumberId}`);
+          }
         }
+      
       } catch (error) {
-        console.error('Error sending flow data:', error);
-        // Add user feedback here (e.g., error message)
+        console.error('Error occurred:', error);
       } finally {
         setIsSending(false);
       }
