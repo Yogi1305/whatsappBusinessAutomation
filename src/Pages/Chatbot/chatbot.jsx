@@ -27,7 +27,7 @@ import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 import { Button, Input } from 'antd';
 
-const socket = io('http://localhost:8080');
+const socket = io('https://whatsappbotserver.azurewebsites.net');
 
 
 const getTenantIdFromUrl = () => {
@@ -126,7 +126,7 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/get-bpid/', {
+        const response = await axios.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
           headers: {
             'X-Tenant-Id': tenantId
           }
@@ -421,7 +421,7 @@ const getAvatarColor = (initials) => {
     }
     try {
       const response = await axios.post(
-        'http://localhost:8080/send-message',
+        'https://whatsappbotserver.azurewebsites.net/send-message',
         {
           phoneNumbers: [phoneNumber],
           messageType: "image",
@@ -587,7 +587,7 @@ const getAvatarColor = (initials) => {
           }
       
           return axios.post(
-            'http://localhost:8080/send-message',
+            'https://whatsappbotserver.azurewebsites.net/send-message',
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
@@ -604,7 +604,7 @@ const getAvatarColor = (initials) => {
           phoneNumber = phoneNumber.slice(2);
         }
         await axios.post(
-          'http://localhost:8080/send-message',
+          'https://whatsappbotserver.azurewebsites.net/send-message',
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
@@ -681,7 +681,7 @@ const getAvatarColor = (initials) => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`http://localhost:8000/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
+      const response = await fetch(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
           'X-Tenant-Id': tenantId
