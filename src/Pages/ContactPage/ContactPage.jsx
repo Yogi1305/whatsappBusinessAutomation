@@ -79,7 +79,7 @@ const ContactPage = () => {
     formData.append('model_name', "Contact");
 
     try {
-      const response = await axiosInstance.post('http://localhost:8000/upload/', formData, {
+      const response = await axiosInstance.post('upload/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

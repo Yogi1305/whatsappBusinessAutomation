@@ -19,7 +19,7 @@ const AssignContact = () => {
   const fetchUsersAndLeads = async () => {
     try {
       const [usersResponse, leadsResponse] = await Promise.all([
-        axiosInstance.get('http://localhost:8000/get-all-user/'),
+        axiosInstance.get('get-all-user/'),
         axiosInstance.get('/contacts/')
       ]);
 

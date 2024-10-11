@@ -48,7 +48,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/get-bpid/', {
+        const response = await axios.get('get-bpid/', {
           headers: {
             'X-Tenant-Id': 'tlb'
           }

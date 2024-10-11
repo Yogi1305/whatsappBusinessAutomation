@@ -16,8 +16,8 @@
   --list-border: #d1d9e6;
   --card-background: #ffffff;
 
-  --sentiment-shadow: 0 4px 6px rgba(29, 63, 218, 0.8);
-  --sentiment-solid: #1bdd2b;
+  --sentiment-shadow: 0 4px 6px rgba(51, 67, 136, 0.8);
+  --sentiment-solid: #373f8bad;
   --sentiment-solid-light: #1bdd2b63;
 }
 
@@ -151,12 +151,190 @@
   border-bottom: 1px solid var(--light-gray);
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  position: relative;
 }
 
 .cb-chat-contact-info{
   display: flex;
   align-items: center;
 }
+
+* {
+  box-sizing: border-box;
+}
+
+.fab-wrapper {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+}
+
+.fab-checkbox {
+  display: none;
+}
+
+.fab {
+  position:absolute;
+  bottom: 0rem;
+  right: 0rem;
+  width: 3.2rem;
+  height: 3.2rem;
+  background: var(--sentiment-solid-light);
+  transition: all 0.3s ease;
+  z-index: 1;
+  border-radius: 75%;
+}
+
+.fab:before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.fab-checkbox:checked ~ .fab:before {
+  width: 90%;
+  height: 90%;
+  left: 5%;
+  top: 5%;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.fab:hover {
+  background: var(--sentiment-solid);
+  box-shadow: 0px 5px 20px 5px #81a4f1;
+}
+
+.fab-dots {
+  position: absolute;
+  height: 6.5px;
+  width: 6.5px;
+  background-color: white;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateX(0%) translateY(-50%) rotate(0deg);
+  opacity: 1;
+  animation: blink 1.8s ease infinite;
+  transition: all 0.3s ease;
+}
+
+.fab-dots-1 {
+  left: 12px;
+  animation-delay: 0s;
+}
+
+.fab-dots-2 {
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  animation-delay: 0.4s;
+}
+
+.fab-dots-3 {
+  right: 12px;
+  animation-delay: 0.8s;
+}
+
+.fab-checkbox:checked ~ .fab .fab-dots {
+  height: 6px;
+}
+
+.fab .fab-dots-2 {
+  transform: translateX(-50%) translateY(-50%) rotate(0deg);
+}
+
+.fab-checkbox:checked ~ .fab .fab-dots-1 {
+  width: 32px;
+  border-radius: 10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%) rotate(45deg);
+}
+
+.fab-checkbox:checked ~ .fab .fab-dots-3 {
+  width: 32px;
+  border-radius: 10px;
+  right: 50%;
+  transform: translateX(50%) translateY(-50%) rotate(-45deg);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.fab-checkbox:checked ~ .fab .fab-dots {
+  animation:alternate;
+}
+
+.fab-wheel {
+  position: absolute;
+  top: 4rem;
+  right: 0;
+  width: 12rem;
+  height: 12rem;
+  transition: all 0.3s ease;
+  transform-origin: top right;
+  transform: scale(0);
+}
+
+.fab-checkbox:checked ~ .fab-wheel {
+  transform: scale(1);
+}
+
+.fab-action {
+  position: absolute;
+  background: var(--sentiment-solid);
+  width: 5rem; /* Increased width for text */
+  height: 3rem; /* Kept the height consistent */
+  border-radius: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: White;
+  font-size: 0.9rem; /* Adjust font size */
+  box-shadow: 0 0.1rem 1rem rgba(24, 66, 154, 0.82);
+  transition: all 1s ease;
+  opacity: 30%;
+  z-index: 2;
+}
+
+.fab-checkbox:checked ~ .fab-wheel .fab-action {
+  opacity: 1;
+}
+
+
+.fab-action:hover {
+  background-color: var(--sentiment-solid-light);
+}
+
+/* Circular positions around top-right corner */
+
+.fab-wheel .fab-action-1 {
+  right: -5%;
+  top: -20%;
+}
+
+.fab-wheel .fab-action-2 {
+  right: -5%;
+  top: 10%;
+}
+
+.fab-wheel .fab-action-3 {
+  right: -5%;
+  top: 40%;
+}
+
+.fab-wheel .fab-action-4 {
+  right: -5%;
+  top: 70%;
+}
+
+
 
 .cb-sidebar-header{
   display: flex;
@@ -206,6 +384,7 @@
   border-radius: 18px;
   margin-bottom: 10px;
   box-shadow: var(--shadow);
+  z-index: 100;
 }
 
 .cb-user-message {
@@ -931,7 +1110,6 @@
     padding: 12px 18px;
     border-radius: 18px;
     margin-bottom: 15px;
-    box-shadow: var(--sentiment-shadow);
     position: relative;
   }
   

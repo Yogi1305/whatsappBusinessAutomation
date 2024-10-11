@@ -108,7 +108,7 @@ const BroadcastPage = () => {
     useEffect(() => {
       const fetchBusinessPhoneId = async () => {
         try {
-          const response = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+          const response = await axiosInstance.get('get-bpid/', {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -230,7 +230,6 @@ const BroadcastPage = () => {
     ].filter(Boolean)
   
       const payload = {
-
         bg_id: newGroup.id,
         template: {
           id: selectedTemplate.id,
@@ -241,7 +240,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
+      const response = await axios.post('http://localhost:8080/send-template/', payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id
@@ -459,7 +458,7 @@ const BroadcastPage = () => {
   
   const fetchBroadcastHistory = async () => {
     try {
-      const response = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-status/');
+      const response = await axiosInstance.get('get-status/');
       const formattedHistory = formatBroadcastHistory(response.data.message_statuses);
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);

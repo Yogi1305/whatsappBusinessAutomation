@@ -42,7 +42,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
 
   useEffect(() => {
-    fetch('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/createTenant')
+    fetch('http://localhost:8000/createTenant/')
       .then((res) => res.json())
       .then((data) => {
         const orgNames = data.map((org) => ({
@@ -94,7 +94,7 @@ const Register = () => {
     const selectedTenantId = selectedOrg ? selectedOrg.tenantId : '';
 
     try {
-      const response = await fetch('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/register/', {
+      const response = await fetch('http://localhost:8000/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,6 +112,7 @@ const Register = () => {
       }
 
       setShowPopup(true);
+
     } catch (error) {
       console.error('Registration failed:', error);
     } finally {
@@ -172,7 +173,7 @@ const Register = () => {
     setCreatingOrg(true)
     try {
       newOrg.tenantId = await createTenantID()
-      const response = await fetch('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/createTenant/', {
+      const response = await fetch('http://localhost:8000/createTenant/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -298,6 +299,22 @@ const Register = () => {
                     onChange={handleInputChange}
                   />
                   {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
+                </div>
+                <div>
+                  <label htmlFor="phone" className="sr-only">Phone</label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="text"
+                    required
+                    className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    placeholder="Phone"
+                    value={formData.phone}
+                    onChange={(e) => {
+                      handleInputChange(e)
+                    }}
+                  />
+                  {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone}</p>}
                 </div>
                 <div>
                   <label htmlFor="password" className="sr-only">Password</label>
