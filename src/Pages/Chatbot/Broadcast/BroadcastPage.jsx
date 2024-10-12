@@ -240,7 +240,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
+      const response = await axios.post('https:/whatsappbotserver.azurewebsites.net/send-template/', payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id
