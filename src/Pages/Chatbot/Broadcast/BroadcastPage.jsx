@@ -18,6 +18,10 @@ const getTenantIdFromUrl = () => {
   return null; // Return null if tenant ID is not found or not in the expected place
 };
 
+const initial_bg = [
+  {id: 1, name: 'first group', contacts: [919548265904, 919864436756]}
+]
+
 const BroadcastPage = () => {
   const [showTemplatePopup, setShowTemplatePopup] = useState(false);
   const [templates, setTemplates] = useState([]);
@@ -30,7 +34,9 @@ const BroadcastPage = () => {
   const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [contacts, setContacts] = useState([]);
+  const [broadcastGroup, setBroadcastGroup] = useState(initial_bg)
   const [selectedPhones, setSelectedPhones] = useState([]);
+  const [selectedBCGroups, setSelectedBCGroups] = useState([])
   const [templateName, setTemplateName] = useState('');
   const [category, setCategory] = useState('');
   const [language, setLanguage] = useState('');
@@ -102,7 +108,7 @@ const BroadcastPage = () => {
     useEffect(() => {
       const fetchBusinessPhoneId = async () => {
         try {
-          const response = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+          const response = await axiosInstance.get('get-bpid/', {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -195,8 +201,8 @@ const BroadcastPage = () => {
 
 
   const handleSendBroadcast = async () => {
-    if (selectedPhones.length === 0 ) {
-      alert("Please select at least one contact and enter a message.");
+    if (selectedPhones.length === 0 && selectedBCGroups.length === 0) {
+      alert("Please select at least one contact or group and enter a message.");
       return;
     }
   
@@ -211,14 +217,19 @@ const BroadcastPage = () => {
       };
       // saveGroupToLocalStorage(newGroup);
   
-      // Prepare the data in the specified format
-      const phoneNumbers = selectedPhones.map((contactId) => {
+
+      const phoneNumbers = [
+        ...selectedPhones.map((contactId) => {
         const contact = contacts.find((c) => c.id === contactId);
-        return parseInt(contact.phone); // Ensure the phone number is an integer
-      });
+        return parseInt(contact.phone);
+      }),
+      ...selectedBCGroups.flatMap((bgId) => {
+        const bcg = broadcastGroup.find((bg) => bg.id === bgId);
+        return bcg.contacts.map(phone => parseInt(phone))
+      }) 
+    ].filter(Boolean)
   
       const payload = {
-
         bg_id: newGroup.id,
         template: {
           id: selectedTemplate.id,
@@ -229,7 +240,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axiosInstance.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
+      const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id
@@ -254,11 +265,40 @@ const BroadcastPage = () => {
     }
   };
 
+  const handleCreateGroup = async () => {
+    console.log("selected phones for groups: ", selectedPhones)
+    console.log("group name: ", groupName)
+    try{
+      const payload = {
+        contact_id : selectedPhones,
+        bgid : uuidv4(),
+        name: groupName 
+      };
+      const response = await axiosInstance.patch('/update-contacts/', payload,
+        {
+          headers: {
+            'X-Tenant-ID': tenantId
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        console.log("Group created successfully");
+        alert("Contacts added to group successfully!");
+      } else {
+        throw new Error("Failed to send broadcast");
+      }
+    } catch (error) {
+      console.error("Error creating broadcast group:", error);
+    }
+  }
+
 
   const handleCloseBroadcastPopup = () => {
     setShowBroadcastPopup(false);
     setBroadcastMessage('');
     setSelectedPhones([]);
+    setSelectedBCGroups([])
     setGroupName('');
     setIsSendingBroadcast(false);
   };
@@ -418,7 +458,7 @@ const BroadcastPage = () => {
   
   const fetchBroadcastHistory = async () => {
     try {
-      const response = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-status/');
+      const response = await axiosInstance.get('get-status/');
       const formattedHistory = formatBroadcastHistory(response.data.message_statuses);
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);
@@ -507,6 +547,14 @@ const BroadcastPage = () => {
       prevSelected.includes(contactId)
         ? prevSelected.filter(id => id !== contactId)
         : [...prevSelected, contactId]
+    );
+  };
+
+  const handleBCGroupSelection = (bgId) => {
+    setSelectedBCGroups(prevSelected => 
+      prevSelected.includes(bgId)
+        ? prevSelected.filter(id => id !== bgId)
+        : [...prevSelected, bgId]
     );
   };
 
@@ -654,16 +702,35 @@ const BroadcastPage = () => {
             </label>
           </div>
         ))}
+        {broadcastGroup.map(bg => (
+          <div key={bg.id} className="cb-broadcast-contact-item">
+            <input
+              type="checkbox"
+              id={`broadcast-group-${bg.id}`}
+              checked={selectedBCGroups.includes(bg.id)}
+              onChange={() => handleBCGroupSelection(bg.id)}
+            />
+            <label htmlFor={`broadcast-group-${bg.id}`}>
+              <span className="cb-broadcast-contact-name">{bg.name}</span>
+              <span className="cb-broadcast-contact-phone">({bg.contacts.join(', ')})</span>
+            </label>
+          </div>
+        ))}
       </div>
       <div className="cb-broadcast-actions">
         <button
           onClick={handleSendBroadcast}
-          disabled={isSendingBroadcast || selectedPhones.length === 0 || !selectedTemplate}
+          disabled={isSendingBroadcast || (selectedPhones.length === 0 && selectedBCGroups.length === 0) || !selectedTemplate }
           className="cb-send-broadcast-btn"
         >
           {isSendingBroadcast ? "Sending..." : "Send Broadcast"}
         </button>
         <button onClick={handleCloseBroadcastPopup} className="cb-cancel-broadcast-btn">Cancel</button>
+        <button 
+        onClick={handleCreateGroup}
+        disabled={selectedPhones.length === 0 || selectedBCGroups.length > 0}
+        className='cb-create-group-btn'
+        >Create Group</button>
       </div>
     </div>
   </div>

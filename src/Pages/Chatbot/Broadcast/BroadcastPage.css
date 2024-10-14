@@ -664,6 +664,31 @@
   transition: all 0.3s ease;
 }
 
+.cb-create-group-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cb-create-group-btn {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.cb-create-group-btn:hover {
+  background-color: #3a7bc8;
+}
+
+.cb-create-group-btn:disabled {
+  background-color: var(--light-gray);
+  cursor: not-allowed;
+}
+
+
 .cb-send-broadcast-btn {
   background-color: var(--primary-color);
   color: var(--white);

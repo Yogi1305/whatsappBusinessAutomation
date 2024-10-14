@@ -26,7 +26,7 @@ const Models = () => {
     useEffect(() => {
         const fetchModels = async () => {
             try {
-                const response = await axiosInstance.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/dynamic-models/');
+                const response = await axiosInstance.get('dynamic-models/');
                 setModels(response.data);
             } catch (error) {
                 console.error('Error fetching models:', error);
@@ -41,7 +41,7 @@ const Models = () => {
         setSelectedModel(model);
         setLoading(true);
         try {
-            const response = await axiosInstance.get(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/dynamic-model-data/${model.model_name}/`);
+            const response = await axiosInstance.get(`dynamic-model-data/${model.model_name}/`);
             setModelData(response.data);
         } catch (error) {
             console.error('Error fetching model data:', error);
@@ -61,7 +61,7 @@ const Models = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axiosInstance.post(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/dynamic-model-data/${selectedModel.model_name}/`, formValues, {
+            const response = await axiosInstance.post(`dynamic-model-data/${selectedModel.model_name}/`, formValues, {
                 headers: {
                     'X-Tenant-Id': tenantId
                 }
@@ -69,7 +69,7 @@ const Models = () => {
             console.log('Data sent successfully:', response.data);
             setShowModal(false);
             // Refresh model data
-            const updatedData = await axiosInstance.get(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/dynamic-model-data/${selectedModel.model_name}/`);
+            const updatedData = await axiosInstance.get(`dynamic-model-data/${selectedModel.model_name}/`);
             setModelData(updatedData.data);
             toast.success('Data submitted successfully');
         } catch (error) {

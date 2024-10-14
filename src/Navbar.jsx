@@ -65,7 +65,7 @@ const Navbar = () => {
   };
 
   const handleLogout = async() => {
-    await axiosInstance.post('/logout/');
+    await axiosInstance.post('logout/');
     logout();
     navigate('/');
   };
@@ -88,7 +88,7 @@ const Navbar = () => {
           <img style={{ height: '2.5rem', marginRight: '2px' }} src={logo} alt="" />
           Nuren AI
         </Link>
-        <div className="hidden md:flex space-x-4 items-center">
+        <div className=" md:flex space-x-4 items-left">
           {authenticated && (
             <>
               <Link to={getPath('/contact')} className="text-white hover:text-gray-300">Contact</Link>
@@ -170,7 +170,7 @@ const Navbar = () => {
           )}
         </div>
         <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white">
-          {isOpen ? <X /> : <Menu />}
+          {isOpen ? <X/> : <Menu />}
         </button>
       </div>
       {isOpen && (

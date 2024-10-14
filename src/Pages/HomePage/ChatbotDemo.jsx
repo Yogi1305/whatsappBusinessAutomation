@@ -48,9 +48,9 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
+        const response = await axios.get('get-bpid/', {
           headers: {
-            'X-Tenant-Id': "ll"
+            'X-Tenant-Id': 'tlb'
           }
         });
         setBusinessPhoneNumberId(response.data.business_phone_number_id);
