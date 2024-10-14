@@ -6,7 +6,7 @@ import logo from "./assets/logo.png";
 import io from 'socket.io-client';
 import axiosInstance from './api';
 
-const socket = io('https:/whatsappbotserver.azurewebsites.net');
+const socket = io('https://whatsappbotserver.azurewebsites.net');
 
 const Navbar = () => {
   const { authenticated, logout, tenantId } = useAuth();
