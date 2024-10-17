@@ -145,9 +145,6 @@ const Register = () => {
     }
     setVerifyingTenant(true)
     try {
-<<<<<<< HEAD
-      const response = await fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/createTenant/', {
-=======
 
       const response = await axiosInstance.post('/verifyTenant/', {
         organisation,
@@ -176,8 +173,7 @@ const Register = () => {
     setCreatingOrg(true)
     try {
       newOrg.tenantId = await createTenantID()
-      const response = await fetch('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/createTenant/', {
->>>>>>> 7adfb7a7ca785c83ffa6f9f5625ba606d656eafc
+      const response = await fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/createTenant/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
