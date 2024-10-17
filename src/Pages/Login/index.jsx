@@ -43,12 +43,12 @@ const Login = ({ onLogin }) => {
         body: JSON.stringify({ username, password }),
       });
 
-      if (!response.ok) throw new Error('Login failed');
-
-      const data = await response.json();
+      const data = response.data;
+      console.log("data: ", data)
       login(data.user_id, data.tenant_id, data.role, data.model);
       setShowPopup(true);
     } catch (error) {
+      console.log("erreoer: ", error)
       setError('Login failed. Please check your credentials and try again.');
     } finally {
       setIsSubmitting(false);
@@ -90,7 +90,6 @@ const Login = ({ onLogin }) => {
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
-                value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
@@ -103,7 +102,6 @@ const Login = ({ onLogin }) => {
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
-                value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
@@ -118,10 +116,18 @@ const Login = ({ onLogin }) => {
             </div>
           </form>
           <div className="mt-6 text-center">
+          <div>
+            <Link to="/change-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              Forgot password?
+            </Link>
+          </div>
+          <div className="mt-4">
             <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
               Don't have an account? Register
             </Link>
           </div>
+        </div>
+
         </div>
       </div>
       {showPopup && <PopupCard message={`Login successful as ${role}`} onClose={() => setShowPopup(false)} />}

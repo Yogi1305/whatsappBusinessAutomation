@@ -10,7 +10,7 @@ import FlowBuilder from "./Pages/NewFlow/FlowBuilder";
 import ContactPage from './Pages/ContactPage/ContactPage';
 import ProfilePage from './Pages/ProfilePage/ProfilePage';
 import HomePage from './Pages/HomePage/Homepage.jsx';
-
+import PasswordReset from './Pages/PasswordReset/index.jsx';
 import AIChatbotsPage from './Pages/Blogs/AIChatbot.jsx';
 import Chatbotredirect from './Pages/Chatbot/Chatbotredirect';
 import Models from './Pages/Model/ModelTable';
@@ -45,6 +45,8 @@ const App = () => {
             <Route path="/" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <HomePage />} />
             <Route path="/login" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Login />} />
             <Route path="/register" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Register />} />
+            
+            <Route path="/change-password" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <PasswordReset />} />
             <Route path="/chatbotredirect" element={<Chatbotredirect />} />
 
             {/* Demo routes accessible without authentication */}

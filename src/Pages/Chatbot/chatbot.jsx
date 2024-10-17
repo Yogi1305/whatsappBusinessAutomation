@@ -35,12 +35,25 @@ const getTenantIdFromUrl = () => {
 
   if (pathArray.length >= 2) {
     var tenant_id = pathArray[1]
-    if(tenant_id == "demo") tenant_id = 'll'
+    if(tenant_id == "demo") tenant_id = 'tlb'
     return tenant_id; // Assumes tenant_id is the first part of the path
   }
   return null; 
 };
 
+const setCSSVariable = (variable, value) => {
+  let root = document.documentElement;
+  root.style.setProperty(variable, value);
+};
+
+const sentimentColors = {
+  anger: '255,0,0',
+  happiness: '255,223,0',
+  sadness: '54,100,139',
+  trust: '0,128,255',
+  fear: '128,0,128',
+  surprise: '255,140,0'
+}
 
 const Chatbot = () => {
   const tenantId=getTenantIdFromUrl();
@@ -87,6 +100,11 @@ const Chatbot = () => {
   // const [inputFields, setInputFields] = useState([{ value: '' }]);
   // const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleFab = () => {
+    setIsOpen(!isOpen);
+  };
 
   const handleCloseAuthPopupp = () => {
     setAuthPopupp(false);
@@ -336,7 +354,7 @@ const getAvatarColor = (initials) => {
         formData.append('messaging_product', 'whatsapp');
   
         // Upload to Facebook Graph API
-        const response = await axiosInstance.post(
+        const response = await axios.post(
           `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`, //HARDCODE
           formData,
           {
@@ -402,7 +420,7 @@ const getAvatarColor = (initials) => {
       phoneNumber = phoneNumber.slice(2);
     }
     try {
-      const response = await axiosInstance.post(
+      const response = await axios.post(
         'https://whatsappbotserver.azurewebsites.net/send-message',
         {
           phoneNumbers: [phoneNumber],
@@ -666,7 +684,7 @@ const getAvatarColor = (initials) => {
       const response = await fetch(`https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
-          'X-Tenant-ID': tenantId
+          'X-Tenant-Id': tenantId
         },
       });
 
@@ -674,11 +692,16 @@ const getAvatarColor = (initials) => {
         throw new Error('Failed to fetch data from backend');
       }
       const data = await response.json();
-      
+      const conversations = data.slice(0,-1)
+      const sentiment = data.at(-1).dominant_emotion
+      const rgb = sentimentColors[sentiment]
+      setCSSVariable('--sentiment-shadow', `0 4px 6px rgba(${rgb}, 0.8)`)
+      setCSSVariable('--sentiment-solid', `rgba(${rgb}, 0.8)`)
+      setCSSVariable('--sentiment-solid-light', `rgba(${rgb}, 0.4)`)
       // Merge fetched data with any new messages
       const mergedConversation = [
         ...(allConversations[contactId] || []),
-        ...data
+        ...conversations
       ];
       setAllConversations(prev => ({
         ...prev,
@@ -1009,6 +1032,26 @@ const handleNewChat = async () => {
     </div>
   </div>
 )}
+<div className="fab-wrapper">
+      <input
+        id="fabCheckbox"
+        type="checkbox"
+        className="fab-checkbox"
+        checked={isOpen}
+        onChange={toggleFab}
+      />
+      <label className="fab" htmlFor="fabCheckbox">
+        <span className="fab-dots fab-dots-1"></span>
+        <span className="fab-dots fab-dots-2"></span>
+        <span className="fab-dots fab-dots-3"></span>
+      </label>
+      <div className={`fab-wheel ${isOpen ? 'open' : ''}`}>
+        <a className="fab-action fab-action-1">Question</a>
+        <a className="fab-action fab-action-2">Documentation</a>
+        <a className="fab-action fab-action-3">Contacts</a>
+        <a className="fab-action fab-action-4">Info</a>
+      </div>
+    </div>
  </div>
 )}
       <div className="cb-message-container">

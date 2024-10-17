@@ -50,7 +50,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
       try {
         const response = await axios.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-bpid/', {
           headers: {
-            'X-Tenant-Id': "ll"
+            'X-Tenant-Id': 'tlb'
           }
         });
         setBusinessPhoneNumberId(response.data.business_phone_number_id);
