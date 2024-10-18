@@ -76,7 +76,7 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
           phoneNumbers: [phone],
         };
     
-        const response = await axios.post('http://localhost:8080/send-template/', payload,
+        const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
         );
         if (response.status == 200) return true
         else return false

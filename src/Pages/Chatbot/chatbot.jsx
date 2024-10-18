@@ -421,7 +421,7 @@ const getAvatarColor = (initials) => {
     }
     try {
       const response = await axios.post(
-        'http://localhost:8080/send-message',
+        'https://whatsappbotserver.azurewebsites.net/send-message',
         {
           phoneNumbers: [phoneNumber],
           messageType: "image",
@@ -587,7 +587,7 @@ const getAvatarColor = (initials) => {
           }
       
           return axios.post(
-            'http://localhost:8080/send-message',
+            'https://whatsappbotserver.azurewebsites.net/send-message',
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
@@ -604,7 +604,7 @@ const getAvatarColor = (initials) => {
           phoneNumber = phoneNumber.slice(2);
         }
         await axios.post(
-          'http://localhost:8080/send-message',
+          'https://whatsappbotserver.azurewebsites.net/send-message',
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
@@ -903,7 +903,7 @@ const getAvatarColor = (initials) => {
         if (insertResponse.status === 200) {
           // Second POST request to reset the session
           const resetSessionResponse = await axiosInstance.post(
-            'http://localhost:8080/reset-session',
+            'https://whatsappbotserver.azurewebsites.net/reset-session',
             { business_phone_number_id: businessPhoneNumberId },
             {
               headers: {
