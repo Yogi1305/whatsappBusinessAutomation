@@ -7,6 +7,7 @@ import qrbg from "../../assets/qrbg.png";
 import WhatsAppQRCode from '../Chatbot/WhatsappQrCode';
 import axios from 'axios';
 import camera from "../../assets/camera.png";
+import { useMediaQuery } from 'react-responsive';
 
 // Function to get tenant ID from the URL
 const getTenantIdFromUrl = () => {
@@ -43,6 +44,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   const tenantId = getTenantIdFromUrl();
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const [sessionId, setSessionId] = useState(null);
+  const isMobile = useMediaQuery({ maxWidth: 1280 });
 
   // Fetch business phone ID
   useEffect(() => {
@@ -119,6 +121,11 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
       socket.off('temp-user', handleTempUser);
     };
   }, [socket, isAuthenticated, navigate, sessionId]);
+  
+  const handleButtonClick = () => {
+    const text = `${sessionId} Hi! How can your chatbot automation help grow my business?`
+    window.location.href = `https://wa.me/919266893634?text=${text}`;
+  };
 
   return (
     <section className="py-20 bg-black text-white min-h-screen flex items-center">
@@ -166,21 +173,37 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <div className="relative p-8 rounded-lg shadow-xl">
-              <img
-                src={qrbg}
-                alt="Background"
-                className="w-full h-auto rounded-lg opacity-30"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white p-6 rounded-lg shadow-xl" style={{ width: '80%', height: '80%' }}>
-                  <WhatsAppQRCode sessionId={sessionId} />
-                </div>
+            {isMobile ? (
+              <div className="p-8">
+                <button
+                  onClick={handleButtonClick}
+                  className="w-full py-3 px-4 bg-blue-500 text-white rounded-lg shadow-xl hover:bg-blue-600 transition duration-300"
+                >
+                  Start Chatting
+                </button>
+                <p className="mt-4 text-gray-300 text-center">
+                  Click the button above to begin the demo
+                </p>
               </div>
-            </div>
-            <p className="mt-4 text-gray-300 text-center">
-              Scan this QR code with your phone's camera to begin the demo
-            </p>
+            ) : (
+              <>
+                <div className="relative p-8 rounded-lg shadow-xl">
+                  <img
+                    src={qrbg}
+                    alt="Background"
+                    className="w-full h-auto rounded-lg opacity-30"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-lg shadow-xl" style={{ width: '80%', height: '80%' }}>
+                      <WhatsAppQRCode sessionId={sessionId} />
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-4 text-gray-300 text-center">
+                  Scan this QR code with your phone's camera to begin the demo
+                </p>
+              </>
+            )}
           </motion.div>
         </div>
 

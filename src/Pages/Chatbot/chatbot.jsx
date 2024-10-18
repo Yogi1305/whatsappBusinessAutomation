@@ -126,10 +126,7 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/get-bpid/', {
-          headers: {
-            'X-Tenant-Id': tenantId
-          }
+        const response = await axiosInstance.get('/get-bpid/', {
         });
         console.log(response.data.business_phone_number_id,"THIS IS BPID");
         setBusinessPhoneNumberId(response.data.business_phone_number_id);
@@ -421,7 +418,7 @@ const getAvatarColor = (initials) => {
     }
     try {
       const response = await axios.post(
-        'https://whatsappbotserver.azurewebsites.net/send-message',
+        'http://localhost:8080/send-message',
         {
           phoneNumbers: [phoneNumber],
           messageType: "image",
@@ -587,7 +584,7 @@ const getAvatarColor = (initials) => {
           }
       
           return axios.post(
-            'https://whatsappbotserver.azurewebsites.net/send-message',
+            'http://localhost:8080/send-message',
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
@@ -604,7 +601,7 @@ const getAvatarColor = (initials) => {
           phoneNumber = phoneNumber.slice(2);
         }
         await axios.post(
-          'https://whatsappbotserver.azurewebsites.net/send-message',
+          'http://localhost:8080/send-message',
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
@@ -681,11 +678,7 @@ const getAvatarColor = (initials) => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
-        method: 'GET',
-        headers: {
-          'X-Tenant-Id': tenantId
-        },
+      const response = await axiosInstance.get(`/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
       });
 
       if (!response.ok) {
@@ -887,7 +880,7 @@ const getAvatarColor = (initials) => {
       
         // First POST request to insert data
         const insertResponse = await axiosInstance.post(
-          'https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/insert-data/',
+          '/insert-data/',
           dataToSend,
           {
             headers: {
@@ -903,7 +896,7 @@ const getAvatarColor = (initials) => {
         if (insertResponse.status === 200) {
           // Second POST request to reset the session
           const resetSessionResponse = await axiosInstance.post(
-            'https://whatsappbotserver.azurewebsites.net/reset-session',
+            'http://localhost:8080/reset-session',
             { business_phone_number_id: businessPhoneNumberId },
             {
               headers: {

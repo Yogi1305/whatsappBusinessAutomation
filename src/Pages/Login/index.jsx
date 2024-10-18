@@ -39,7 +39,7 @@ const Login = ({ onLogin }) => {
     try {
       const body = JSON.stringify({ username, password })
       console.log("body: ", body)
-      const response = await axios.post(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/login/`, body,
+      const response = await axiosInstance.post(`/login/`, body,
         {headers : { 'Content-Type': 'application/json' }});
       console.log("response: ", response)
 

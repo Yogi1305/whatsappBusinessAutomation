@@ -240,7 +240,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
+      const response = await axios.post('http://localhost:8080/send-template/', payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id
@@ -648,11 +648,36 @@ const BroadcastPage = () => {
     }
   };
 
+  const [tableData, setTableData] = useState([]);
+
+  const handleCellChange = (e, rowIndex, field) => {
+    const newData = [...tableData];
+    newData[rowIndex][field] = e.target.value;
+    setTableData(newData);
+  };
+
+  const addRow = () => {
+    const newRow = { id: tableData.length + 1, name: "", price: 0 };
+    setTableData([...tableData, newRow]);
+  };
+
+  const deleteRow = (rowIndex) => {
+    const newData = tableData.filter((_, index) => index !== rowIndex);
+    setTableData(newData);
+  };
+
+  const handleSubmitCatalog  = async (tableData) => {
+    console.log("tableDData: ", tableData)
+    const response = await  axiosInstance.post('/catalog/', tableData)
+    console.log("Response catalog: ", response)
+  }
+
   return (
     <div className="bp-broadcast-page">
       <div className="bp-left-sidebar">
       <div className={`bp-menu-item ${activeTab === 'history' ? 'bp-active' : ''}`} onClick={() => handleTabChange('history')}>Broadcast History</div>
       <div className={`bp-menu-item ${activeTab === 'templates' ? 'bp-active' : ''}`} onClick={() => handleTabChange('templates')}>Template Messages</div>
+      <div className={`bp-menu-item ${activeTab === 'catalog' ? 'bp-active' : ''}`} onClick={() => handleTabChange('catalog')}>Catalog Management</div>
       </div>
       <div className="bp-main-content">
       {activeTab === 'history' && (
@@ -788,41 +813,152 @@ const BroadcastPage = () => {
           </div>
         </div>
       )}
-        {activeTab === 'templates' && (
-          <div className="bp-template-messages">
-            <h1 style={{fontSize:'36px', fontWeight:'600', fontFamily:'sans-serif'}}>Template Messages</h1>
-            <button className="bp-btn-create" onClick={() => {
-              resetTemplateForm();
-              setShowTemplatePopup(true);
-            }}>Create Template</button>
-            <div className="bp-template-list">
-              {templates.map((template, index) => (
-                <div key={index} className="bp-template-item">
-                  <h3>{template.name}</h3>
-                  <p className={`bp-status-${template.status.toLowerCase()}`}>
-                    Status: {template.status}
-                  </p>
-                  <p>Category: {template.category}</p>
-                  <p>Language: {template.language}</p>
-                  <p>Body: {template.components.find(c => c.type === "BODY")?.text.substring(0, 50)}...</p>
-                  {template.components.find(c => c.type === "BUTTONS") && (
-                    <p>Buttons: {template.components.find(c => c.type === "BUTTONS").buttons.length}</p>
-                  )}
-                  <div className="bp-template-actions">
-                    <button onClick={() => handleEditTemplate(template)} className="bp-btn-edit">
-                      <Edit2 size={18} />
-                      Edit
-                    </button>
-                    <button onClick={() => handleDeleteTemplate(template.name)} className="bp-btn-delete">
-                      <Trash2 size={18} />
-                      Delete
-                    </button>
-                  </div>
+      {activeTab === 'templates' && (
+        <div className="bp-template-messages">
+          <h1 style={{fontSize:'36px', fontWeight:'600', fontFamily:'sans-serif'}}>Template Messages</h1>
+          <button className="bp-btn-create" onClick={() => {
+            resetTemplateForm();
+            setShowTemplatePopup(true);
+          }}>Create Template</button>
+          <div className="bp-template-list">
+            {templates.map((template, index) => (
+              <div key={index} className="bp-template-item">
+                <h3>{template.name}</h3>
+                <p className={`bp-status-${template.status.toLowerCase()}`}>
+                  Status: {template.status}
+                </p>
+                <p>Category: {template.category}</p>
+                <p>Language: {template.language}</p>
+                <p>Body: {template.components.find(c => c.type === "BODY")?.text.substring(0, 50)}...</p>
+                {template.components.find(c => c.type === "BUTTONS") && (
+                  <p>Buttons: {template.components.find(c => c.type === "BUTTONS").buttons.length}</p>
+                )}
+                <div className="bp-template-actions">
+                  <button onClick={() => handleEditTemplate(template)} className="bp-btn-edit">
+                    <Edit2 size={18} />
+                    Edit
+                  </button>
+                  <button onClick={() => handleDeleteTemplate(template.name)} className="bp-btn-delete">
+                    <Trash2 size={18} />
+                    Delete
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      )}
+      {activeTab === 'catalog' && (
+        <div className="bp-catalog">
+          <button className='submit-button' onClick={() => handleSubmitCatalog(tableData)}>Submit</button>
+          <h1 style={{fontSize:'36px', fontWeight:'600', fontFamily:'sans-serif', paddingBottom: 20}}>Catalog Management</h1>
+          <table border="1" style={{ width: "100%", textAlign: "left", fontSize: 14 }}>
+            <thead>
+              <tr>
+                <th></th> 
+                <th>Product Retailer ID</th>
+                <th>Product Name</th>
+                <th>Description</th>
+                <th>Item Price</th>
+                <th>Currency</th>
+                <th>Catalog ID</th>
+                <th>Quantity</th>
+                <th>Image URL</th>
+                <th>Product URL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableData.map((row, rowIndex) => (
+                <tr key={row.product_retailer_id}>
+                  <td>{rowIndex + 1}</td>
+                  <td>
+  <input
+    type="text"
+    value={row.product_retailer_id}
+    placeholder="Retailer ID"
+    onChange={(e) => handleCellChange(e, rowIndex, "product_retailer_id")}
+  />
+</td>
+<td>
+  <input
+    type="text"
+    value={row.product_name}
+    placeholder="Product Name"
+    onChange={(e) => handleCellChange(e, rowIndex, "product_name")}
+  />
+</td>
+<td>
+  <input
+    type="text"
+    value={row.description}
+    placeholder="Description"
+    onChange={(e) => handleCellChange(e, rowIndex, "description")}
+  />
+</td>
+<td>
+  <input
+    type="text"
+    value={row.item_price}
+    placeholder="Item Price"
+    onChange={(e) => handleCellChange(e, rowIndex, "item_price")}
+  />
+</td>
+<td>
+  <input
+    type="text"
+    value={row.currency}
+    placeholder="Currency"
+    onChange={(e) => handleCellChange(e, rowIndex, "currency")}
+  />
+</td>
+<td>
+  <input
+    type="text"
+    value={row.catalog_id}
+    placeholder="Catalog ID"
+    onChange={(e) => handleCellChange(e, rowIndex, "catalog_id")}
+  />
+</td>
+<td>
+  <input
+    type="text"
+    value={row.quantity}
+    placeholder="Quantity"
+    onChange={(e) => handleCellChange(e, rowIndex, "quantity")}
+  />
+</td>
+<td>
+  <input
+    type="url"
+    value={row.image_url}
+    placeholder="Image URL"
+    onChange={(e) => handleCellChange(e, rowIndex, "image_url")}
+  />
+</td>
+<td>
+  <input
+    type="url"
+    value={row.product_url}
+    placeholder="Product URL"
+    onChange={(e) => handleCellChange(e, rowIndex, "product_url")}
+  />
+</td>
+<td>
+  <button className="btn btn-delete" onClick={() => deleteRow(rowIndex)}>
+    <Trash2 className="trash-icon" size={18} />
+  </button>
+</td>
+
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <button className="add-row-button" onClick={addRow}>
+            +
+          </button>
+        </div>
+      )}
       </div>
        {showTemplatePopup && (
         <div className="bp-popup-overlay">
