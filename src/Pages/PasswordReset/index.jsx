@@ -40,7 +40,6 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
   const navigate = useNavigate();
 
   const handleSendOtp = async (username, phone) => {
-  
     if (!username || !phone) {
       console.error("Both username and phone are required");
       setError({ username: "username is required", phone: "phone is required" });
@@ -98,7 +97,7 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
     try {
       const body = JSON.stringify({ username, newPassword })
       console.log("body: ", body)
-      const response = await axios.post(`https://backenreal-hgg2d7a0d9fzctgj.eastus-01.azurewebsites.net/change-password/`, body,
+      const response = await axiosInstance.post(`/change-password/`, body,
         {headers : { 'Content-Type': 'application/json' }});
       console.log("response: ", response)
 

@@ -42,8 +42,8 @@ const Login = ({ onLogin }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-
-      const data = response.data;
+      console.log("resposneL ", response)
+      const data = await response.json();
       console.log("data: ", data)
       login(data.user_id, data.tenant_id, data.role, data.model);
       setShowPopup(true);

@@ -5,6 +5,7 @@ const WhatsAppQRCode = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [error, setError] = useState('');
   const [sessionId, setSessionId] = useState('');
+  const [prefilled_message, setPreFilled_message] = useState('')
 
   // Function to generate a unique session ID that starts with "*/"
   const generateSessionId = () => {
