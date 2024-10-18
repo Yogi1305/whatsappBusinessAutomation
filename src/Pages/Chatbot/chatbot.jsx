@@ -126,7 +126,10 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axiosInstance.get('/get-bpid/', {
+        const response = await axios.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-bpid/', {
+          headers: {
+            'X-Tenant-Id': tenantId
+          }
         });
         console.log(response.data.business_phone_number_id,"THIS IS BPID");
         setBusinessPhoneNumberId(response.data.business_phone_number_id);
@@ -678,7 +681,11 @@ const getAvatarColor = (initials) => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await axiosInstance.get(`/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
+      const response = await fetch(`https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
+        method: 'GET',
+        headers: {
+          'X-Tenant-Id': tenantId
+        },
       });
 
       if (!response.ok) {
@@ -821,7 +828,7 @@ const getAvatarColor = (initials) => {
   
     const fetchFlows = async () => {
       try {
-        const response = await axiosInstance.get('/node-templates/', {
+        const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/node-templates/', {
           headers: { token: localStorage.getItem('token') },
         });
         // Ensure each flow has an id property
@@ -880,7 +887,7 @@ const getAvatarColor = (initials) => {
       
         // First POST request to insert data
         const insertResponse = await axiosInstance.post(
-          '/insert-data/',
+          'https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/insert-data/',
           dataToSend,
           {
             headers: {
@@ -927,7 +934,7 @@ const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-    const response = await axiosInstance.post('/contacts/', {
+    const response = await axiosInstance.post('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/contacts/', {
       phone: newPhoneNumber,
       tenant: tenantId,
       // Add other required fields for creating a new contact

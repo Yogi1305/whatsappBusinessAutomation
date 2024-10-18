@@ -43,7 +43,7 @@ const ProfilePage = () => {
     const fetchData = async () => {
       try {
         // First, fetch the business phone ID
-        const bpidResponse = await axiosInstance.get('get-bpid/', {
+        const bpidResponse = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-bpid/', {
           headers: {
             'X-Tenant-ID': tenantId
           }

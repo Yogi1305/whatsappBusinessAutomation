@@ -42,7 +42,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
 
   useEffect(() => {
-    fetch('http://localhost:8000/createTenant/')
+    fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/createTenant')
       .then((res) => res.json())
       .then((data) => {
         const orgNames = data.map((org) => ({
@@ -94,7 +94,7 @@ const Register = () => {
     const selectedTenantId = selectedOrg ? selectedOrg.tenantId : '';
 
     try {
-      const response = await fetch('http://localhost:8000/register/', {
+      const response = await fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ const Register = () => {
     setCreatingOrg(true)
     try {
       newOrg.tenantId = await createTenantID()
-      const response = await fetch('http://localhost:8000/createTenant/', {
+      const response = await fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/createTenant/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

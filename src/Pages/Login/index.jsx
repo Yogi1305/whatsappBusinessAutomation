@@ -37,11 +37,11 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      const body = JSON.stringify({ username, password })
-      console.log("body: ", body)
-      const response = await axiosInstance.post(`/login/`, body,
-        {headers : { 'Content-Type': 'application/json' }});
-      console.log("response: ", response)
+      const response = await fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
       const data = response.data;
       console.log("data: ", data)

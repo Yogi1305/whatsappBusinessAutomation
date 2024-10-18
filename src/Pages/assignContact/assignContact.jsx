@@ -19,7 +19,7 @@ const AssignContact = () => {
   const fetchUsersAndLeads = async () => {
     try {
       const [usersResponse, leadsResponse] = await Promise.all([
-        axiosInstance.get('get-all-user/'),
+        axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-all-user/'),
         axiosInstance.get('/contacts/')
       ]);
 

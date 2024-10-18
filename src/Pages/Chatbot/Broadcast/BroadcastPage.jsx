@@ -108,7 +108,7 @@ const BroadcastPage = () => {
     useEffect(() => {
       const fetchBusinessPhoneId = async () => {
         try {
-          const response = await axiosInstance.get('get-bpid/', {
+          const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-bpid/', {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -458,7 +458,7 @@ const BroadcastPage = () => {
   
   const fetchBroadcastHistory = async () => {
     try {
-      const response = await axiosInstance.get('get-status/');
+      const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-status/');
       const formattedHistory = formatBroadcastHistory(response.data.message_statuses);
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);
