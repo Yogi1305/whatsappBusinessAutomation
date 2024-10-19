@@ -45,8 +45,12 @@ const Login = ({ onLogin }) => {
       console.log("resposneL ", response)
       const data = await response.json();
       console.log("data: ", data)
-      login(data.user_id, data.tenant_id, data.role, data.model);
-      setShowPopup(true);
+      if(response.status == 200){
+        login(data.user_id, data.tenant_id, data.role, data.model);
+        setShowPopup(true);
+      }else{
+        throw error
+      }
     } catch (error) {
       console.log("erreoer: ", error)
       setError('Login failed. Please check your credentials and try again.');
