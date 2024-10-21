@@ -903,7 +903,7 @@
   padding: 0.5rem;
   border-radius: 4px;
   text-decoration: none;
-}
+} 
 
 .bp-message-time {
   text-align: right;
@@ -959,10 +959,6 @@ button {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #45a049;
 }
 
 .submit-button {

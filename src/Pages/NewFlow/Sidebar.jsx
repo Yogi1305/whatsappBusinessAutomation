@@ -1,3 +1,5 @@
+import { Height } from '@mui/icons-material';
+import { AlignCenter } from 'lucide-react';
 import React from 'react';
 
 const Sidebar = () => {
@@ -28,9 +30,27 @@ const Sidebar = () => {
     fontWeight: 'bold',
   };
 
+  const smallNodeStyle = {
+    ...nodeStyle,
+    padding: '5px',
+    fontSize: '15px',
+    marginLeft: '10px',
+    marginBottom: '5px',
+    width:'5rem',
+    height:'3rem',
+    display:'flex',
+    alignItems:'center',
+    justifyContent:'center'
+  };
+
   const iconStyle = {
     marginRight: '10px',
     fontSize: '20px',
+  };
+
+  const smallIconStyle = {
+    ...iconStyle,
+    fontSize: '16px',
   };
 
   return (
@@ -45,6 +65,7 @@ const Sidebar = () => {
         Send a Message
         <div style={{fontSize: '12px', fontWeight: 'normal'}}>With no response required from visitor</div>
       </div>
+      
       <div 
         style={{...nodeStyle, backgroundColor: '#FFA500'}}
         onDragStart={(event) => onDragStart(event, 'askQuestion')} 
@@ -64,6 +85,17 @@ const Sidebar = () => {
         <div style={{fontSize: '12px', fontWeight: 'normal'}}>Send message(s) based on logical condition(s)</div>
       </div>
       
+      <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
+
+      <div 
+        style={{...smallNodeStyle, backgroundColor: '#6495ED'}}
+        onDragStart={(event) => onDragStart(event, 'ai')} 
+        draggable
+        >
+        <span style={smallIconStyle}>🤖</span>
+        AI
+      </div>
+    </div>
     </aside>
   );
 };

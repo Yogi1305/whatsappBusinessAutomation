@@ -66,7 +66,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
 
   // Setup socket connection
   useEffect(() => {
-    const newSocket = io('https://whatsappbotserver.azurewebsites.net');
+    const newSocket = io('http://localhost:8080');
     setSocket(newSocket);
 
     const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);

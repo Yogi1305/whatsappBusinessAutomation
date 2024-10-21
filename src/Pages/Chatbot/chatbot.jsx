@@ -27,12 +27,11 @@ import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 import { Button, Input } from 'antd';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net');
+const socket = io('http://localhost:8080');
 
 
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
-
   if (pathArray.length >= 2) {
     var tenant_id = pathArray[1]
     if(tenant_id == "demo") tenant_id = 'tlb'
@@ -71,12 +70,12 @@ const Chatbot = () => {
   const [selectedFlow, setSelectedFlow] = useState('');
   const [previousContact, setPreviousContact] = useState(null);
   const [newMessages, setNewMessages] = useState([]);
- 
+
   const [showPopup, setShowPopup] = useState(false);
- 
+
   const [allConversations, setAllConversations] = useState({});
   const [allMessages, setAllMessages] = useState([]);
-  
+
   const [unreadCounts, setUnreadCounts] = useState({});
   const messageEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -84,7 +83,7 @@ const Chatbot = () => {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [imageCaption, setImageCaption] = useState('');
   const [imageMap, setImageMap] = useState({});
-  
+
   const [isUploading, setIsUploading] = useState(false);
   const [accessToken, setAccessToken] = useState('');
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
@@ -100,22 +99,19 @@ const Chatbot = () => {
   // const [inputFields, setInputFields] = useState([{ value: '' }]);
   // const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
+  
   const [isOpen, setIsOpen] = useState(false);
-
   const toggleFab = () => {
     setIsOpen(!isOpen);
   };
-
   const handleCloseAuthPopupp = () => {
     setAuthPopupp(false);
   };
-  
+
   useEffect(() => {
     // Show popup only if not authenticated and not in demo mode
     setAuthPopupp(!authenticated);
   }, [authenticated]);
-
-
 
 
   useEffect(() => {
@@ -126,6 +122,7 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
+        console.log("fetching business phone number id")
         const response = await axios.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-bpid/', {
           headers: {
             'X-Tenant-Id': tenantId
@@ -140,21 +137,21 @@ const Chatbot = () => {
 
     fetchBusinessPhoneId();
   }, [tenantId]);
-  
+    
   const renderMessageContent = (message) => {
     if (typeof message.text === 'object' && message.text !== null) {
       // Handle message types
       switch (message.text.type) {
         case 'text':
           return message.text.body || <div className="error">No text body provided</div>;
-  
+
         case 'interactive':
           // Replace `renderInteractiveMessage` with your logic to handle interactive messages
           return renderInteractiveMessage(message.text.interactive) || <div className="error">Interactive message rendering failed</div>;
-  
+
           case 'template':
           return renderTemplateMessage(message.text.template) || <div className="error">Template message rendering failed</div>;
-  
+
 
         default:
           return <div className="error">Unknown message type: {message.text.type}</div>;
@@ -163,7 +160,7 @@ const Chatbot = () => {
       // Fallback for plain text messages
       return message.text || <div className="error">Message content is undefined</div>;
     }
-  
+
     return <div className="error">Invalid message format</div>;
   };
 
@@ -232,7 +229,7 @@ const Chatbot = () => {
 
     return <p className="error-message">Unsupported message type</p>;
   };
-  
+
   const fixJsonString = (jsonString) => {
     try {
       // Replace single quotes with double quotes
@@ -257,9 +254,7 @@ const Chatbot = () => {
   };
 
 
-
-
-  
+    
   const fetchContacts = async () => {
     try {
       const response = await axiosInstance.get('/contacts/', {
@@ -268,7 +263,7 @@ const Chatbot = () => {
         },
       });
       // Ensure all contacts have the necessary properties
-     
+      
       setContacts(response.data);
     } catch (error) {
       console.error("Error fetching contacts data:", error);
@@ -280,65 +275,61 @@ const Chatbot = () => {
     fetchContacts();
   }, []);
 
-  const fetchProfileImage = async (contactId) => {
-    try {
-        console.log('Tenant ID:', tenantId);
-        console.log("this is id", contactId);
+  //   const fetchProfileImage = async (contactId) => {
+  //     try {
+  //         console.log('Tenant ID:', tenantId);
+  //         console.log("this is id", contactId);
 
-        const response = await axiosInstance.get(`/return-documents/10/${contactId}`);
-        console.log('GET request successful, response:', response.data);
+  //         const response = await axiosInstance.get(`/return-documents/10/${contactId}`);
+  //         console.log('GET request successful, response:', response.data);
 
-        const documents = response.data.documents;
-        console.log('Documents array:', documents);
+  //         const documents = response.data.documents;
+  //         console.log('Documents array:', documents);
 
-        if (documents && documents.length > 0) {
-            const profileImage = documents[0].file;
-            console.log('Found profile image:', profileImage);
-            setProfileImage(profileImage);
-        } else {
-            const initials = getInitials(contact.name, contact.last_name);
-            const avatarColorClass = getAvatarColor(initials);
-            console.log('No profile image found. Using initials:', initials);
-            setProfileImage(initials);
-            setAvatarColorClass(avatarColorClass);
-        }
-    } catch (error) {
-        console.error('Error fetching profile image:', error);
-    }
-};
+  //         if (documents && documents.length > 0) {
+  //             const profileImage = documents[0].file;
+  //             console.log('Found profile image:', profileImage);
+  //             setProfileImage(profileImage);
+  //         } else {
+  //             const initials = getInitials(contact.name, contact.last_name);
+  //             const avatarColorClass = getAvatarColor(initials);
+  //             console.log('No profile image found. Using initials:', initials);
+  //             setProfileImage(initials);
+  //             setAvatarColorClass(avatarColorClass);
+  //         }
+  //     } catch (error) {
+  //         console.error('Error fetching profile image:', error);
+  //     }
+  // };
 
-const getInitials = (firstName, lastName) => {
-    const firstInitial = firstName && firstName.charAt(0) ? firstName.charAt(0).toUpperCase() : '';
-    const lastInitial = lastName && lastName.charAt(0) ? lastName.charAt(0).toUpperCase() : '';
-    return firstInitial + lastInitial || '??';
-};
+  const getInitials = (firstName, lastName) => {
+      const firstInitial = firstName && firstName.charAt(0) ? firstName.charAt(0).toUpperCase() : '';
+      const lastInitial = lastName && lastName.charAt(0) ? lastName.charAt(0).toUpperCase() : '';
+      return firstInitial + lastInitial || '??';
+  };
 
-const getAvatarColor = (initials) => {
-    const charCode = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
-    return `avatar-bg-${(charCode % 10) + 1}`;
-};
+  const getAvatarColor = (initials) => {
+      const charCode = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
+      return `avatar-bg-${(charCode % 10) + 1}`;
+  };
 
-  useEffect(() => {
-    if ( tenantId) {
-        fetchProfileImage();
-    }
-}, [ tenantId]);
-
-
-
+  //   useEffect(() => {
+  //     if ( tenantId) {
+  //         fetchProfileImage();
+  //     }
+  // }, [ tenantId]);
 
   useEffect(() => {
     const fetchTenantData = async () => {
       try {
         // const business_phone_number_id = 241683569037594;
+        console.log("bpiddddddd: ", businessPhoneNumberId)
         const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${businessPhoneNumberId}`);
         setAccessToken(response.data.access_token);
-        setBusinessPhoneNumberId(response.data.business_phone_number_id);
       } catch (error) {
         console.error('Error fetching tenant data:', error);
       }
-    };
-    
+    };  
     fetchTenantData();
   }, []);
 
@@ -352,7 +343,7 @@ const getAvatarColor = (initials) => {
         formData.append('file', file);
         formData.append('type', 'image'); // Adjust based on file type if needed
         formData.append('messaging_product', 'whatsapp');
-  
+
         // Upload to Facebook Graph API
         const response = await axios.post(
           `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`, //HARDCODE
@@ -367,7 +358,7 @@ const getAvatarColor = (initials) => {
         console.log('File uploaded to WhatsApp, ID:', response.data.id);
         setHeaderMediaId(response.data.id);
         setImageToSend(response.data.id);
-  
+
         if (response.data && response.data.id) {
           // Store the media ID
           const mediaId = response.data.id;
@@ -375,7 +366,7 @@ const getAvatarColor = (initials) => {
           // You might want to store this mediaId in state or use it immediately
           setImageToSend(mediaId);
           setShowImagePreview(true);
-  
+
           // If you want to show a preview, you can still use FileReader
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -421,18 +412,18 @@ const getAvatarColor = (initials) => {
     }
     try {
       const response = await axios.post(
-        'https://whatsappbotserver.azurewebsites.net/send-message',
+        'http://localhost:8080/send-message',
         {
           phoneNumbers: [phoneNumber],
           messageType: "image",
           additionalData: {
-            imageId: imageToSend, // Use the media ID here
+            imageId: imageToSend, 
             caption: imageCaption
           },
           business_phone_number_id: businessPhoneNumberId
         }
       );
-  
+
       if (response.status === 200) {
         setConversation(prev => [...prev, { 
           type: 'image', 
@@ -452,27 +443,27 @@ const getAvatarColor = (initials) => {
   };
 
 
-  
+
   const createNewContact = (contactPhone) => ({
     id: Date.now(), // Generate a unique ID or use another method
     phoneNumber: contactPhone,
     name: 'New Contact', // Default or empty name
     hasNewMessage: true // Default or initial state
   });
-  
+
   // Scroll to bottom of chat
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation]);
 
 
-  
+    
 
   useEffect(() => {
     socket.on('connect', () => {
       console.log('Connected to the server');
     });
-  
+
     socket.on('new-message', (message) => {
       if (message) {
         console.log('Got New Message', message.message);
@@ -481,7 +472,7 @@ const getAvatarColor = (initials) => {
           console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
           setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
           //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
-         } else {
+          } else {
           // Update unread count for non-selected contacts
           setContacts(prevContacts => 
             prevContacts.map(contact => 
@@ -490,10 +481,9 @@ const getAvatarColor = (initials) => {
                 : contact
             )
           );
-  
       }}
     });
-  
+
     socket.on('node-message', (message) => {
       console.log(message.message, "this is node");
       console.log(selectedContact,"yahandekhhhhhh");
@@ -553,29 +543,29 @@ const getAvatarColor = (initials) => {
       }
     });
     
-  
+
     return () => {
       socket.off('node-message');
       socket.off('new-message');
       socket.off('temp_user');
     };
   }, [selectedContact]);
-   
+    
 
-  
-  
+
+
   const handleSend = async () => {
     if (!selectedContact || !messageTemplates[selectedContact.id]) {
       console.error('Message template or contact not selected');
       return;
     }
-  
+
     const newMessage = { 
       content: messageTemplates[selectedContact.id],
       timestamp: new Date().toISOString(),
       sender: 'bot'
     };
-  
+
     try {
       if (selectedContact.isGroup) {
         // Send message to all group members
@@ -587,7 +577,7 @@ const getAvatarColor = (initials) => {
           }
       
           return axios.post(
-            'https://whatsappbotserver.azurewebsites.net/send-message',
+            'http://localhost:8080/send-message',
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
@@ -604,7 +594,7 @@ const getAvatarColor = (initials) => {
           phoneNumber = phoneNumber.slice(2);
         }
         await axios.post(
-          'https://whatsappbotserver.azurewebsites.net/send-message',
+          'http://localhost:8080/send-message',
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
@@ -613,13 +603,13 @@ const getAvatarColor = (initials) => {
           }
         );
       }
-  
+
       // Update local state with the new message
-      setConversation(prevConversation => [
-        ...prevConversation,
-        { text: newMessage.content, sender: 'bot', timestamp: newMessage.timestamp }
-      ]);
-      setNewMessages(prevMessages => [...prevMessages, newMessage]);
+      // setConversation(prevConversation => [
+      //   ...prevConversation,
+      //   { text: newMessage.content, sender: 'bot', timestamp: newMessage.timestamp }
+      // ]);
+      // setNewMessages(prevMessages => [...prevMessages, newMessage]);
       setMessageTemplates(prevTemplates => ({
         ...prevTemplates,
         [selectedContact.id]: ''
@@ -676,8 +666,8 @@ const getAvatarColor = (initials) => {
     setPrioritizedContacts(getFilteredAndSortedContacts());
   }, [contacts, searchText]);
 
-  
-  // Function to fetch conversation data for a given contact
+    
+    // Function to fetch conversation data for a given contact
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
@@ -718,19 +708,19 @@ const getAvatarColor = (initials) => {
   const addInputField = () => {
     setInputFields([...inputFields, { value: '' }]);
   };
-  
+
 
   const deleteInputField = (index) => {
     const newInputFields = inputFields.filter((_, i) => i !== index);
     setInputFields(newInputFields);
   };
+    
   
- 
   useEffect(() => {
     // Clear current conversation
     setConversation(['']);
     setNewMessages(['']);
-  
+
     // Fetch conversation data for the new selected contact
     if(selectedContact){
     fetchConversation(selectedContact.phone);}
@@ -755,7 +745,7 @@ const getAvatarColor = (initials) => {
     if (!allConversations[contact.phone]) {
       fetchConversation(contact.phone);
     }
-  
+
     const contactMessages = allMessages
       .filter(message => message.contactPhone === contact.phone)
       .map(message => ({ 
@@ -767,10 +757,8 @@ const getAvatarColor = (initials) => {
     setConversation(contactMessages);
     setNewMessages([]);
     setUnreadCounts(prev => ({ ...prev, [contact.phone]: 0 }));
-};
-
-
- 
+  };
+  
   const handleToggleSmileys = () => {
     setShowSmileys(!showSmileys);
   };
@@ -789,19 +777,19 @@ const getAvatarColor = (initials) => {
       setUploadStatus('Please select a file to upload.');
       return;
     }
-  
+
     setIsUploading(true);
     setUploadStatus('Uploading...');
-  
+
     const jsonData = {};
     inputFields.forEach((field, index) => {
       jsonData[`description_${index}`] = field.value;
     });
-  
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('jsonData', JSON.stringify(jsonData));
-  
+
     try {
       const response = await axiosInstance.post('/upload/', formData, {
         headers: {
@@ -816,79 +804,96 @@ const getAvatarColor = (initials) => {
       setIsUploading(false);
     }
   };
-  
-
-    const handleRedirect = () => {
-      window.location.href = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=1546607802575879&redirect_uri=https%3A%2F%2Fwhatsapp.nuren.ai%2Fchatbotredirect&response_type=code&config_id=1573657073196264&state=pass-through%20value';
-    };
-
-    const handleCreateFlow = () => {
-      navigate(`/${tenantId}/flow-builder`); // Use navigate instead of history.push
-    };
-  
-    const fetchFlows = async () => {
-      try {
-        const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/node-templates/', {
-          headers: { token: localStorage.getItem('token') },
-        });
-        // Ensure each flow has an id property
-        const flowsWithIds = response.data.map(flow => ({
-          ...flow,
-          id: flow.id.toString() // Ensure id is a string for consistency
-        }));
-        setFlows(flowsWithIds);
-        console.log('Fetched flows:', flowsWithIds);
-      } catch (error) {
-        console.error("Error fetching flows:", error);
-      }
-    };
-  
-    useEffect(() => {
-      fetchFlows();
-    }, []);
-  
-    const handleFlowChange = (event) => {
-      const selectedValue = event.target.value;
-      console.log("Selected flow ID:", selectedValue);
-      setSelectedFlow(selectedValue);
-      const selectedFlowData = flows.find(flow => flow.id === selectedValue);
-      console.log("Selected flow data:", selectedFlowData);
-    };
-  
-    useEffect(() => {
-      console.log("Selected flow has changed:", selectedFlow);
-    }, [selectedFlow]);
-    const [isSending, setIsSending] = useState(false);
-
-    const handleSendFlowData = async () => {
-      if (!selectedFlow) {
-        console.error('No flow selected');
-        return;
-      }
     
-      const selectedFlowData = flows.find(flow => flow.id === selectedFlow);
-      if (!selectedFlowData) {
-        console.error('Selected flow data not found');
-        console.log('Current flows:', flows);
-        console.log('Selected flow ID:', selectedFlow);
-        return;
-      }
 
-     
+  const handleRedirect = () => {
+    window.location.href = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=1546607802575879&redirect_uri=https%3A%2F%2Fwhatsapp.nuren.ai%2Fchatbotredirect&response_type=code&config_id=1573657073196264&state=pass-through%20value';
+  };
+
+  const handleCreateFlow = () => {
+    navigate(`/${tenantId}/flow-builder`); // Use navigate instead of history.push
+  };
+
+  const fetchFlows = async () => {
+    try {
+      const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/node-templates/', {
+        headers: { token: localStorage.getItem('token') },
+      });
+      // Ensure each flow has an id property
+      const flowsWithIds = response.data.map(flow => ({
+        ...flow,
+        id: flow.id.toString() // Ensure id is a string for consistency
+      }));
+      setFlows(flowsWithIds);
+      console.log('Fetched flows:', flowsWithIds);
+    } catch (error) {
+      console.error("Error fetching flows:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFlows();
+  }, []);
+
+  const handleFlowChange = (event) => {
+    const selectedValue = event.target.value;
+    console.log("Selected flow ID:", selectedValue);
+    setSelectedFlow(selectedValue);
+    const selectedFlowData = flows.find(flow => flow.id === selectedValue);
+    console.log("Selected flow data:", selectedFlowData);
+  };
     
-      try {
-        setIsSending(true);
-        const dataToSend = {
-          ...selectedFlowData,
-          business_phone_number_id: businessPhoneNumberId,
-        };
-      
-        console.log('Sending flow data:', dataToSend);
-      
-        // First POST request to insert data
-        const insertResponse = await axiosInstance.post(
-          'https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/insert-data/',
-          dataToSend,
+  useEffect(() => {
+    console.log("Selected flow has changed:", selectedFlow);
+  }, [selectedFlow]);
+
+  const [isSending, setIsSending] = useState(false);
+
+  const handleSendFlowData = async () => {
+    if (!selectedFlow) {
+      console.error('No flow selected');
+      return;
+    }
+
+    const selectedFlowData = flows.find(flow => flow.id === selectedFlow);
+    if (!selectedFlowData) {
+      console.error('Selected flow data not found');
+      console.log('Current flows:', flows);
+      console.log('Selected flow ID:', selectedFlow);
+      return;
+    }
+
+    
+
+    try {
+      setIsSending(true);
+      const dataToSend = {
+        ...selectedFlowData,
+        business_phone_number_id: businessPhoneNumberId,
+      };
+    
+      console.log('Sending flow data:', dataToSend);
+    
+      // First POST request to insert data
+      const insertResponse = await axiosInstance.post(
+        'https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/insert-data/',
+        dataToSend,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            token: localStorage.getItem('token'),
+          },
+        }
+      );
+    
+      console.log('Flow data sent successfully:', insertResponse.data);
+    
+      // Check if the first request is successful
+      if (insertResponse.status === 200) {
+        // Second POST request to reset the session
+        const resetSessionResponse = await axiosInstance.post(
+          'http://localhost:8080/reset-session',
+          { business_phone_number_id: businessPhoneNumberId },
           {
             headers: {
               'Content-Type': 'application/json',
@@ -896,342 +901,326 @@ const getAvatarColor = (initials) => {
             },
           }
         );
-      
-        console.log('Flow data sent successfully:', insertResponse.data);
-      
-        // Check if the first request is successful
-        if (insertResponse.status === 200) {
-          // Second POST request to reset the session
-          const resetSessionResponse = await axiosInstance.post(
-            'https://whatsappbotserver.azurewebsites.net/reset-session',
-            { business_phone_number_id: businessPhoneNumberId },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                token: localStorage.getItem('token'),
-              },
-            }
-          );
-      
-          console.log('Session reset successfully:', resetSessionResponse.data);
-      
-          if (resetSessionResponse.status === 200) {
-            console.log(`Session deleted successfully for ${businessPhoneNumberId}`);
-          }
+    
+        console.log('Session reset successfully:', resetSessionResponse.data);
+    
+        if (resetSessionResponse.status === 200) {
+          console.log(`Session deleted successfully for ${businessPhoneNumberId}`);
         }
-      
-      } catch (error) {
-        console.error('Error occurred:', error);
-      } finally {
-        setIsSending(false);
       }
-    };
- 
+    
+    } catch (error) {
+      console.error('Error occurred:', error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+  
 
 
 
-const handleNewChat = async () => {
+  const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-    const response = await axiosInstance.post('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/contacts/', {
-      phone: newPhoneNumber,
-      tenant: tenantId,
-      // Add other required fields for creating a new contact
-    }, {
-      headers: { token: localStorage.getItem('token') },
-    });
+  const response = await axiosInstance.post('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/contacts/', {
+    phone: newPhoneNumber,
+    tenant: tenantId,
+    // Add other required fields for creating a new contact
+  }, {
+    headers: { token: localStorage.getItem('token') },
+  });
 
-    const newContact = response.data;
-    //setContacts(prev => sortContacts([newContact, ...prev]));
-    setSelectedContact(newContact);
-    setShowNewChatInput(false);
-    setNewPhoneNumber('');
+  const newContact = response.data;
+  //setContacts(prev => sortContacts([newContact, ...prev]));
+  setSelectedContact(newContact);
+  setShowNewChatInput(false);
+  setNewPhoneNumber('');
   } catch (error) {
-    console.error("Error creating new contact:", error);
+  console.error("Error creating new contact:", error);
   }
-};
+  };
 
- return (
+  return (
   <div>
-      {authPopupp && <AuthPopup onClose={handleCloseAuthPopupp} />}
-     <div className={`${showPopup ? 'filter blur-lg' : ''}`}>
-   <div className="cb-container">
-      <div className="cb-sidebar">
-        <div className="cb-sidebar-header">
-        <button className="cb-signup-btn" onClick={handleRedirect}>
-      {businessPhoneNumberId ? businessPhoneNumberId : 'Sign Up'}
-    </button>
-        <h1 className='cb-sidebar-title'>
-      {/* <ArrowBackIcon className="cb-back-icon" onClick={handleBack} />  */}
-          Contacts 
-          </h1>
-          <button onClick={() => setShowNewChatInput(!showNewChatInput)} className="text-blue-500 hover:text-blue-700">
-          <PlusIcon />
-        </button>
-        </div>
-        {showNewChatInput && (
-          <div className="p-4 border-b">
-            <input
-              type="text"
-              value={newPhoneNumber}
-              onChange={(e) => setNewPhoneNumber(e.target.value)}
-              placeholder="Enter phone number"
-              className="w-full p-2 border rounded"
-            />
-            <button onClick={handleNewChat} className="mt-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-              Start New Chat
-            </button>
-          </div>
-        )}
-        <div className='cb-search-container'>
+    {authPopupp && <AuthPopup onClose={handleCloseAuthPopupp} />}
+    <div className={`${showPopup ? 'filter blur-lg' : ''}`}>
+  <div className="cb-container">
+    <div className="cb-sidebar">
+      <div className="cb-sidebar-header">
+      <button className="cb-signup-btn" onClick={handleRedirect}>
+    {businessPhoneNumberId ? businessPhoneNumberId : 'Sign Up'}
+  </button>
+      <h1 className='cb-sidebar-title'>
+    {/* <ArrowBackIcon className="cb-back-icon" onClick={handleBack} />  */}
+        Contacts 
+        </h1>
+        <button onClick={() => setShowNewChatInput(!showNewChatInput)} className="text-blue-500 hover:text-blue-700">
+        <PlusIcon />
+      </button>
+      </div>
+      {showNewChatInput && (
+        <div className="p-4 border-b">
           <input
             type="text"
-            placeholder="Search contacts..."
-            value={searchText}
-            className='cb-search-input'
-            onChange={(e) => setSearchText(e.target.value)}
+            value={newPhoneNumber}
+            onChange={(e) => setNewPhoneNumber(e.target.value)}
+            placeholder="Enter phone number"
+            className="w-full p-2 border rounded"
           />
-          <SearchIcon className="cb-search-icon" />
+          <button onClick={handleNewChat} className="mt-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+            Start New Chat
+          </button>
         </div>
-        <div className="cb-contact-list">
-          <h2 className='cb-contact-title'>Contacts</h2>
-          
-          {prioritizedContacts.map(contact => (
-        <div
-          key={contact.id || contact.phone}
-          className={`cb-contact-item ${selectedContact?.phone === contact.phone ? 'cb-selected' : ''}`}
-          onClick={() => handleContactSelection(contact)}
-        >
-          <div className="cb-contact-info">
-            <span className="cb-contact-name">{contact.name || 'Unknown Name'}</span>
-            <span className="cb-contact-phone">{contact.phone || 'No Phone'}</span>
-          </div>
-          {contact.unreadCount > 0 && (
-            <span className="cb-unread-count">{contact.unreadCount}</span>
-          )}
-                </div>
-              ))}
-        </div>
+      )}
+      <div className='cb-search-container'>
+        <input
+          type="text"
+          placeholder="Search contacts..."
+          value={searchText}
+          className='cb-search-input'
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+        <SearchIcon className="cb-search-icon" />
       </div>
-      <div className="cb-main">
-      {selectedContact && (
-   <div className="cb-chat-header">
+      <div className="cb-contact-list">
+        <h2 className='cb-contact-title'>Contacts</h2>
+        
+        {prioritizedContacts.map(contact => (
+      <div
+        key={contact.id || contact.phone}
+        className={`cb-contact-item ${selectedContact?.phone === contact.phone ? 'cb-selected' : ''}`}
+        onClick={() => handleContactSelection(contact)}
+      >
+        <div className="cb-contact-info">
+          <span className="cb-contact-name">{contact.name || 'Unknown Name'}</span>
+          <span className="cb-contact-phone">{contact.phone || 'No Phone'}</span>
+        </div>
+        {contact.unreadCount > 0 && (
+          <span className="cb-unread-count">{contact.unreadCount}</span>
+        )}
+              </div>
+            ))}
+      </div>
+    </div>
+    <div className="cb-main">
+    {selectedContact && (
+  <div className="cb-chat-header">
   {selectedContact && (
   <div className="cb-chat-contact-info">
-    {profileImage && typeof profileImage === 'string' ? (
-      <img src={profileImage} alt="Profile" className="cb-profile-icon" />
-    ) : (
-      <div className={`cb-default-avatar`}>
-        {getInitials(selectedContact.name, selectedContact.last_name)}
-      </div>
-    )}
-    <div className="cb-contact-details">
-      <span className="cb-contact-name">{selectedContact.name} {selectedContact.last_name}</span>
-      <span className="cb-contact-phone">{selectedContact.phone}</span>
+  {profileImage && typeof profileImage === 'string' ? (
+    <img src={profileImage} alt="Profile" className="cb-profile-icon" />
+  ) : (
+    <div className={`cb-default-avatar`}>
+      {getInitials(selectedContact.name, selectedContact.last_name)}
+    </div>
+  )}
+  <div className="cb-contact-details">
+    <span className="cb-contact-name">{selectedContact.name} {selectedContact.last_name}</span>
+    <span className="cb-contact-phone">{selectedContact.phone}</span>
+  </div>
+  </div>
+  )}
+  <div className="fab-wrapper">
+    <input
+      id="fabCheckbox"
+      type="checkbox"
+      className="fab-checkbox"
+      checked={isOpen}
+      onChange={toggleFab}
+    />
+    <label className="fab" htmlFor="fabCheckbox">
+      <span className="fab-dots fab-dots-1"></span>
+      <span className="fab-dots fab-dots-2"></span>
+      <span className="fab-dots fab-dots-3"></span>
+    </label>
+    <div className={`fab-wheel ${isOpen ? 'open' : ''}`}>
+      <a className="fab-action fab-action-1">Question</a>
+      <a className="fab-action fab-action-2">Documentation</a>
+      <a className="fab-action fab-action-3">Contacts</a>
+      <a className="fab-action fab-action-4">Info</a>
     </div>
   </div>
-)}
-<div className="fab-wrapper">
-      <input
-        id="fabCheckbox"
-        type="checkbox"
-        className="fab-checkbox"
-        checked={isOpen}
-        onChange={toggleFab}
-      />
-      <label className="fab" htmlFor="fabCheckbox">
-        <span className="fab-dots fab-dots-1"></span>
-        <span className="fab-dots fab-dots-2"></span>
-        <span className="fab-dots fab-dots-3"></span>
-      </label>
-      <div className={`fab-wheel ${isOpen ? 'open' : ''}`}>
-        <a className="fab-action fab-action-1">Question</a>
-        <a className="fab-action fab-action-2">Documentation</a>
-        <a className="fab-action fab-action-3">Contacts</a>
-        <a className="fab-action fab-action-4">Info</a>
-      </div>
-    </div>
- </div>
-)}
-      <div className="cb-message-container">
+  </div>
+  )}
+    <div className="cb-message-container">
   {conversation.map((message, index) => (
-    <div
-      key={index}
-      className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
-    >
-      {(() => {
-      
-        if (typeof message.text === 'string') {
-          if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
-            try {
-              const fixedMessage = fixJsonString(message.text);
-              const parsedMessage = JSON.parse(fixedMessage);
-              //console.log('Parsed Message:', parsedMessage);
-              return renderInteractiveMessage(parsedMessage);
-            } catch (e) {
-              console.error('Failed to parse JSON message:', e);
-              return <div className="error">Failed to parse message</div>;
-            }
+  <div
+    key={index}
+    className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
+  >
+    {(() => {
+    
+      if (typeof message.text === 'string') {
+        if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
+          try {
+            const fixedMessage = fixJsonString(message.text);
+            const parsedMessage = JSON.parse(fixedMessage);
+            //console.log('Parsed Message:', parsedMessage);
+            return renderInteractiveMessage(parsedMessage);
+          } catch (e) {
+            console.error('Failed to parse JSON message:', e);
+            return <div className="error">Failed to parse message</div>;
           }
-          return message.text || <div className="error">Message content is undefined</div>;
-        }else if (typeof message.text === 'object' && message.text !== null) {
-          // Handle non-string message formats
-          return renderMessageContent(message);
         }
-        return <div className="error">Please Select a contact</div>;
-      })()}
-    </div>
+        return message.text || <div className="error">Message content is undefined</div>;
+      }else if (typeof message.text === 'object' && message.text !== null) {
+        // Handle non-string message formats
+        return renderMessageContent(message);
+      }
+      return <div className="error">Please Select a contact</div>;
+    })()}
+  </div>
   ))}
   <div ref={messageEndRef} />
-</div>
-    <div className="cb-input-container">
-          <div className="cb-input-actions">
-            <EmojiEmotionsIcon className="cb-action-icon" onClick={handleToggleSmileys} />
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFileSelect}
-              ref={fileInputRef}
-            />
-            <AttachFileIcon className="cb-action-icon" onClick={() => fileInputRef.current.click()} />
-          </div>
-          <textarea
-            value={selectedContact && messageTemplates[selectedContact.id] || ''}
-            onChange={(e) => {
-              if (selectedContact) {
-                setMessageTemplates(prevTemplates => ({
-                  ...prevTemplates,
-                  [selectedContact.id]: e.target.value
-                }));
-              }
-            }}
-            placeholder="Type a message"
-            className="cb-input-field"
-          />
-          <SendIcon className="cb-send-icon" onClick={handleSend} />
-        </div>
-        {showSmileys && (
-          <div className="cb-emoji-picker">
-            <Picker onEmojiClick={handleSelectSmiley} />
-          </div>
-        )}
-      </div>
-      <div className="cb-details-panel">
-      
-        {selectedContact && (
-  <div className="cb-contact-full-details">
-    <div className="cb-profile-section">
-
-{profileImage && typeof profileImage === 'string' ? (
-      <img src={profileImage} alt="Profile" className="cb-profile-image" />
-    ) : (
-      <div className={`cb-default-avatar-large`}>
-        {getInitials(selectedContact.name, selectedContact.last_name)}
-      </div>
-    )}
-      <h2>{selectedContact.name} {selectedContact.last_name}</h2>
-    </div>
-    <div className="cb-contact-info-details">
-      <p className='cb-info-item'>
-        <CallRoundedIcon className="cb-info-icon" />
-        {selectedContact.phone}
-      </p>
-      <p className='cb-info-item'>
-        <MailIcon className="cb-info-icon" />
-        {selectedContact.email}
-      </p>
-    </div>
   </div>
-)}
-        <div className="cb-actions">
-          {/* <button onClick={handleCreateFlow} className="cb-action-btn">Create Flow</button> */}
-          <select value={selectedFlow} onChange={handleFlowChange} className="cb-flow-select">
-            <option value="" disabled>Select a flow</option>
-            {flows.map(flow => (
-              <option key={flow.id} value={flow.id}>
-                {flow.name || flow.id}
-              </option>
-            ))}
-          </select>
-          <button 
-            onClick={handleSendFlowData} 
-            className="cb-flow-btn"
-            disabled={isSending}
-          >
-            {isSending ? "Sending..." : "Send Flow Data"}
-          </button>
-         
-        </div>
-
-        <div className="ai-content-container">
-      <h1 className="ai-content-title">AI Content</h1>
-      <div className="ai-content-fields flex flex-col items-center space-y-4 p-4">
-      <Input
-        type="file"
-        onChange={handleFileChange}
-        className="ai-content-file-input w-full"
-      />
-      {inputFields.map((field, index) => (
-        <div key={index} className="flex items-center space-x-2 w-full">
-          <Input
-            type="text"
-            value={field.value}
-            onChange={(e) => handleInputChange(index, e)}
-            placeholder="Enter content description"
-            className="flex-grow"
+  <div className="cb-input-container">
+        <div className="cb-input-actions">
+          <EmojiEmotionsIcon className="cb-action-icon" onClick={handleToggleSmileys} />
+          <input
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleFileSelect}
+            ref={fileInputRef}
           />
-          <Button
-            type="button"
-            onClick={() => deleteInputField(index)}
-            variant="outline"
-            size="icon"
-            className="text-red-500 hover:bg-red-100"
-            aria-label="Delete"
-          >
-            <X size={18} />
-          </Button>
+          <AttachFileIcon className="cb-action-icon" onClick={() => fileInputRef.current.click()} />
         </div>
-      ))}
-      <Button onClick={addInputField} variant="outline" style={{backgroundColor:'#4299e1', color:'white'}}  className="w-full">
-        Add Description Field
-      </Button>
-      <Button onClick={handleUpload} disabled={isUploading} style={{backgroundColor:'green', color:'white'}} className="w-full">
-        {isUploading ? 'Uploading...' : 'Upload'}
-      </Button>
-      {uploadStatus && (
-        <p className={uploadStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}>
-          {uploadStatus}
-        </p>
+        <textarea
+          value={selectedContact && messageTemplates[selectedContact.id] || ''}
+          onChange={(e) => {
+            if (selectedContact) {
+              setMessageTemplates(prevTemplates => ({
+                ...prevTemplates,
+                [selectedContact.id]: e.target.value
+              }));
+            }
+          }}
+          placeholder="Type a message"
+          className="cb-input-field"
+        />
+        <SendIcon className="cb-send-icon" onClick={handleSend} />
+      </div>
+      {showSmileys && (
+        <div className="cb-emoji-picker">
+          <Picker onEmojiClick={handleSelectSmiley} />
+        </div>
       )}
     </div>
+    <div className="cb-details-panel">
+    
+      {selectedContact && (
+  <div className="cb-contact-full-details">
+  <div className="cb-profile-section">
+
+  {profileImage && typeof profileImage === 'string' ? (
+    <img src={profileImage} alt="Profile" className="cb-profile-image" />
+  ) : (
+    <div className={`cb-default-avatar-large`}>
+      {getInitials(selectedContact.name, selectedContact.last_name)}
+    </div>
+  )}
+    <h2>{selectedContact.name} {selectedContact.last_name}</h2>
+  </div>
+  <div className="cb-contact-info-details">
+    <p className='cb-info-item'>
+      <CallRoundedIcon className="cb-info-icon" />
+      {selectedContact.phone}
+    </p>
+    <p className='cb-info-item'>
+      <MailIcon className="cb-info-icon" />
+      {selectedContact.email}
+    </p>
+  </div>
+  </div>
+  )}
+      <div className="cb-actions">
+        {/* <button onClick={handleCreateFlow} className="cb-action-btn">Create Flow</button> */}
+        <select value={selectedFlow} onChange={handleFlowChange} className="cb-flow-select">
+          <option value="" disabled>Select a flow</option>
+          {flows.map(flow => (
+            <option key={flow.id} value={flow.id}>
+              {flow.name || flow.id}
+            </option>
+          ))}
+        </select>
+        <button 
+          onClick={handleSendFlowData} 
+          className="cb-flow-btn"
+          disabled={isSending}
+        >
+          {isSending ? "Sending..." : "Send Flow Data"}
+        </button>
+        
       </div>
+
+      <div className="ai-content-container">
+    <h1 className="ai-content-title">AI Content</h1>
+    <div className="ai-content-fields flex flex-col items-center space-y-4 p-4">
+    <Input
+      type="file"
+      onChange={handleFileChange}
+      className="ai-content-file-input w-full"
+    />
+    {inputFields.map((field, index) => (
+      <div key={index} className="flex items-center space-x-2 w-full">
+        <Input
+          type="text"
+          value={field.value}
+          onChange={(e) => handleInputChange(index, e)}
+          placeholder="Enter content description"
+          className="flex-grow"
+        />
+        <Button
+          type="button"
+          onClick={() => deleteInputField(index)}
+          variant="outline"
+          size="icon"
+          className="text-red-500 hover:bg-red-100"
+          aria-label="Delete"
+        >
+          <X size={18} />
+        </Button>
       </div>
-      {showImagePreview && (
-      <div className="cb-image-preview-overlay">
-        <div className="cb-image-preview-container">
-          <CloseIcon className="cb-close-preview" onClick={() => setShowImagePreview(false)} />
-          <img src={imageMap[imageToSend]} alt="Preview" className="cb-preview-image" />
-          <textarea
-            value={imageCaption}
-            onChange={(e) => setImageCaption(e.target.value)}
-            placeholder="Add a caption..."
-            className="cb-image-caption-input"
-          />
-          <button 
-            className="cb-send-image-btn" 
-            onClick={handleImageSend}
-            // disabled={isUploading || !blobUrl}
-          >
-            {isUploading ? "Uploading..." : "Send"}
-          </button>
-        </div>
-      </div>
+    ))}
+    <Button onClick={addInputField} variant="outline" style={{backgroundColor:'#4299e1', color:'white'}}  className="w-full">
+      Add Description Field
+    </Button>
+    <Button onClick={handleUpload} disabled={isUploading} style={{backgroundColor:'green', color:'white'}} className="w-full">
+      {isUploading ? 'Uploading...' : 'Upload'}
+    </Button>
+    {uploadStatus && (
+      <p className={uploadStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}>
+        {uploadStatus}
+      </p>
     )}
+  </div>
     </div>
     </div>
+    {showImagePreview && (
+    <div className="cb-image-preview-overlay">
+      <div className="cb-image-preview-container">
+        <CloseIcon className="cb-close-preview" onClick={() => setShowImagePreview(false)} />
+        <img src={imageMap[imageToSend]} alt="Preview" className="cb-preview-image" />
+        <textarea
+          value={imageCaption}
+          onChange={(e) => setImageCaption(e.target.value)}
+          placeholder="Add a caption..."
+          className="cb-image-caption-input"
+        />
+        <button 
+          className="cb-send-image-btn" 
+          onClick={handleImageSend}
+          // disabled={isUploading || !blobUrl}
+        >
+          {isUploading ? "Uploading..." : "Send"}
+        </button>
+      </div>
     </div>
+  )}
+  </div>
+  </div>
+  </div>
   );
 
 };

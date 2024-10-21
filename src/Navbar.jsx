@@ -6,7 +6,7 @@ import logo from "./assets/logo.png";
 import io from 'socket.io-client';
 import axiosInstance from './api';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net');
+const socket = io('http://localhost:8080');
 
 const Navbar = () => {
   const { authenticated, logout, tenantId } = useAuth();
@@ -95,7 +95,7 @@ const Navbar = () => {
               <Link to={getPath('/broadcast')} className="text-white hover:text-gray-300">Broadcast</Link>
             </>
           )}
-          <Link to={('/blogs')} className="text-white hover:text-gray-300">Blogs</Link>
+          <Link to={('/catalog')} className="text-white hover:text-gray-300">Catalog</Link>
           <Link to={('/pricing')} className="text-white hover:text-gray-300">Pricing</Link>
           <Link to={getPath('/chatbot')} className="text-white hover:text-gray-300">Chatbot</Link>
           <Link to={getPath('/flow-builder')} className="text-white hover:text-gray-300">Flow Builder</Link>

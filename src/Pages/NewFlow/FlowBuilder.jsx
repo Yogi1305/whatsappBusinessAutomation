@@ -14,7 +14,8 @@ import ReactFlow, {
   Position
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { AskQuestionNode, SendMessageNode, SetConditionNode } from './NodeTypes';
+import { AskQuestionNode, SendMessageNode, SetConditionNode, AINode } from './NodeTypes';
+import { DelayNode } from './DelayNode';
 import Sidebar from "./Sidebar";
 import "./FlowBuilder.css";
 import SaveFlowPopup from "./SaveFlowPopup";
@@ -32,6 +33,8 @@ const nodeTypes = {
   askQuestion: AskQuestionNode,
   sendMessage: SendMessageNode,
   setCondition: SetConditionNode,
+  delay: DelayNode,
+  ai: AINode,
   start: ({ data }) => (
     <div style={{ padding: '10px', border: '2px solid #4CAF50', borderRadius: '5px', background: '#E8F5E9' }}>
       <strong>{data.label}</strong>

@@ -6,6 +6,10 @@ import uploadToBlob from "../../azureUpload.jsx";
 import { convertMentionsForBackend, convertMentionsForFrontend, MentionTextArea } from './MentionTextArea';
 import { useAuth } from '../../authContext.jsx';
 import axiosInstance from '../../api.jsx';
+import { Clock, LogOut, Upload } from 'lucide-react';
+import { Button, Card, Input } from 'antd';
+import { CardContent } from '@mui/material';
+import { CardHeader, CardTitle } from 'react-bootstrap';
 
 const nodeStyles = {
   padding: '20px',
@@ -587,8 +591,6 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
 };
 
 
-
-
 export const SetConditionNode = ({ id,data, isConnectable }) => {
   const [condition, setCondition] = useState(data.condition || '');
  // const { id } = data;
@@ -631,5 +633,23 @@ const handleConditionChange = (e) => {
                         width: '12px',
                         height: '12px', }} />
     </NodeWrapper>
+  );
+};
+
+export const AINode = ({ id, data, isConnectable }) => {
+  const { updateNodeData } = useFlow();
+
+  return (
+    <Card className="w-34 border-purple-200">
+      <Handle type="target" position="top" isConnectable={isConnectable} />
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold text-purple-700 flex items-center">
+          <Upload className="w-5 h-5 mr-2" /> AI Upload
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        </CardContent>
+      <Handle type="source" position="bottom" isConnectable={isConnectable} />
+    </Card>
   );
 };

@@ -240,7 +240,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
+      const response = await axios.post('http://localhost:8080/send-template/', payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id
@@ -850,7 +850,7 @@ const BroadcastPage = () => {
       )}
       {activeTab === 'catalog' && (
         <div className="bp-catalog">
-          <button className='submit-button' onClick={() => handleSubmitCatalog(tableData)}>Submit</button>
+          <button className='submit-butt+on' onClick={() => handleSubmitCatalog(tableData)}>Submit</button>
           <h1 style={{fontSize:'36px', fontWeight:'600', fontFamily:'sans-serif', paddingBottom: 20}}>Catalog Management</h1>
           <table border="1" style={{ width: "100%", textAlign: "left", fontSize: 14 }}>
             <thead>
@@ -953,7 +953,7 @@ const BroadcastPage = () => {
               ))}
             </tbody>
           </table>
-
+      
           <button className="add-row-button" onClick={addRow}>
             +
           </button>

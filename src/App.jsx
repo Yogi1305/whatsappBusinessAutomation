@@ -27,6 +27,7 @@ import PricingPage from './Pages/Misc/pricing.jsx';
 import PrivacyPolicy from './Pages/Misc/privacypolicy.jsx';
 import TermsAndConditions from './Pages/Misc/terms&conditions.jsx';
 import ContactUs from './Pages/Misc/contactus.jsx';
+import Catalog from './Pages/Catalog/catalog.jsx';
 
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
@@ -82,6 +83,7 @@ const App = () => {
               <Route path="privacypolicy" element={<PrivacyPolicy />} />
               <Route path="termsandconditions" element={<TermsAndConditions />} />
               <Route path="pricing" element={<PricingPage />} />
+              <Route path="catalog" element={<Catalog/>}/>
               <Route path="blogs" element={<Blogs/>} />
               <Route path="blogs/learn-more" element={<Learn />} />
               <Route path="blogs/chatbot" element={<AIChatbotsPage/>} />
