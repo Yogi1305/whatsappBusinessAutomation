@@ -112,7 +112,11 @@ const ContactPage = () => {
   };
 
   const handleContactClick = (contactId) => {
-    navigate(`/${tenantId}/chatbot/`);
+    // const contact = filteredContacts.get()
+    // console.log("HHFUEHKDF: ", contact)
+    
+    navigate(`/${tenantId}/chatbot/?id=${contactId}`);
+    
   };
 
   return (

@@ -108,7 +108,7 @@ const BroadcastPage = () => {
     useEffect(() => {
       const fetchBusinessPhoneId = async () => {
         try {
-          const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-bpid/', {
+          const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -123,7 +123,7 @@ const BroadcastPage = () => {
   
       const fetchTenantData = async (bpid) => {
         try {
-          const response = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${bpid}`, {
+          const response = await axiosInstance.get(`/whatsapp_tenant/`, {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -240,7 +240,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axios.post('http://localhost:8080/send-template/', payload,
+      const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id
@@ -677,7 +677,6 @@ const BroadcastPage = () => {
       <div className="bp-left-sidebar">
       <div className={`bp-menu-item ${activeTab === 'history' ? 'bp-active' : ''}`} onClick={() => handleTabChange('history')}>Broadcast History</div>
       <div className={`bp-menu-item ${activeTab === 'templates' ? 'bp-active' : ''}`} onClick={() => handleTabChange('templates')}>Template Messages</div>
-      <div className={`bp-menu-item ${activeTab === 'catalog' ? 'bp-active' : ''}`} onClick={() => handleTabChange('catalog')}>Catalog Management</div>
       </div>
       <div className="bp-main-content">
       {activeTab === 'history' && (
@@ -846,117 +845,6 @@ const BroadcastPage = () => {
               </div>
             ))}
           </div>
-        </div>
-      )}
-      {activeTab === 'catalog' && (
-        <div className="bp-catalog">
-          <button className='submit-butt+on' onClick={() => handleSubmitCatalog(tableData)}>Submit</button>
-          <h1 style={{fontSize:'36px', fontWeight:'600', fontFamily:'sans-serif', paddingBottom: 20}}>Catalog Management</h1>
-          <table border="1" style={{ width: "100%", textAlign: "left", fontSize: 14 }}>
-            <thead>
-              <tr>
-                <th></th> 
-                <th>Product Retailer ID</th>
-                <th>Product Name</th>
-                <th>Description</th>
-                <th>Item Price</th>
-                <th>Currency</th>
-                <th>Catalog ID</th>
-                <th>Quantity</th>
-                <th>Image URL</th>
-                <th>Product URL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((row, rowIndex) => (
-                <tr key={row.product_retailer_id}>
-                  <td>{rowIndex + 1}</td>
-                  <td>
-  <input
-    type="text"
-    value={row.product_retailer_id}
-    placeholder="Retailer ID"
-    onChange={(e) => handleCellChange(e, rowIndex, "product_retailer_id")}
-  />
-</td>
-<td>
-  <input
-    type="text"
-    value={row.product_name}
-    placeholder="Product Name"
-    onChange={(e) => handleCellChange(e, rowIndex, "product_name")}
-  />
-</td>
-<td>
-  <input
-    type="text"
-    value={row.description}
-    placeholder="Description"
-    onChange={(e) => handleCellChange(e, rowIndex, "description")}
-  />
-</td>
-<td>
-  <input
-    type="text"
-    value={row.item_price}
-    placeholder="Item Price"
-    onChange={(e) => handleCellChange(e, rowIndex, "item_price")}
-  />
-</td>
-<td>
-  <input
-    type="text"
-    value={row.currency}
-    placeholder="Currency"
-    onChange={(e) => handleCellChange(e, rowIndex, "currency")}
-  />
-</td>
-<td>
-  <input
-    type="text"
-    value={row.catalog_id}
-    placeholder="Catalog ID"
-    onChange={(e) => handleCellChange(e, rowIndex, "catalog_id")}
-  />
-</td>
-<td>
-  <input
-    type="text"
-    value={row.quantity}
-    placeholder="Quantity"
-    onChange={(e) => handleCellChange(e, rowIndex, "quantity")}
-  />
-</td>
-<td>
-  <input
-    type="url"
-    value={row.image_url}
-    placeholder="Image URL"
-    onChange={(e) => handleCellChange(e, rowIndex, "image_url")}
-  />
-</td>
-<td>
-  <input
-    type="url"
-    value={row.product_url}
-    placeholder="Product URL"
-    onChange={(e) => handleCellChange(e, rowIndex, "product_url")}
-  />
-</td>
-<td>
-  <button className="btn btn-delete" onClick={() => deleteRow(rowIndex)}>
-    <Trash2 className="trash-icon" size={18} />
-  </button>
-</td>
-
-                </tr>
-              ))}
-            </tbody>
-          </table>
-      
-          <button className="add-row-button" onClick={addRow}>
-            +
-          </button>
         </div>
       )}
       </div>

@@ -255,14 +255,14 @@ const SaveFlowPopup = ({ onSave, onCancel, fallbackMessage, fallbackCount }) => 
       description: description.trim(),
       category: "default",
       node_data: {
-        fallback_message: fallbackMessage,
-        fallback_count: fallbackCount,
         nodes: processedNodes.map(({ id, type, position, data }) => {
           const { updateNodeData, ...cleanData } = data;
           return { id, type, position, data: cleanData };
         }),
         edges
-      }
+      },
+      fallback_msg: fallbackMessage,
+      fallback_count: fallbackCount,
     };
 
     try {

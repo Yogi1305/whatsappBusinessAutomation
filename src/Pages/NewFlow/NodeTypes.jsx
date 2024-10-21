@@ -418,7 +418,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
     const fetchData = async () => {
       try {
         // Fetch the business phone ID
-        const bpidResponse = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-bpid/', {
+        const bpidResponse = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
           headers: {
             'X-Tenant-ID': tenantId
           }
@@ -427,7 +427,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         setBusinessPhoneNumberId(fetchedBusinessPhoneNumberId);
 
         // Fetch the access token using the obtained business phone ID
-        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${fetchedBusinessPhoneNumberId}`);
+        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/`);
         setAccessToken(tenantResponse.data.access_token);
       } catch (error) {
         console.error('Error fetching data:', error);
