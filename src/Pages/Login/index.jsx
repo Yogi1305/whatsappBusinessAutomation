@@ -45,7 +45,6 @@ const Login = ({ onLogin }) => {
       console.log("resposneL ", response.status)
       const data = await response.json();
       console.log("data: ", data)
-
       if(response.status == 200){
         login(data.user_id, data.tenant_id, data.role, data.model);
         setShowPopup(true);
