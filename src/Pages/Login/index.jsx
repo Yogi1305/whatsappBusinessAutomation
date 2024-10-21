@@ -42,7 +42,7 @@ const Login = ({ onLogin }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      console.log("resposneL ", response)
+      console.log("resposneL ", response.status)
       const data = await response.json();
       console.log("data: ", data)
       if(response.status == 200){
@@ -51,6 +51,7 @@ const Login = ({ onLogin }) => {
       }else{
         throw error
       }
+      
     } catch (error) {
       console.log("erreoer: ", error)
       setError('Login failed. Please check your credentials and try again.');

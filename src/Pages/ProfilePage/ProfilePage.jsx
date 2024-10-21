@@ -43,7 +43,7 @@ const ProfilePage = () => {
     const fetchData = async () => {
       try {
         // First, fetch the business phone ID
-        const bpidResponse = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-bpid/', {
+        const bpidResponse = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
           headers: {
             'X-Tenant-ID': tenantId
           }
@@ -52,7 +52,7 @@ const ProfilePage = () => {
         setBusinessPhoneNumberId(businessPhoneNumberId);
   
         // Then, fetch the tenant data using the obtained business phone ID
-        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/?business_phone_id=${businessPhoneNumberId}`);
+        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/`);
         setAccessToken(tenantResponse.data.access_token);
   
         // Fetch user profile
