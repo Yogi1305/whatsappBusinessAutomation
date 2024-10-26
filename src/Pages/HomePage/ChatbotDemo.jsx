@@ -50,7 +50,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
+        const response = await axios.get('http://localhost:8000/whatsapp_tenant/', {
           headers: {
             'X-Tenant-Id': 'tlb'
           }
@@ -66,7 +66,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
 
   // Setup socket connection
   useEffect(() => {
-    const newSocket = io('https://whatsappbotserver.azurewebsites.net');
+    const newSocket = io('http://localhost:8080');
     setSocket(newSocket);
 
     const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);

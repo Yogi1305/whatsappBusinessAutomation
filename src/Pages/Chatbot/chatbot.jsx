@@ -27,7 +27,7 @@ import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 import { Button, Input } from 'antd';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net');
+const socket = io('http://localhost:8080');
 
 
 const getTenantIdFromUrl = () => {
@@ -128,10 +128,12 @@ const Chatbot = () => {
 
   useEffect(() => {
     const contactID = getContactIDfromURL()
-    const contact = contacts.find(c => c.id == parseInt(contactID))
-    console.log("CONTATATATATATTA: ", contact)
+    const contact = contacts.find(c => c.id === parseInt(contactID))
     setSelectedContact(contact)
-  })
+    console.log("Selected Contact 1: ", selectedContact)
+
+  }, [])
+  
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -142,7 +144,7 @@ const Chatbot = () => {
     const fetchBusinessPhoneId = async () => {
       try {
         console.log("fetching business phone number id")
-        const response = await axios.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
+        const response = await axios.get('http://localhost:8000/whatsapp_tenant/', {
           headers: {
             'X-Tenant-Id': tenantId
           }
@@ -273,7 +275,6 @@ const Chatbot = () => {
   };
 
 
-    
   const fetchContacts = async () => {
     try {
       const response = await axiosInstance.get('/contacts/', {
@@ -419,7 +420,6 @@ const Chatbot = () => {
     setInputFields(newInputFields);
   };
 
-
   const handleImageSend = async () => {
     if (!imageToSend || !selectedContact) return;
     let phoneNumber = selectedContact.phone;
@@ -428,7 +428,7 @@ const Chatbot = () => {
     }
     try {
       const response = await axiosInstance.post(
-        'https://whatsappbotserver.azurewebsites.net/send-message',
+        'http://localhost:8080/send-message',
         {
           phoneNumbers: [phoneNumber],
           messageType: "image",
@@ -466,19 +466,14 @@ const Chatbot = () => {
     hasNewMessage: true // Default or initial state
   });
 
-  // Scroll to bottom of chat
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messageEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [conversation]);
-
-
-    
 
   useEffect(() => {
     socket.on('connect', () => {
       console.log('Connected to the server');
     });
-
     socket.on('new-message', (message) => {
       if (message) {
         console.log('Got New Message', message.message);
@@ -549,7 +544,6 @@ const Chatbot = () => {
           });
         
           setShowNewChatInput(false);
-          console.log("Selected contact:", message.contactPhone);
         }else {
           console.log("Session ID does not match.");
         }
@@ -590,13 +584,13 @@ const Chatbot = () => {
           }
           
           return axiosInstance.post(
-            'https://whatsappbotserver.azurewebsites.net/send-message',
+            'http://localhost:8080/send-message',
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
               business_phone_number_id: businessPhoneNumberId,
               messageType: "text",
-            }
+            }                                                                                                        /////
           );
         });
         await Promise.all(sendPromises);
@@ -607,7 +601,7 @@ const Chatbot = () => {
           phoneNumber = phoneNumber.slice(2);
         }
         await axiosInstance.post(
-          'https://whatsappbotserver.azurewebsites.net/send-message',
+          'http://localhost:8080/send-message',
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
@@ -684,7 +678,7 @@ const Chatbot = () => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
+      const response = await fetch(`http://localhost:8000/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
           'X-Tenant-Id': tenantId
@@ -722,7 +716,6 @@ const Chatbot = () => {
     setInputFields([...inputFields, { value: '' }]);
   };
 
-
   const deleteInputField = (index) => {
     const newInputFields = inputFields.filter((_, i) => i !== index);
     setInputFields(newInputFields);
@@ -730,16 +723,13 @@ const Chatbot = () => {
     
   
   useEffect(() => {
-    // Clear current conversation
     setConversation(['']);
     setNewMessages(['']);
-
-    // Fetch conversation data for the new selected contact
+    console.log("selected contact 3:", selectedContact)
+    
     if(selectedContact){
     fetchConversation(selectedContact.phone);}
-    
   }, [selectedContact]);
-
 
   const handleContactSelection = async (contact) => {
     if (selectedContact) {
@@ -784,7 +774,6 @@ const Chatbot = () => {
     }));
   };
 
-
   const handleUpload = async () => {
     if (!file) {
       setUploadStatus('Please select a file to upload.');
@@ -818,7 +807,6 @@ const Chatbot = () => {
     }
   };
     
-
   const handleRedirect = () => {
     window.location.href = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=1546607802575879&redirect_uri=https%3A%2F%2Fwhatsapp.nuren.ai%2Fchatbotredirect&response_type=code&config_id=1573657073196264&state=pass-through%20value';
   };
@@ -829,7 +817,7 @@ const Chatbot = () => {
 
   const fetchFlows = async () => {
     try {
-      const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/node-templates/', {
+      const response = await axiosInstance.get('http://localhost:8000/node-templates/', {
         headers: { token: localStorage.getItem('token') },
       });
       // Ensure each flow has an id property
@@ -879,7 +867,7 @@ const Chatbot = () => {
     
       // First POST request to insert data
       const insertResponse = await axiosInstance.post(
-        'https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/insert-data/',
+        'http://localhost:8000/insert-data/',
         dataToSend,
         {
           headers: {
@@ -895,7 +883,7 @@ const Chatbot = () => {
       if (insertResponse.status === 200) {
         // Second POST request to reset the session
         const resetSessionResponse = await axiosInstance.post(
-          'https://whatsappbotserver.azurewebsites.net/reset-session',
+          'http://localhost:8080/reset-session',
           { business_phone_number_id: businessPhoneNumberId },
           {
             headers: {
@@ -919,14 +907,16 @@ const Chatbot = () => {
     }
   };
   
-
-
+  useEffect(() => { 
+    navigate(window.location.pathname, { replace: true });
+    console.log("selected contact 2 : ", selectedContact)
+  })
 
   const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-  const response = await axiosInstance.post('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/contacts/', {
+  const response = await axiosInstance.post('http://localhost:8000/contacts/', {
     phone: newPhoneNumber,
     tenant: tenantId,
     // Add other required fields for creating a new contact
