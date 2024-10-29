@@ -590,7 +590,7 @@ const Chatbot = () => {
               message: newMessage.content,
               business_phone_number_id: businessPhoneNumberId,
               messageType: "text",
-            }                                                                                                        /////
+            }                                                                  /////
           );
         });
         await Promise.all(sendPromises);

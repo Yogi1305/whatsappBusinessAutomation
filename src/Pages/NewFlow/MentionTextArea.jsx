@@ -54,7 +54,6 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
         console.error("Error fetching contact fields:", error);
       }
     };
-
     fetchContactFields();
   }, []);
 
@@ -131,4 +130,23 @@ export const convertMentionsForFrontend = (text) => {
   return text.replace(/{{(\w+)}}/g, '@$1');
 };
 
-export default MentionTextArea;
+export const ShowProducts = ({ productIds, selectedProductId, onSelect }) => {
+  return (
+    <div style={{ position: 'relative' }}>
+      <select
+        value={selectedProductId}
+        onChange={(e) => onSelect(e.target.value)}
+        style={{ width: '100%', padding: '8px', borderRadius: '4px' }}
+      >
+        <option value="" disabled>Select a product ID</option>
+        {productIds.map((id) => (
+          <option key={id} value={id}>
+            {id}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+export default {MentionTextArea, ShowProducts};

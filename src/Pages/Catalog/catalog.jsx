@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Trash2 } from 'lucide-react';
 import axiosInstance from '../../api';
 import './catalog.css';
+import { BlobServiceClient } from '@azure/storage-blob';
 
 const Catalog = () => {
 
   const [loading, setLoading] = useState(true); 
+  const [originalData, setOriginalData] = useState([]); 
   const [textToCopy, setTextToCopy] = useState({ display: "Copy Link", url: "" });
   
   const [tableData, setTableData] = useState([]);
@@ -24,6 +26,7 @@ const Catalog = () => {
       try {
         const response = await axiosInstance.post('/create-spreadsheet/');
         const products = response.data.products;
+        console.log("rcvd products: ", response.data)
 
         setTextToCopy(prevState => ({ ...prevState, url: response.data.spreadsheet_url }));
         
@@ -34,13 +37,23 @@ const Catalog = () => {
           link: product.link || "",
           image_link: product.image_link || "",
           condition: product.condition || "",
-          availability: product.availability || "",
+          quantity: product.quantity || "",
           price: product.price || "",
           brand: product.brand || "",
           status: product.status || ""
-        }));
-        
+        })
+      );
+        console.log("Changing the Original Data...", initialData)
+        setOriginalData([...initialData.map(item => ({...item}))]);
         setTableData(initialData);
+        console.log("Initial Data: ", initialData)
+        const initialImageURLs = {};
+        initialData.forEach((item, index) => {
+          if (item.image_link) {
+            initialImageURLs[index] = item.image_link;
+          }
+        });
+        setImageURLs(initialImageURLs);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally{
@@ -69,16 +82,88 @@ const Catalog = () => {
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [imageURLs, setImageURLs] = useState({});
+
+  const uploadToBlob = async (e, rowIndex, field) => {
+    try {
+      const file = e.target.files[0]
+      const account = "pdffornurenai";
+      const sas = "sv=2022-11-02&ss=bfqt&srt=co&sp=rwdlacupiytfx&se=2025-06-01T16:13:31Z&st=2024-06-01T08:13:31Z&spr=https&sig=8s7IAdQ3%2B7zneCVJcKw8o98wjXa12VnKNdylgv02Udk%3D";
+
+      const containerName = 'pdf';
+      const blobServiceClient = new BlobServiceClient(`https://${account}.blob.core.windows.net/?${sas}`);
+
+      const containerClient = blobServiceClient.getContainerClient(containerName);
+  
+      const blobName = file.name + '-' + Date.now(); // Appending timestamp to the file name for uniqueness
+      const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  
+      const uploadBlobResponse = await blockBlobClient.uploadData(file, {
+        blobHTTPHeaders: {
+          blobContentType: file.type
+        }
+      });
+  
+      console.log(`Upload block blob ${blobName} successfully`, uploadBlobResponse.requestId);
+  
+      console.log(blockBlobClient.url); // Return the URL of the uploaded file
+      const newData = [...tableData];
+      const newValue = blockBlobClient.url;
+      newData[rowIndex][field] = newValue;
+      setTableData(newData);
+      setImageURLs((prev) => ({
+        ...prev,
+        [rowIndex]: blockBlobClient.url,
+      }))
+
+    } catch (error) {
+      console.error('Error uploading file to Azure:', error);
+      throw error;
+    }
+  }
+  
+
   const handleSubmitCatalog = async () => {
     try {
+        setIsSubmitting(true)
+        console.log("Table Data to be submitted: ", tableData
+        )
       const dataToSubmit = tableData.map((row) => ({
         ...row,
         condition: row.condition || "new",
-        availability: row.availability || "in_stock",
+        availability: row.quantity > 0 ? "in_stock" : "out_of_stock",
         status: row.status || "active"
       }));
-      const response = await axiosInstance.post('/catalog/', dataToSubmit);
+      console.log("Data To Submit: ", dataToSubmit)
+      console.log("Original Data: ", originalData)
+      console.log("Table Data: ", tableData)
+      const changes = dataToSubmit.map((newRow) => {
+        const originalRow = originalData.find(item => item.product_id === newRow.product_id); // Use the unique identifier
+        if (!originalRow) {
+          return { ...newRow, row_status: 'added' }; 
+        }
+        let isChanged = false;
+        for (let key of Object.keys(newRow)) {
+          console.log("NEW ROW: ", newRow)
+          if (newRow[key] !== originalRow[key]) {
+            console.log(`Field changed in row ${newRow.id}: ${key} (Original: ${originalRow[key]}, New: ${newRow[key]})`);
+            isChanged = true;
+          }
+        }
+  
+        if (!isChanged) {
+          console.log(`Row unchanged:`, newRow);
+        }
+        return { ...newRow, row_status: isChanged ? 'changed' : 'unchanged' };
+      });
+
+      console.log("Changes: ", changes)
+      const filteredChanges = changes.filter(row => row.row_status !== 'unchanged');
+      console.log("Filtered Changes: ", filteredChanges)
+      const response = await axiosInstance.post('/catalog/', filteredChanges);
       console.log("Response catalog: ", response);
+      setIsSubmitting(false)
     } catch (error) {
       console.error("Error submitting catalog data: ", error);
     }
@@ -108,7 +193,7 @@ const Catalog = () => {
       link: "",
       image_link: "",
       condition: "",
-      availability: "",
+      quantity: "",
       price: "",
       brand: "",
       status: ""
@@ -137,7 +222,7 @@ const Catalog = () => {
             <th>Product Link</th>
             <th>Image</th>
             <th>Condition</th>
-            <th>Availability</th>
+            <th>Quantity</th>
             <th>Item Price</th>
             <th>Brand</th>
             <th>Status</th>
@@ -183,12 +268,16 @@ const Catalog = () => {
                   className="column-bg"
                 />
               </td>
-              <td>
+              <td className="flex items-center space-x-4">
+                
+              {imageURLs[rowIndex] && (
+                  <img src = {imageURLs[rowIndex]} alt="Preview" style={{width: "70px", height: "70px"}}/>
+                )}
                 <input
-                  type="url"
-                  value={row.image_link}
+                  type="file"
+                  accept="image/"
                   placeholder="Image"
-                  onChange={(e) => handleCellChange(e, rowIndex, "image_link")}
+                  onChange={(e) => uploadToBlob(e, rowIndex, "image_link")}
                   className="column-bg"
                 />
               </td>
@@ -197,7 +286,7 @@ const Catalog = () => {
                   value={row.condition}
                   onChange={(e) => handleCellChange(e, rowIndex, "condition")}
                   className="column-bg"
-                  defaultValue="new"
+                //   defaultValue="new"
                 >
                   <option value="new">New</option>
                   <option value="used">Used</option>
@@ -205,15 +294,14 @@ const Catalog = () => {
                 </select>
               </td>
               <td>
-                <select
-                  value={row.availability}
-                  onChange={(e) => handleCellChange(e, rowIndex, "availability")}
+              <input
+                  type="number"
+                  value={row.quantity}
+                  placeholder="Quantity"
+                  onChange={(e) => handleCellChange(e, rowIndex, "quantity")}
                   className="column-bg"
-                  defaultValue="in_stock"
-                >
-                  <option value="in_stock">In Stock</option>
-                  <option value="out_of_stock">Out of Stock</option>
-                </select>
+                  min="0"
+                />
               </td>
               <td>
                 <input
@@ -239,7 +327,7 @@ const Catalog = () => {
                   value={row.status}
                   onChange={(e) => handleCellChange(e, rowIndex, "status")}
                   className="column-bg"
-                  defaultValue="active"
+                //   defaultValue="active"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -256,7 +344,7 @@ const Catalog = () => {
       </table>
       <div className="submit-container">
     <button className="submit-button" onClick={handleSubmitCatalog}>
-      Submit
+      {isSubmitting? 'Submitting...': 'Submit'}
     </button>
   </div>
       <button className="add-row-button" onClick={addRow}>+</button>
