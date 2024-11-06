@@ -97,7 +97,7 @@ const Navbar = () => {
             </>
           )}
           <Link to={getPath('/catalog')} className="text-white hover:text-gray-300">Catalog</Link>
-          <Link to={getPath('/pricing')} className="text-white hover:text-gray-300">Pricing</Link>
+          {!authenticated ? <Link to={getPath('/pricing')} className="text-white hover:text-gray-300">Pricing</Link> : '' } {/* temporary fix */}
           <Link to={getPath('/chatbot')} className="text-white hover:text-gray-300">Chatbot</Link>
           <Link to={getPath('/flow-builder')} className="text-white hover:text-gray-300">Flow Builder</Link>
           
