@@ -128,10 +128,12 @@ const Chatbot = () => {
 
   useEffect(() => {
     const contactID = getContactIDfromURL()
-    const contact = contacts.find(c => c.id == parseInt(contactID))
-    console.log("CONTATATATATATTA: ", contact)
+    const contact = contacts.find(c => c.id === parseInt(contactID))
     setSelectedContact(contact)
-  })
+    console.log("Selected Contact 1: ", selectedContact)
+
+  }, [])
+  
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -273,7 +275,6 @@ const Chatbot = () => {
   };
 
 
-    
   const fetchContacts = async () => {
     try {
       const response = await axiosInstance.get('/contacts/', {
@@ -419,7 +420,6 @@ const Chatbot = () => {
     setInputFields(newInputFields);
   };
 
-
   const handleImageSend = async () => {
     if (!imageToSend || !selectedContact) return;
     let phoneNumber = selectedContact.phone;
@@ -466,19 +466,14 @@ const Chatbot = () => {
     hasNewMessage: true // Default or initial state
   });
 
-  // Scroll to bottom of chat
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messageEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [conversation]);
-
-
-    
 
   useEffect(() => {
     socket.on('connect', () => {
       console.log('Connected to the server');
     });
-
     socket.on('new-message', (message) => {
       if (message) {
         console.log('Got New Message', message.message);
@@ -549,7 +544,6 @@ const Chatbot = () => {
           });
         
           setShowNewChatInput(false);
-          console.log("Selected contact:", message.contactPhone);
         }else {
           console.log("Session ID does not match.");
         }
@@ -596,7 +590,7 @@ const Chatbot = () => {
               message: newMessage.content,
               business_phone_number_id: businessPhoneNumberId,
               messageType: "text",
-            }
+            }                                                                  /////
           );
         });
         await Promise.all(sendPromises);
@@ -722,7 +716,6 @@ const Chatbot = () => {
     setInputFields([...inputFields, { value: '' }]);
   };
 
-
   const deleteInputField = (index) => {
     const newInputFields = inputFields.filter((_, i) => i !== index);
     setInputFields(newInputFields);
@@ -730,16 +723,13 @@ const Chatbot = () => {
     
   
   useEffect(() => {
-    // Clear current conversation
     setConversation(['']);
     setNewMessages(['']);
-
-    // Fetch conversation data for the new selected contact
+    console.log("selected contact 3:", selectedContact)
+    
     if(selectedContact){
     fetchConversation(selectedContact.phone);}
-    
   }, [selectedContact]);
-
 
   const handleContactSelection = async (contact) => {
     if (selectedContact) {
@@ -784,7 +774,6 @@ const Chatbot = () => {
     }));
   };
 
-
   const handleUpload = async () => {
     if (!file) {
       setUploadStatus('Please select a file to upload.');
@@ -818,7 +807,6 @@ const Chatbot = () => {
     }
   };
     
-
   const handleRedirect = () => {
     window.location.href = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=1546607802575879&redirect_uri=https%3A%2F%2Fwhatsapp.nuren.ai%2Fchatbotredirect&response_type=code&config_id=1573657073196264&state=pass-through%20value';
   };
@@ -919,8 +907,10 @@ const Chatbot = () => {
     }
   };
   
-
-
+  useEffect(() => { 
+    navigate(window.location.pathname, { replace: true });
+    console.log("selected contact 2 : ", selectedContact)
+  })
 
   const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;

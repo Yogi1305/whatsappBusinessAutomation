@@ -3,10 +3,10 @@ import { Handle, Position, useReactFlow } from 'reactflow';
 import { FaTrash, FaCopy, FaMinus, FaPlus } from 'react-icons/fa';
 import { useFlow } from './FlowContext';
 import uploadToBlob from "../../azureUpload.jsx";
-import { convertMentionsForBackend, convertMentionsForFrontend, MentionTextArea } from './MentionTextArea';
+import { convertMentionsForBackend, convertMentionsForFrontend, MentionTextArea, ShowProducts } from './MentionTextArea';
 import { useAuth } from '../../authContext.jsx';
 import axiosInstance from '../../api.jsx';
-import { Clock, LogOut, Upload } from 'lucide-react';
+import { Clock, LogOut, Upload, ShoppingBag } from 'lucide-react';
 import { Button, Card, Input } from 'antd';
 import { CardContent } from '@mui/material';
 import { CardHeader, CardTitle } from 'react-bootstrap';
@@ -163,19 +163,18 @@ const NodeWrapper = ({ children, style, type }) => {
   );
 };
 
-
-
 export const AskQuestionNode = ({id, data, isConnectable }) => {
   const [question, setQuestion] = useState(data.question || '');
   const [optionType, setOptionType] = useState(data.optionType || 'Buttons');
   const [options, setOptions] = useState(data.options || []);
+
   const [variable, setVariable] = useState(data.variable || '');
   const [dataType, setDataType] = useState(data.dataType || '');
   const [errors, setErrors] = useState({});
   const { updateNodeData } = useFlow();
 
   useEffect(() => {
-    validateNode();
+    validateNode(); 
   }, [question, options, variable, dataType]);
 
   const validateNode = () => {
@@ -396,9 +395,6 @@ const errorStyle = {
   marginTop: '5px',
 };
 
-
-
-
 export const SendMessageNode = ({ id,data, isConnectable }) => {
   const [field, setField] = useState(data.fields || { type: 'Message', content: { text: '', caption: '', med_id: '' } });
  // const { id } = data;
@@ -590,7 +586,6 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   );
 };
 
-
 export const SetConditionNode = ({ id,data, isConnectable }) => {
   const [condition, setCondition] = useState(data.condition || '');
  // const { id } = data;
@@ -607,14 +602,7 @@ const handleConditionChange = (e) => {
 
   return (
     <NodeWrapper style={{ background: '#f9f0ff', borderColor: '#d3adf7' }} type="setCondition">
-      <Handle type="target"  style={{
-                        
-                        top: '50%',
-                        right: '-10px',
-                        background: '#784212',
-                        width: '12px',
-                        height: '12px',
-                    }} position={Position.Left} isConnectable={isConnectable} />
+      <Handle type="target"  style={{ top: '50%', right: '-10px', background: '#784212', width: '12px', height: '12px'}} position={Position.Left} isConnectable={isConnectable} />
       <h3 style={{ marginBottom: '15px', color: '#531dab' }}>Set Condition</h3>
       <MentionTextArea
         value={convertMentionsForFrontend(condition)}
@@ -625,13 +613,8 @@ const handleConditionChange = (e) => {
         <div style={{ background: '#d9f7be', padding: '5px 10px', borderRadius: '4px', color: '#389e0d' }}>True</div>
         <div style={{ background: '#ffccc7', padding: '5px 10px', borderRadius: '4px', color: '#cf1322' }}>False</div>
       </div>
-      <Handle type="source"  position={Position.Right} id="true" isConnectable={isConnectable}  style={{ top: '50%', background: '#389e0d',
-                        right: '-5px',
-                        width: '12px',
-                        height: '12px', }} />
-      <Handle type="source" position={Position.Right} id="false" isConnectable={isConnectable}  style={{ top: '80%', background: '#cf1322', right: '-5px',
-                        width: '12px',
-                        height: '12px', }} />
+      <Handle type="source"  position={Position.Right} id="true" isConnectable={isConnectable}  style={{ top: '50%', background: '#389e0d',right: '-5px',width: '12px',height: '12px', }} />
+      <Handle type="source" position={Position.Right} id="false" isConnectable={isConnectable}  style={{ top: '80%', background: '#cf1322', right: '-5px',width: '12px',height: '12px', }} />
     </NodeWrapper>
   );
 };
@@ -640,16 +623,91 @@ export const AINode = ({ id, data, isConnectable }) => {
   const { updateNodeData } = useFlow();
 
   return (
-    <Card className="w-34 border-purple-200">
-      <Handle type="target" position="top" isConnectable={isConnectable} />
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-purple-700 flex items-center">
-          <Upload className="w-5 h-5 mr-2" /> AI Upload
-        </CardTitle>
-      </CardHeader>
+<Card className="w-34 h-20 border-purple-200">
+  <Handle type="target" position="top" isConnectable={isConnectable} />
+  <CardHeader className="pb-3">
+    <CardTitle className="text-lg font-semibold text-black-700 flex items-center">
+      <Upload className="w-5 h-5 mr-2" />AI {/* Optional: wrap "AI" in a span for better alignment */}
+    </CardTitle>
+  </CardHeader>
       <CardContent className="space-y-2">
         </CardContent>
-      <Handle type="source" position="bottom" isConnectable={isConnectable} />
+  <Handle type="source" position="bottom" isConnectable={isConnectable} />
+</Card>
+
+  );
+};
+
+export const product = ({ id, data, isConnectable }) => {
+  const { updateNodeData } = useFlow();
+  const [products, setProducts] = useState([]);
+  const [selectedProductIds, setSelectedProductIds] = useState([""]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try{
+        const response = await axiosInstance.get('catalog/')
+        console.log("catalog get Response: ", response.data)
+        setProducts(response.data)
+
+      }catch (error) {
+        console.error("Error fetching product IDs:", error);
+      }
+    };
+
+    fetchProducts();
+  }, [])
+
+  const handleProductSelection = (index, newProduct) => {
+    const updatedSelectedProductIds = [...selectedProductIds];
+    console.log(newProduct,id,"lookity look");
+    updatedSelectedProductIds[index] = newProduct;
+    setSelectedProductIds(updatedSelectedProductIds);
+
+    updateNodeData(id, {product_ids: updatedSelectedProductIds});
+  };
+
+  const addProduct = () => {
+    setSelectedProductIds([...selectedProductIds, ""])
+  }
+
+  
+  return (
+    <Card className="w-304 h-200 border-pink-200">
+      <Handle type="target" position="left" isConnectable={isConnectable} />
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-semibold text-pink-700 flex items-center">
+          <ShoppingBag className="w-5 h-5 mr-2" /> Product
+        </CardTitle>
+
+        {selectedProductIds.map((selectedProductId, index) => (
+          <ShowProducts
+            key={index}
+            products={products}
+            selectedProductId={selectedProductId}
+            onSelect={(newProductId) => handleProductSelection(index, newProductId)}
+            style={{ marginTop: '10%' }}
+          />
+        ))}
+
+        <button style={{
+          background: '#4CAF50',
+          color: 'white',
+          borderRadius: '16px',
+          cursor: 'pointer',
+          marginTop: '13px',
+          transition: 'background-color 0.3s, transform 0.1s',
+          width: '100%',
+          height: '30px',
+          display: 'flex',   
+          alignItems: 'center',   
+          justifyContent: 'center' 
+        }} onClick={addProduct}>
+            <FaPlus style={{ marginRight: '5px' }} /> Add Product
+        </button>
+      </CardHeader>
+      <CardContent className="space-y-2"></CardContent>
+      <Handle type="source" position="right" isConnectable={isConnectable} />
     </Card>
   );
 };

@@ -1,3 +1,6 @@
+:root {
+  --column-bg-color: #d1eaf0ec; /* Define your column background color here */
+}
 
 h1 {
     font-size: 36px;
@@ -14,17 +17,17 @@ h1 {
   th, td {
     padding: 15px;
     text-align: left;
-    border: 1px solid #ddd;
+    border: 1px solid var(--column-bg-color);
   }
   
   th {
-    background-color: #f4f4f4;
+    background-color: var(--column-bg-color);
   }
   
   td input {
     width: 90%;
     padding: 5px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--column-bg-color);
     border-radius: 4px;
   }
   
@@ -37,26 +40,54 @@ h1 {
     cursor: pointer;
     transition: background-color 0.3s ease;
   }
+
+  body {
+    background: linear-gradient(to right, var(--column-bg-color), #a0e0e0); /* Adjust colors as needed */
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+  .submit-container {
+    display: flex;
+    justify-content: center; /* Center the button horizontally */
+    margin-top: 20px; /* Add space above the button */
+}
+
+.column-bg {
+  background-color: var(--column-bg-color);
+}
   
   .submit-button {
-    position: absolute;
-    top: 95px; 
-    right: 15px; 
-    width: 90px;
-    height: 45px;
-    border-radius: 15px;
+    position: relative; /* Remove absolute positioning for better flow */
+    width: 120px;
+    height: 50px;
+    border-radius: 25px;
     background-color: #4CAF50;
     color: white;
     border: none;
     font-size: 18px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 20px;
+}
+
+.submit-button:hover {
+    background-color: #45a049;
+    transform: scale(1.05); /* Slight zoom on hover for effect */
+}
+
+.submit-button:active {
+    background-color: #3e8e41;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transform: scale(1.02);
+}
+
+
   .add-row-button {
     position: fixed; /* Fixes the button to the viewport */
     bottom: 20px; /* Distance from the bottom */
@@ -105,3 +136,66 @@ h1 {
     background-color: rgba(255, 0, 0, 0.13); /* lighten(red, 48%) */
   }
   
+  .duplicate-input {
+    border: 2px solid rgb(179, 54, 54); /* Red border for duplicates */
+}
+
+.duplicate-input:focus {
+  border-color: rgb(179, 54, 54) !important; /* Ensures border stays red even on focus */
+  outline: none; /* Optional: remove the default focus outline */
+}
+
+.copy-text-box {
+  position: absolute;
+  top: 90px;
+  right: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  background-color: #f0f0f0;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer; /* Hand cursor on hover */
+  text-align: center;
+  width: 120px; /* Width of the box */
+  user-select: none; /* Prevents text selection */
+  transition: background-color 0.3s ease;
+}
+
+.input-catalogid {
+  position: absolute;
+  top: 90px;
+  left: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  padding: 15px;
+  text-align: center;
+  user-select: none; /* Prevents text selection */
+  transition: background-color 0.3s ease;
+}
+
+.popup {
+  transform: scale(1);
+  transition: transform 0.3s ease;
+}
+
+.popup-enter {
+  transform: scale(1); /* Fully visible at full scale */
+}
+
+.popup-exit {
+  transform: scale(0); /* Scales down to zero when exiting */
+}
+
+
+.copy-text-box:hover {
+  background-color: #e0e0e0;
+}
+
+
+.copy-text-box.copied {
+  background-color: green;
+  color: white;
+}

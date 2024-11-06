@@ -21,7 +21,6 @@ const Navbar = () => {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   const handleNewMessage = (message) => {
-    console.log(message, "amrit");
     const newNotification = {
       id: Date.now(),
       text: `New message from ${message.contactPhone}: ${message.message.text.body}`,
@@ -82,13 +81,15 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-black p-4 transition-colors duration-300"  >
-      <div className="container mx-auto flex justify-between items-center px-6 lg:px-12"> {/* Added consistent padding */}
+    <nav className="bg-black p-4 transition-colors duration-300">
+      <div className="container mx-auto flex justify-between items-center px-6 lg:px-12">
         <Link style={{ display: 'flex', alignItems: 'center' }} className="text-white text-2xl font-gliker" to="/">
           <img style={{ height: '2.5rem', marginRight: '2px' }} src={logo} alt="" />
           Nuren AI
         </Link>
-        <div className=" md:flex space-x-4 items-left">
+        
+        {/* Desktop Menu */}
+        <div className="hidden md:flex space-x-4 items-center">
           {authenticated && (
             <>
               <Link to={getPath('/contact')} className="text-white hover:text-gray-300">Contact</Link>
@@ -96,43 +97,42 @@ const Navbar = () => {
             </>
           )}
           <Link to={getPath('/catalog')} className="text-white hover:text-gray-300">Catalog</Link>
-          <Link to={('/pricing')} className="text-white hover:text-gray-300">Pricing</Link>
+          <Link to={getPath('/pricing')} className="text-white hover:text-gray-300">Pricing</Link>
           <Link to={getPath('/chatbot')} className="text-white hover:text-gray-300">Chatbot</Link>
           <Link to={getPath('/flow-builder')} className="text-white hover:text-gray-300">Flow Builder</Link>
+          
+          {/* User Options */}
           {authenticated ? (
-            <>
+            <div className="flex items-center space-x-4">
+              <Bell
+                className="text-white cursor-pointer"
+                onClick={handleNotificationClick}
+              />
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs absolute -top-1 -right-1">
+                  {unreadCount}
+                </span>
+              )}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-10 max-h-96 overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map(notification => (
+                      <div key={notification.id} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center">
+                        <span className={notification.read ? 'text-gray-500' : 'font-semibold'}>{notification.text}</span>
+                        <button onClick={() => removeNotification(notification.id)} className="text-red-500 hover:text-red-700">
+                          &times;
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-sm text-gray-700">No new notifications</div>
+                  )}
+                </div>
+              )}
+              
+              {/* Profile Dropdown */}
               <div className="relative">
-                <Bell
-                  className="text-white cursor-pointer"
-                  onClick={handleNotificationClick}
-                />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
-                    {unreadCount}
-                  </span>
-                )}
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-10 max-h-96 overflow-y-auto">
-                    {notifications.length > 0 ? (
-                      notifications.map(notification => (
-                        <div key={notification.id} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center">
-                          <span className={notification.read ? 'text-gray-500' : 'font-semibold'}>{notification.text}</span>
-                          <button onClick={() => removeNotification(notification.id)} className="text-red-500 hover:text-red-700">
-                            &times;
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-4 py-2 text-sm text-gray-700">No new notifications</div>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center text-white hover:text-gray-300 focus:outline-none"
-                >
+                <button onClick={() => setShowProfileDropdown(!showProfileDropdown)} className="flex items-center text-white hover:text-gray-300 focus:outline-none">
                   <User className="mr-1" />
                   <ChevronDown className="w-4 h-4" />
                 </button>
@@ -141,21 +141,11 @@ const Navbar = () => {
                     {profileDropdownItems.map((item, index) => (
                       <div key={index}>
                         {item.path ? (
-                          <Link
-                            to={getPath(item.path)}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setShowProfileDropdown(false)}
-                          >
+                          <Link to={getPath(item.path)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setShowProfileDropdown(false)}>
                             {item.label}
                           </Link>
                         ) : (
-                          <button
-                            onClick={() => {
-                              item.action();
-                              setShowProfileDropdown(false);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
+                          <button onClick={() => { item.action(); setShowProfileDropdown(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                             {item.label}
                           </button>
                         )}
@@ -164,45 +154,43 @@ const Navbar = () => {
                   </div>
                 )}
               </div>
-            </>
+            </div>
           ) : (
             <Link to="/login" className="text-white hover:text-gray-300">Login</Link>
           )}
         </div>
+        
+        {/* Mobile Menu Button */}
         <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white">
           {isOpen ? <X/> : <Menu />}
         </button>
       </div>
+      
+      {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden bg-black text-white pt-8 pl-9 space-y-4">
           {authenticated && (
             <>
-              <Link to={getPath('/contact')} className="text-white hover:text-gray-300 block py-2">Contact</Link>
-              <Link to={getPath('/broadcast')} className="text-white hover:text-gray-300 block py-2">Broadcast</Link>
+              <Link to={getPath('/contact')} className="block hover:text-gray-300">Contact</Link>
+              <Link to={getPath('/broadcast')} className="block hover:text-gray-300">Broadcast</Link>
             </>
           )}
-          <Link to={getPath('/chatbot')} className="text-white hover:text-gray-300 block py-2">Chatbot</Link>
-          <Link to={getPath('/flow-builder')} className="text-white hover:text-gray-300 block py-2">Flow Builder</Link>
+          <Link to={getPath('/catalog')} className="block hover:text-gray-300">Catalog</Link>
+          <Link to="/pricing" className="block hover:text-gray-300">Pricing</Link>
+          <Link to={getPath('/chatbot')} className="block hover:text-gray-300">Chatbot</Link>
+          <Link to={getPath('/flow-builder')} className="block hover:text-gray-300">Flow Builder</Link>
+          
+          {/* Mobile Profile Dropdown */}
           {authenticated && (
             <>
               {profileDropdownItems.map((item, index) => (
                 <div key={index}>
                   {item.path ? (
-                    <Link
-                      to={getPath(item.path)}
-                      className="text-white hover:text-gray-300 block py-2"
-                      onClick={() => setIsOpen(false)}
-                    >
+                    <Link to={getPath(item.path)} className="block py-2 hover:text-gray-300">
                       {item.label}
                     </Link>
                   ) : (
-                    <button
-                      onClick={() => {
-                        item.action();
-                        setIsOpen(false);
-                      }}
-                      className="text-white hover:text-gray-300 block py-2 w-full text-left"
-                    >
+                    <button onClick={() => { item.action(); setIsOpen(false); }} className="block py-2 text-left hover:text-gray-300">
                       {item.label}
                     </button>
                   )}
@@ -211,7 +199,7 @@ const Navbar = () => {
             </>
           )}
           {!authenticated && (
-            <Link to="/login" className="text-white hover:text-gray-300 block py-2">Login</Link>
+            <Link to="/login" className="block hover:text-gray-300">Login</Link>
           )}
         </div>
       )}

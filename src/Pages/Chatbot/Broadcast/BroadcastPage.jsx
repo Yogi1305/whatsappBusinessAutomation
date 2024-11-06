@@ -114,7 +114,7 @@ const BroadcastPage = () => {
             }
           });
           setBusinessPhoneNumberId(response.data.business_phone_number_id);
-          setAccountId(response.data.account_id);
+          setAccountId(response.data.business_account_id);
           return response.data;
         } catch (error) {
           console.error('Error fetching business phone ID:', error);
