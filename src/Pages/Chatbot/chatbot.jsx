@@ -27,7 +27,7 @@ import AuthPopup from './AuthPopup.jsx';
 import { div } from 'framer-motion/client';
 import { Button, Input } from 'antd';
 
-const socket = io('http://localhost:8080');
+const socket = io('https://whatsappbotserver.azurewebsites.net');
 
 
 const getTenantIdFromUrl = () => {
@@ -144,7 +144,7 @@ const Chatbot = () => {
     const fetchBusinessPhoneId = async () => {
       try {
         console.log("fetching business phone number id")
-        const response = await axios.get('http://localhost:8000/whatsapp_tenant/', {
+        const response = await axios.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
           headers: {
             'X-Tenant-Id': tenantId
           }
@@ -428,7 +428,7 @@ const Chatbot = () => {
     }
     try {
       const response = await axiosInstance.post(
-        'http://localhost:8080/send-message',
+        'https://whatsappbotserver.azurewebsites.net/send-message',
         {
           phoneNumbers: [phoneNumber],
           messageType: "image",
@@ -584,7 +584,7 @@ const Chatbot = () => {
           }
           
           return axiosInstance.post(
-            'http://localhost:8080/send-message',
+            'https://whatsappbotserver.azurewebsites.net/send-message',
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
@@ -601,7 +601,7 @@ const Chatbot = () => {
           phoneNumber = phoneNumber.slice(2);
         }
         await axiosInstance.post(
-          'http://localhost:8080/send-message',
+          'https://whatsappbotserver.azurewebsites.net/send-message',
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
@@ -678,7 +678,7 @@ const Chatbot = () => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`http://localhost:8000/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
+      const response = await fetch(`https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
           'X-Tenant-Id': tenantId
@@ -817,7 +817,7 @@ const Chatbot = () => {
 
   const fetchFlows = async () => {
     try {
-      const response = await axiosInstance.get('http://localhost:8000/node-templates/', {
+      const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/node-templates/', {
         headers: { token: localStorage.getItem('token') },
       });
       // Ensure each flow has an id property
@@ -867,7 +867,7 @@ const Chatbot = () => {
     
       // First POST request to insert data
       const insertResponse = await axiosInstance.post(
-        'http://localhost:8000/insert-data/',
+        'https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/insert-data/',
         dataToSend,
         {
           headers: {
@@ -883,7 +883,7 @@ const Chatbot = () => {
       if (insertResponse.status === 200) {
         // Second POST request to reset the session
         const resetSessionResponse = await axiosInstance.post(
-          'http://localhost:8080/reset-session',
+          'https://whatsappbotserver.azurewebsites.net/reset-session',
           { business_phone_number_id: businessPhoneNumberId },
           {
             headers: {
@@ -916,7 +916,7 @@ const Chatbot = () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-  const response = await axiosInstance.post('http://localhost:8000/contacts/', {
+  const response = await axiosInstance.post('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/contacts/', {
     phone: newPhoneNumber,
     tenant: tenantId,
     // Add other required fields for creating a new contact

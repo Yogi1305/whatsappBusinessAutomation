@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import axiosInstance from '../../api';
 import './catalog.css';
 import { BlobServiceClient } from '@azure/storage-blob';
+import { Position } from "@xyflow/react";
 
 const Catalog = () => {
 
   const [loading, setLoading] = useState(true); 
   const [originalData, setOriginalData] = useState([]); 
   const [textToCopy, setTextToCopy] = useState({ display: "Copy Link", url: "" });
-  
+  const [catalogID, setCatalogID] = useState('')
   const [tableData, setTableData] = useState([]);
 
   const generateRandomProductID = () => {
@@ -29,6 +30,7 @@ const Catalog = () => {
         console.log("rcvd products: ", response.data)
 
         setTextToCopy(prevState => ({ ...prevState, url: response.data.spreadsheet_url }));
+        setCatalogID(response.data.catalog_id)
         
         const initialData = products.map(product => ({
           product_id: product.product_id || generateRandomProductID(),
@@ -84,6 +86,7 @@ const Catalog = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageURLs, setImageURLs] = useState({});
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
 
   const uploadToBlob = async (e, rowIndex, field) => {
     try {
@@ -201,6 +204,22 @@ const Catalog = () => {
     setTableData((prevData) => [...prevData, newRow]);
   };
 
+  const handleEditClick = async () => {
+    setIsPopupVisible(!isPopupVisible);
+  }
+
+  const handleInputChange = (e) => {
+    setCatalogID(e.target.value)
+  }
+
+  const handleSaveCatalogID = () => {
+    console.log("Catalog ID to save: ", catalogID)
+    const response = axiosInstance.post('catalog-id/', {
+      catalog_id: catalogID
+    })
+    handleEditClick()
+  }
+
   return (
     <div className="bp-catalog">
      <div 
@@ -208,6 +227,22 @@ const Catalog = () => {
         onClick={handleCopyText}
       >
         {textToCopy.display}
+      </div>
+      <div className="hidden lg:flex items-center input-catalogid">
+        <b>Catalog ID: {catalogID}</b>
+      <Edit style={{ position: 'relative', marginLeft: '12px', cursor: 'pointer' }} size={18} onClick={handleEditClick}/>
+      <div
+          className={`absolute mt-2 p-2 bg-white border border-gray-300 shadow-lg rounded popup ${
+            isPopupVisible ? 'popup-enter' : 'popup-exit'
+          }`}
+          style={{ top: '45px', left: '10px', transformOrigin: '85px -15px', borderRadius: '7px' }}
+        >
+          <p>Catalog ID:</p>
+          <input type="text" placeholder="Enter new Catalog ID" className="mt-2 p-1 border rounded" value={catalogID} onChange={handleInputChange}/>
+          <button onClick={handleSaveCatalogID} className="mt-2 p-1 bg-blue-500 text-white rounded">
+            Save
+          </button>
+        </div>
       </div>
 
       <h1 style={{ fontSize: '36px', fontWeight: '600', fontFamily: 'sans-serif', paddingBottom: 20, alignContent: 'center' }}>Catalog Management</h1>

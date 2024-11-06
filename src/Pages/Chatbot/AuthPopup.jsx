@@ -22,7 +22,7 @@ const AuthPopup = ({ onClose, isAuthenticated }) => {
       setShowPopup(true);
     }
 
-    const newSocket = io('http://localhost:8080');
+    const newSocket = io('https://whatsappbotserver.azurewebsites.net');
     setSocket(newSocket);
 
     const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);
