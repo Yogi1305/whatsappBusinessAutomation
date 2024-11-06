@@ -18,7 +18,7 @@ import Picker from 'emoji-picker-react';
 import shortid from 'shortid';
 import ImageEditorComponent from "../../Components/ImageEditor/imageeditor.jsx";
 import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid'; 
+import { parse, v4 as uuidv4 } from 'uuid'; 
 
 import io from 'socket.io-client';
 import { PhoneIcon, PlusCircle, PlusIcon, Upload, X } from 'lucide-react';
@@ -198,9 +198,10 @@ const Chatbot = () => {
 
   const renderInteractiveMessage = (parsedMessage) => {
     const { type, interactive, text, image, template } = parsedMessage;
-
+    // console.log("Parsed Message: ", parsedMessage)
     if (type === 'interactive') {
       if (interactive.type === 'list') {
+        // console.log("interactive: ",interactive)
         return (
           <div className="interactive-message list-message">
             <p className="message-text">{interactive.body.text}</p>
@@ -689,7 +690,7 @@ const Chatbot = () => {
         throw new Error('Failed to fetch data from backend');
       }
       const data = await response.json();
-      const conversations = data.slice(0,-1)
+      console.log("Conversations: ", data)
       const sentiment = data.at(-1).dominant_emotion
       const rgb = sentimentColors[sentiment]
       setCSSVariable('--sentiment-shadow', `0 4px 6px rgba(${rgb}, 0.8)`)
@@ -698,7 +699,7 @@ const Chatbot = () => {
       // Merge fetched data with any new messages
       const mergedConversation = [
         ...(allConversations[contactId] || []),
-        ...conversations
+        ...data
       ];
       setAllConversations(prev => ({
         ...prev,
@@ -910,7 +911,7 @@ const Chatbot = () => {
   useEffect(() => { 
     navigate(window.location.pathname, { replace: true });
     console.log("selected contact 2 : ", selectedContact)
-  })
+  }, [])
 
   const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
@@ -1049,10 +1050,12 @@ const Chatbot = () => {
           try {
             const fixedMessage = fixJsonString(message.text);
             const parsedMessage = JSON.parse(fixedMessage);
-            //console.log('Parsed Message:', parsedMessage);
+            // console.log('Parsed Message:', parsedMessage);
             return renderInteractiveMessage(parsedMessage);
           } catch (e) {
-            console.error('Failed to parse JSON message:', e);
+            const fixedMessage = fixJsonString(message.text);
+            const parsedMessage = JSON.parse(fixedMessage);
+            console.error(`Failed to parse JSON message: ${JSON.stringify(parsedMessage, null, 4)}`, e);
             return <div className="error">Failed to parse message</div>;
           }
         }
