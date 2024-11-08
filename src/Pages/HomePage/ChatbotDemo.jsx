@@ -8,6 +8,8 @@ import WhatsAppQRCode from '../Chatbot/WhatsappQrCode';
 import axios from 'axios';
 import camera from "../../assets/camera.png";
 import { useMediaQuery } from 'react-responsive';
+import {whatsappURL}  from '../../Navbar';
+import { baseURL } from '../../api';
 
 // Function to get tenant ID from the URL
 const getTenantIdFromUrl = () => {
@@ -50,7 +52,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
+        const response = await axios.get(`${baseURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-Id': 'tlb'
           }
@@ -66,7 +68,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
 
   // Setup socket connection
   useEffect(() => {
-    const newSocket = io('https://whatsappbotserver.azurewebsites.net');
+    const newSocket = io(whatsappURL);
     setSocket(newSocket);
 
     const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);

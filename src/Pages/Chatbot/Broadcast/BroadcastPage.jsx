@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './BroadcastPage.css';
-import axiosInstance from '../../../api';
+import {axiosInstance, baseURL} from '../../../api';
 import axios from 'axios';
 import { Edit2, Trash2, X } from 'lucide-react';
+import {whatsappURL}  from '../../../Navbar';
 import { v4 as uuidv4 } from 'uuid'; 
 // import { uploadToBlob } from '../../../utils/azureStorage';
 import { useAuth } from '../../../authContext';
 import uploadToBlob from '../../../azureUpload';
 import { MentionTextArea,convertMentionsForBackend, convertMentionsForFrontend } from '../../NewFlow/MentionTextArea';
+import { base } from 'framer-motion/client';
 
 const getTenantIdFromUrl = () => {
   // Example: Extract tenant_id from "/3/home"
@@ -108,7 +110,7 @@ const BroadcastPage = () => {
     useEffect(() => {
       const fetchBusinessPhoneId = async () => {
         try {
-          const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
+          const response = await axiosInstance.get(`${baseURL}/whatsapp_tenant/`, {
             headers: {
               'X-Tenant-ID': tenantId
             }
@@ -240,7 +242,7 @@ const BroadcastPage = () => {
       };
   
       // Send the broadcast message
-      const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
+      const response = await axios.post(`${whatsappURL}/send-template/`, payload,
         {
           headers: {
             'X-Tenant-ID': tenantId // Replace with the actual tenant_id
@@ -458,7 +460,7 @@ const BroadcastPage = () => {
   
   const fetchBroadcastHistory = async () => {
     try {
-      const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-status/');
+      const response = await axiosInstance.get(`${baseURL}/get-status/`);
       const formattedHistory = formatBroadcastHistory(response.data.message_statuses);
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);

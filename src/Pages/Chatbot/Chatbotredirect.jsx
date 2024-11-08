@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import logo from "../../assets/logo.png"
 import axios from 'axios';
 import axiosInstance from '../../api';
+import { whatsappURL } from '../../Navbar';
 
 const Chatbotredirect = () => {
   const [progress, setProgress] = useState(0);
@@ -17,7 +18,7 @@ const Chatbotredirect = () => {
         if (code) {
           // Send the auth code to the backend
           const response = await axios.post(
-            'https://whatsappbotserver.azurewebsites.net/login-flow',
+            `${whatsappURL}/login-flow`,
             { code },  // This is the body of the request
             { headers: { 'X-Tenant-Id': 'tlb' } }  // This is the headers object
           );

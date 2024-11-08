@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Edit2, Save, X, Upload } from 'lucide-react';
 import axios from 'axios';
-import axiosInstance from '../../api';
+import axiosInstance, { baseURL } from '../../api';
 
 
 
@@ -43,7 +43,7 @@ const ProfilePage = () => {
     const fetchData = async () => {
       try {
         // First, fetch the business phone ID
-        const bpidResponse = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
+        const bpidResponse = await axiosInstance.get(`${baseURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-ID': tenantId
           }

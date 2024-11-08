@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
-import axiosInstance from '../../api';
+import axiosInstance, { baseURL } from '../../api';
 import { header } from 'framer-motion/client';
 
 const PopupCard = ({ message, onClose }) => (
@@ -42,7 +42,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
 
   useEffect(() => {
-    fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/createTenant')
+    fetch(`${baseURL}/createTenant`)
       .then((res) => res.json())
       .then((data) => {
         const orgNames = data.map((org) => ({
@@ -94,7 +94,7 @@ const Register = () => {
     const selectedTenantId = selectedOrg ? selectedOrg.tenantId : '';
 
     try {
-      const response = await fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/register/', {
+      const response = await fetch(`${baseURL}/register/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ const Register = () => {
     setCreatingOrg(true)
     try {
       newOrg.tenantId = await createTenantID()
-      const response = await fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/createTenant/', {
+      const response = await fetch(`${baseURL}/createTenant/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

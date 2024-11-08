@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 import WhatsAppQRCode from './WhatsappQrCode';
+import {whatsappURL}  from '../../Navbar';
 
 const AuthPopup = ({ onClose, isAuthenticated }) => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const AuthPopup = ({ onClose, isAuthenticated }) => {
       setShowPopup(true);
     }
 
-    const newSocket = io('https://whatsappbotserver.azurewebsites.net');
+    const newSocket = io(whatsappURL);
     setSocket(newSocket);
 
     const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);

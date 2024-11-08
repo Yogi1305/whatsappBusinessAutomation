@@ -5,7 +5,7 @@ import { useFlow } from './FlowContext';
 import uploadToBlob from "../../azureUpload.jsx";
 import { convertMentionsForBackend, convertMentionsForFrontend, MentionTextArea, ShowProducts } from './MentionTextArea';
 import { useAuth } from '../../authContext.jsx';
-import axiosInstance from '../../api.jsx';
+import axiosInstance, { baseURL } from '../../api.jsx';
 import { Clock, LogOut, Upload, ShoppingBag } from 'lucide-react';
 import { Button, Card, Input } from 'antd';
 import { CardContent } from '@mui/material';
@@ -414,7 +414,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
     const fetchData = async () => {
       try {
         // Fetch the business phone ID
-        const bpidResponse = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
+        const bpidResponse = await axiosInstance.get(`${baseURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-ID': tenantId
           }
