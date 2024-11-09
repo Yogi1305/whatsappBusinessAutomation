@@ -57,7 +57,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
             'X-Tenant-Id': 'tlb'
           }
         });
-        setBusinessPhoneNumberId(response.data.business_phone_number_id);
+        setBusinessPhoneNumberId(response.data.whatsapp_data.business_phone_number_id);
       } catch (error) {
         console.error('Error fetching business phone ID:', error);
       }
