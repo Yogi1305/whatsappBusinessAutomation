@@ -419,12 +419,12 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
             'X-Tenant-ID': tenantId
           }
         });
-        const fetchedBusinessPhoneNumberId = bpidResponse.data.business_phone_number_id;
+        const fetchedBusinessPhoneNumberId = bpidResponse.data.whatsapp_data.business_phone_number_id;
         setBusinessPhoneNumberId(fetchedBusinessPhoneNumberId);
 
         // Fetch the access token using the obtained business phone ID
         const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/`);
-        setAccessToken(tenantResponse.data.access_token);
+        setAccessToken(tenantResponse.data.whatsapp_data.access_token);
       } catch (error) {
         console.error('Error fetching data:', error);
       }

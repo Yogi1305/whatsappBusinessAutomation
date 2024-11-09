@@ -115,9 +115,9 @@ const BroadcastPage = () => {
               'X-Tenant-ID': tenantId
             }
           });
-          setBusinessPhoneNumberId(response.data.business_phone_number_id);
-          setAccountId(response.data.business_account_id);
-          return response.data;
+          setBusinessPhoneNumberId(response.data.whatsapp_data.business_phone_number_id);
+          setAccountId(response.data.whatsapp_data.business_account_id);
+          return response.data.whatsapp_data;
         } catch (error) {
           console.error('Error fetching business phone ID:', error);
         }
@@ -130,7 +130,7 @@ const BroadcastPage = () => {
               'X-Tenant-ID': tenantId
             }
           });
-          setAccessToken(response.data.access_token);
+          setAccessToken(response.data.whatsapp_data.access_token);
         } catch (error) {
           console.error('Error fetching tenant data:', error);
         }

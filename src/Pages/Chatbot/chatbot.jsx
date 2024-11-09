@@ -150,8 +150,8 @@ const Chatbot = () => {
             'X-Tenant-Id': tenantId
           }
         });
-        console.log(response.data.business_phone_number_id,"THIS IS BPID");
-        setBusinessPhoneNumberId(response.data.business_phone_number_id);
+        console.log(response.data.whatsapp_data.business_phone_number_id,"THIS IS BPID");
+        setBusinessPhoneNumberId(response.data.whatsapp_data.business_phone_number_id);
       } catch (error) {
         console.error('Error fetching business phone ID:', error);
       }
@@ -344,7 +344,7 @@ const Chatbot = () => {
         // const business_phone_number_id = 241683569037594;
         console.log("bpiddddddd: ", businessPhoneNumberId)
         const response = await axiosInstance.get(`/whatsapp_tenant/`);
-        setAccessToken(response.data.access_token);
+        setAccessToken(response.data.whatsapp_data.access_token);
 
       } catch (error) {
         console.error('Error fetching tenant data:', error);
