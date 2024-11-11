@@ -35,7 +35,7 @@ const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
     var tenant_id = pathArray[1]
-    if(tenant_id == "demo") tenant_id = 'tlb'
+    if(tenant_id == "demo") tenant_id = 'ai'
     return tenant_id; // Assumes tenant_id is the first part of the path
   }
   return null; 
@@ -266,8 +266,9 @@ const Chatbot = () => {
               return match;
           }
           // Replace single quotes with double quotes
-          return match.replace(/'/g, '"');
+          return match.replace(/'(?![^"]*")/g, '"');
       });
+      console.log("Pre Fixed String: ", fixedString)
       // Ensure proper escape sequences
       fixedString = fixedString.replace(/\\"/g, '\\\\"');
       return fixedString;
@@ -477,37 +478,7 @@ const Chatbot = () => {
     socket.on('connect', () => {
       console.log('Connected to the server');
     });
-    socket.on('new-message', (message) => {
-      if (message) {
-        console.log('Got New Message', message.message);
-        updateContactPriority(message.contactPhone, message.message);
-        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
-          console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
-          setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
-          //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
-          } else {
-          // Update unread count for non-selected contacts
-          setContacts(prevContacts => 
-            prevContacts.map(contact => 
-              contact.phone === message.contactPhone
-                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
-                : contact
-            )
-          );
-      }}
-    });
-
-    socket.on('node-message', (message) => {
-      console.log(message.message, "this is node");
-      console.log(selectedContact,"yahandekhhhhhh");
-      if (message) {
-          if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
-            console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-            setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'bot' }]);
-          }
-
-      }
-    });
+    
     socket.on('temp-user', (message) => {
       console.log("New temp user logged");
     
@@ -552,6 +523,37 @@ const Chatbot = () => {
         }
       } else {
         console.log("Message is undefined or null.");
+      }
+    });
+    socket.on('new-message', (message) => {
+      if (message) {
+        console.log('Got New Message', message.message);
+        updateContactPriority(message.contactPhone, message.message);
+        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
+          console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
+          setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
+          //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
+          } else {
+          // Update unread count for non-selected contacts
+          setContacts(prevContacts => 
+            prevContacts.map(contact => 
+              contact.phone === message.contactPhone
+                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
+                : contact
+            )
+          );
+      }}
+    });
+
+    socket.on('node-message', (message) => {
+      console.log(message.message, "this is node");
+      console.log(selectedContact,"yahandekhhhhhh");
+      if (message) {
+          if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
+            console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+            setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'bot' }]);
+          }
+
       }
     });
     return () => {
