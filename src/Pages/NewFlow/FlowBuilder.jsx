@@ -19,7 +19,7 @@ import { DelayNode } from './DelayNode';
 import Sidebar from "./Sidebar";
 import "./FlowBuilder.css";
 import SaveFlowPopup from "./SaveFlowPopup";
-import axiosInstance from "../../api";
+import axiosInstance, { djangoURL, fastURL } from "../../api";
 import { FlowProvider, useFlow } from './FlowContext';
 import { useAuth } from "../../authContext";
 import { ToastContainer, toast } from 'react-toastify';
@@ -74,7 +74,7 @@ const FlowBuilderContent = () => {
   const confirmDelete = async () => {
     if (flowToDelete) {
       try {
-        await axiosInstance.delete(`/node-templates/${flowToDelete}/`);
+        await axiosInstance.delete(`${djangoURL}/node-templates/${flowToDelete}/`);
         toast.success("Flow deleted successfully");
         fetchExistingFlows();
         if (selectedFlow === flowToDelete) {
@@ -201,7 +201,7 @@ const FlowBuilderContent = () => {
   const fetchExistingFlows = async () => {
     if (!authenticated) return;
     try {
-      const response = await axiosInstance.get('/node-templates/');
+      const response = await axiosInstance.get(`${fastURL}/node-templates/`);
       setExistingFlows(response.data);
       toast.success("Existing flows fetched successfully");
     } catch (error) {
@@ -427,10 +427,10 @@ const FlowBuilderContent = () => {
     try {
       let response;
       if (isExistingFlow) {
-        response = await axiosInstance.put(`/node-templates/${selectedFlow}/`, flow);
+        response = await axiosInstance.put(`${djangoURL}/node-templates/${selectedFlow}/`, flow);
         toast.success("Flow updated successfully");
       } else {
-        response = await axiosInstance.post('/node-templates/', flow);
+        response = await axiosInstance.post(`${djangoURL}/node-templates/`, flow);
         toast.success("New flow created successfully");
         setIsExistingFlow(true);
         setSelectedFlow(response.data.id);
@@ -471,7 +471,7 @@ const FlowBuilderContent = () => {
     } else if (flowId) {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get(`/node-templates/${flowId}/`);
+        const response = await axiosInstance.get(`${fastURL}/node-templates/${flowId}/`);
         const flow = response.data;
         const lastNodeId = Math.max(
           ...flow.node_data.nodes

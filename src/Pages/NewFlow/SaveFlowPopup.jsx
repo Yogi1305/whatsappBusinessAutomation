@@ -134,7 +134,7 @@
 
 import React, { useState, useCallback } from 'react';
 import "./FlowBuilder.css"
-import axiosInstance from '../../api';
+import axiosInstance, { djangoURL, fastURL } from '../../api';
 import { useFlow } from './FlowContext';
 import GreenTickAnimation from './GreenTickAnimation'
 import { useNavigate } from 'react-router-dom';
@@ -266,7 +266,7 @@ const SaveFlowPopup = ({ onSave, onCancel, fallbackMessage, fallbackCount }) => 
     };
 
     try {
-      const response = await axiosInstance.post('/node-templates/', flow);
+      const response = await axiosInstance.post(`${djangoURL}/node-templates/`, flow);
       console.log('Flow saved successfully:', response.data);
       setSuccessMessage('Flow saved successfully!');
       setShowSuccessPopup(true);

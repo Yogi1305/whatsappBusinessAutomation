@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Select, Input, message, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import {axiosInstance, baseURL} from '../../api';
+import {axiosInstance, fastURL, djangoURL} from '../../api';
 
 const { Option } = Select;
 
@@ -19,7 +19,7 @@ const AssignContact = () => {
   const fetchUsersAndLeads = async () => {
     try {
       const [usersResponse, leadsResponse] = await Promise.all([
-        axiosInstance.get(`${baseURL}/get-all-user/`),
+        axiosInstance.get(`${djangoURL}/get-all-user/`),
         axiosInstance.get('/contacts/')
       ]);
 

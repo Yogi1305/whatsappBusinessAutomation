@@ -9,6 +9,7 @@ import axiosInstance from './api';
 export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
 // export const whatsappURL = 'http://localhost:8080'
 
+
 const socket = io(whatsappURL);
 
 const Navbar = () => {

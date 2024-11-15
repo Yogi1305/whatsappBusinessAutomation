@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
-import axiosInstance, { baseURL } from '../../api';
+import axiosInstance, { fastURL, djangoURL } from '../../api';
 import { header } from 'framer-motion/client';
 
 const PopupCard = ({ message, onClose }) => (
@@ -42,7 +42,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
 
   useEffect(() => {
-    fetch(`${baseURL}/createTenant`)
+    fetch(`${djangoURL}/createTenant`)
       .then((res) => res.json())
       .then((data) => {
         const orgNames = data.map((org) => ({
@@ -94,7 +94,7 @@ const Register = () => {
     const selectedTenantId = selectedOrg ? selectedOrg.tenantId : '';
 
     try {
-      const response = await fetch(`${baseURL}/register/`, {
+      const response = await fetch(`${djangoURL}/register/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ const Register = () => {
     setCreatingOrg(true)
     try {
       newOrg.tenantId = await createTenantID()
-      const response = await fetch(`${baseURL}/createTenant/`, {
+      const response = await fetch(`${djangoURL}/createTenant/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

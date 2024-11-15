@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Dropdown } from "react-bootstrap";
-import axiosInstance, { baseURL } from "../../api";
+import axiosInstance, { fastURL, djangoURL } from "../../api";
 import { FaFileExcel, FaFilePdf, FaSearch, FaPlus } from 'react-icons/fa';
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -79,7 +79,7 @@ const ContactPage = () => {
     formData.append('model_name', "Contact");
 
     try {
-      const response = await axiosInstance.post(`${baseURL}/upload/`, formData, {
+      const response = await axiosInstance.post(`${djangoURL}/upload/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
