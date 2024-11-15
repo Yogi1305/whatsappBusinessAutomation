@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './BroadcastPage.css';
-import {axiosInstance, baseURL} from '../../../api';
+import {axiosInstance, fastURL, djangoURL} from '../../../api';
 import axios from 'axios';
 import { Edit2, Trash2, X } from 'lucide-react';
 import {whatsappURL}  from '../../../Navbar';
@@ -68,33 +68,7 @@ const BroadcastPage = () => {
   const [accountId, setAccountId] = useState('');
 
 
-  const fetchTemplates = useCallback(async () => {
-    if (!accessToken || !accountId) return;
-    try {
-      const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates?fields=name,status,components,language,category`;
-      const response = await axios.get(url, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-      const formattedTemplates = response.data.data.map(template => ({
-        ...template,
-        components: template.components.map(component => {
-          if (component.type === "BODY") {
-            return {
-              ...component,
-              text: convertMentionsForFrontend(component.text)
-            };
-          }
-          return component;
-        })
-      }));
-      setTemplates(formattedTemplates);
-      setFilteredTemplates(formattedTemplates);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-    }
-  }, [accessToken, accountId]);
+
 
   const handleTemplateFilter = (query) => {
     setTemplateSearchQuery(query);
@@ -110,26 +84,31 @@ const BroadcastPage = () => {
     useEffect(() => {
       const fetchBusinessPhoneId = async () => {
         try {
-          const response = await axiosInstance.get(`${baseURL}/whatsapp_tenant/`, {
+          const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
             headers: {
               'X-Tenant-ID': tenantId
             }
           });
-          setBusinessPhoneNumberId(response.data.whatsapp_data.business_phone_number_id);
-          setAccountId(response.data.whatsapp_data.business_account_id);
+          console.log("response: ", response.data.whatsapp_data)
+          console.log("bpid ac id at: ", response.data.whatsapp_data.access_token, response.data.whatsapp_data.business_phone_number_id, response.data.whatsapp_data.accountId)
+          setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
+          setAccountId(response.data.whatsapp_data[0].business_account_id);
+          setAccessToken(response.data.whatsapp_data[0].access_token)
           return response.data.whatsapp_data;
         } catch (error) {
           console.error('Error fetching business phone ID:', error);
         }
       };
-  
+      
       const fetchTenantData = async (bpid) => {
+        console.log("NIGIAAHFBYEVKJABHCJABHCHVJB")
         try {
-          const response = await axiosInstance.get(`/whatsapp_tenant/`, {
+          const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
             headers: {
               'X-Tenant-ID': tenantId
             }
           });
+          
           setAccessToken(response.data.whatsapp_data.access_token);
         } catch (error) {
           console.error('Error fetching tenant data:', error);
@@ -177,8 +156,37 @@ const BroadcastPage = () => {
       }
     };
 
+      const fetchTemplates = useCallback(async () => {
+    if (!accessToken || !accountId) return;
+    try {
+      const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates?fields=name,status,components,language,category`;
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      const formattedTemplates = response.data.data.map(template => ({
+        ...template,
+        components: template.components.map(component => {
+          if (component.type === "BODY") {
+            return {
+              ...component,
+              text: convertMentionsForFrontend(component.text)
+            };
+          }
+          return component;
+        })
+      }));
+      setTemplates(formattedTemplates);
+      setFilteredTemplates(formattedTemplates);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+    }
+  }, [accessToken, accountId]);
+
 
     useEffect(() => {
+    console.log("at and ac id: ", accessToken, accountId)
       if (accessToken && accountId) {
         fetchTemplates();
         fetchBroadcastHistory();
@@ -460,14 +468,19 @@ const BroadcastPage = () => {
   
   const fetchBroadcastHistory = async () => {
     try {
-      const response = await axiosInstance.get(`${baseURL}/get-status/`);
-      const formattedHistory = formatBroadcastHistory(response.data.message_statuses);
+      const response = await axiosInstance.get(`${fastURL}/get-status/`);
+      const formattedHistory = formatBroadcastHistory(response.data);
+      console.log("Formatted History: ", formattedHistory)
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);
     } catch (error) {
       console.error('Error fetching broadcast history:', error);
     }
   };
+
+  useEffect(() => {
+    fetchBroadcastHistory()
+  },[])
 
   // const handleDateFilter = () => {
   //   const filtered = broadcastHistory.filter(broadcast => {
@@ -521,28 +534,44 @@ const BroadcastPage = () => {
   }, []);
 
 
-  const formatBroadcastHistory = (messageStatuses) => {
-    const groupedStatuses = messageStatuses.reduce((acc, status) => {
-      if (!acc[status.broadcast_group]) {
-        acc[status.broadcast_group] = [];
-      }
-      acc[status.broadcast_group].push(status);
-      return acc;
-    }, {});
+  // const formatBroadcastHistory = (messageStatuses) => {
+  //   const groupedStatuses = messageStatuses.reduce((acc, status) => {
+  //     if (!acc[status.broadcast_group]) {
+  //       acc[status.broadcast_group] = [];
+  //     }
+  //     acc[status.broadcast_group].push(status);
+  //     return acc;
+  //   }, {});
+
+  //   console.log("grouped status: " ,groupedStatuses)
   
+  //   return Object.entries(groupedStatuses).map(([broadcastGroup, statuses]) => ({
+  //     id: broadcastGroup,
+  //     name: `Broadcast Group ${broadcastGroup}`,
+  //     sent: statuses.length,
+  //     delivered: statuses.filter(s => s.is_delivered).length,
+  //     read: statuses.filter(s => s.is_read).length,
+  //     replied: statuses.filter(s => s.is_replied).length,
+  //     failed: statuses.filter(s => s.is_failed).length,
+  //     date: new Date(statuses[0].timestamp).toLocaleDateString(), // Assuming there's a timestamp field
+  //     status: statuses.every(s => s.is_delivered) ? 'Completed' : 'In Progress',
+  //     recipients: statuses.map(s => s.user_phone_number)
+  //   }));
+  // };
+
+  const formatBroadcastHistory = (groupedStatuses) => {
+
     return Object.entries(groupedStatuses).map(([broadcastGroup, statuses]) => ({
-      id: broadcastGroup,
-      name: `Broadcast Group ${broadcastGroup}`,
-      sent: statuses.length,
-      delivered: statuses.filter(s => s.is_delivered).length,
-      read: statuses.filter(s => s.is_read).length,
-      replied: statuses.filter(s => s.is_replied).length,
-      failed: statuses.filter(s => s.is_failed).length,
-      date: new Date(statuses[0].timestamp).toLocaleDateString(), // Assuming there's a timestamp field
-      status: statuses.every(s => s.is_delivered) ? 'Completed' : 'In Progress',
-      recipients: statuses.map(s => s.user_phone_number)
-    }));
-  };
+          id: broadcastGroup,
+          name: `Broadcast Group ${broadcastGroup}`,
+          sent: statuses.sent,
+          delivered: statuses.delivered,
+          read: statuses.read,
+          replied: statuses.replied,
+          failed: statuses.failed,
+          status: statuses.delivered ? 'Completed' : 'In Progress'
+        }));
+  }
 
   const handlePhoneSelection = (contactId) => {
     setSelectedPhones(prevSelected => 

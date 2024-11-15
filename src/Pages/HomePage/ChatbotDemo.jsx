@@ -9,7 +9,7 @@ import axios from 'axios';
 import camera from "../../assets/camera.png";
 import { useMediaQuery } from 'react-responsive';
 import {whatsappURL}  from '../../Navbar';
-import { baseURL } from '../../api';
+import { fastURL, djangoURL } from '../../api';
 
 // Function to get tenant ID from the URL
 const getTenantIdFromUrl = () => {
@@ -52,7 +52,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        const response = await axios.get(`${baseURL}/whatsapp_tenant/`, {
+        const response = await axios.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-Id': 'ai'
           }

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Edit2, Save, X, Upload } from 'lucide-react';
 import axios from 'axios';
-import axiosInstance, { baseURL } from '../../api';
+import axiosInstance, { fastURL, djangoURL } from '../../api';
 
 
 
@@ -43,7 +43,7 @@ const ProfilePage = () => {
     const fetchData = async () => {
       try {
         // First, fetch the business phone ID
-        const bpidResponse = await axiosInstance.get(`${baseURL}/whatsapp_tenant/`, {
+        const bpidResponse = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-ID': tenantId
           }
@@ -52,7 +52,7 @@ const ProfilePage = () => {
         setBusinessPhoneNumberId(businessPhoneNumberId);
   
         // Then, fetch the tenant data using the obtained business phone ID
-        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/`);
+        const tenantResponse = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
         setAccessToken(tenantResponse.data.whatsapp_data.access_token);
   
         // Fetch user profile

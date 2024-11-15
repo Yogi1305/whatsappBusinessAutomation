@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './chatbot.css';
 // import OpenAI from "openai";
 import { Navigate, useNavigate, useParams } from "react-router-dom"; 
-import {axiosInstance,baseURL} from "../../api.jsx";
+import {axiosInstance,fastURL, djangoURL} from "../../api.jsx";
 import MailIcon from '@mui/icons-material/Mail';
 import SearchIcon from '@mui/icons-material/Search';
 import CallRoundedIcon from '@mui/icons-material/CallRounded';
@@ -145,13 +145,13 @@ const Chatbot = () => {
     const fetchBusinessPhoneId = async () => {
       try {
         console.log("fetching business phone number id")
-        const response = await axios.get(`${baseURL}/whatsapp_tenant/`, {
+        const response = await axios.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-Id': tenantId
           }
         });
-        console.log(response.data.whatsapp_data.business_phone_number_id,"THIS IS BPID");
-        setBusinessPhoneNumberId(response.data.whatsapp_data.business_phone_number_id);
+        console.log(response.data.whatsapp_data[0].business_phone_number_id,"THIS IS BPID");
+        setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
       } catch (error) {
         console.error('Error fetching business phone ID:', error);
       }
@@ -344,7 +344,7 @@ const Chatbot = () => {
       try {
         // const business_phone_number_id = 241683569037594;
         console.log("bpiddddddd: ", businessPhoneNumberId)
-        const response = await axiosInstance.get(`/whatsapp_tenant/`);
+        const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
         setAccessToken(response.data.whatsapp_data.access_token);
 
       } catch (error) {
@@ -683,7 +683,7 @@ const Chatbot = () => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`${baseURL}/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
+      const response = await fetch(`${djangoURL}/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
           'X-Tenant-Id': tenantId
@@ -822,7 +822,7 @@ const Chatbot = () => {
 
   const fetchFlows = async () => {
     try {
-      const response = await axiosInstance.get(`${baseURL}/node-templates/`, {
+      const response = await axiosInstance.get(`${fastURL}/node-templates/`, {
         headers: { token: localStorage.getItem('token') },
       });
       // Ensure each flow has an id property
@@ -872,7 +872,7 @@ const Chatbot = () => {
     
       // First POST request to insert data
       const insertResponse = await axiosInstance.post(
-        `${baseURL}/insert-data/`,
+        `${djangoURL}/insert-data/`,
         dataToSend,
         {
           headers: {
@@ -921,7 +921,7 @@ const Chatbot = () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-  const response = await axiosInstance.post(`${baseURL}/contacts/`, {
+  const response = await axiosInstance.post(`${djangoURL}/contacts/`, {
     phone: newPhoneNumber,
     tenant: tenantId,
     // Add other required fields for creating a new contact
