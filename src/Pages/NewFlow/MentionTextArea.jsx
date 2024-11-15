@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axiosInstance from "../../api";  // Assuming this is the correct path to your axiosInstance
+import axiosInstance, { fastURL } from "../../api";  // Assuming this is the correct path to your axiosInstance
 
 import { FaTrash, FaCopy, FaMinus, FaPlus } from 'react-icons/fa';
 const textAreaStyles = {
@@ -42,7 +42,7 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
   useEffect(() => {
     const fetchContactFields = async () => {
       try {
-        const response = await axiosInstance.get('/contacts/');
+        const response = await axiosInstance.get(`${fastURL}/contacts/`);
         if (response.data && response.data.length > 0) {
           const sampleContact = response.data[0];
           const fields = Object.keys(sampleContact).filter(key => 
