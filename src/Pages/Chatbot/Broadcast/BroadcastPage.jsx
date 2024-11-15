@@ -510,7 +510,7 @@ const BroadcastPage = () => {
 
   const fetchContacts = async () => {
     try {
-      const response = await axiosInstance.get('/contacts/', {
+      const response = await axiosInstance.get(`${fastURL}/contacts/`, {
         headers: {
           token: localStorage.getItem('token'),
         },

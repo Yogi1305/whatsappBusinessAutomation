@@ -35,7 +35,7 @@ const ContactPage = () => {
   const fetchContacts = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get('/contacts/');
+      const response = await axiosInstance.get(`${fastURL}/contacts/`);
       setContacts(response.data);
       setFilteredContacts(response.data);
     } catch (error) {
