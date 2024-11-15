@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const djangoURL = "https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net"
 // export const fastURL = "http://localhost:8000"
-export const fastURL = "https://8twdg37p-8000.inc1.devtunnels.ms"
+export const fastURL = "fastapione-gue2c5ecc9c4b8hy.centralindia-01.azurewebsites.net"
 // export const djangoURL = "http://localhost:8001"
 
 export const axiosInstance = axios.create({
