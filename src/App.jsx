@@ -67,6 +67,7 @@ const App = () => {
                   </ProtectedRoute>
                 } />
                 <Route path="chatbot" element={<Chatbot />} />
+                <Route path="catalog" element={<Catalog/>}/>
                 <Route path="assign" element={<AssignContact />} />
                 <Route path="flow-builder" element={<FlowBuilder />} />
                 <Route path="models" element={<ProtectedRoute><Models /></ProtectedRoute>} />
