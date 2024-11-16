@@ -29,6 +29,7 @@ const WhatsAppQRCode = () => {
   const storedSessionId = localStorage.getItem('sessionId');
   useEffect(() => {
     if (!sessionId) return; 
+    let code;
     const generateQRCode = async () => {
       try {
         const response = await axios.post(
@@ -45,14 +46,26 @@ const WhatsAppQRCode = () => {
           }
         );
 
+        console.log("Response QR: ", response.data)
+
         if (response.data && response.data.qr_image_url) {
           setQrCodeUrl(response.data.qr_image_url);
+          code = response.data.code
         } else {
           setError('Failed to generate QR code');
         }
       } catch (err) {
         setError('Error generating QR code');
         console.error('QR code generation error:', err);
+      }
+      finally {
+        setTimeout(() => {
+          axios.delete(`https://graph.facebook.com/v20.0/241683569037594/message_qrdls?code=${code}`, {
+              headers: {
+                  'Authorization': 'Bearer EAAVZBobCt7AcBO8trGDsP8t4bTe2mRA7sNdZCQ346G9ZANwsi4CVdKM5MwYwaPlirOHAcpDQ63LoHxPfx81tN9h2SUIHc1LUeEByCzS8eQGH2J7wwe9tqAxZAdwr4SxkXGku2l7imqWY16qemnlOBrjYH3dMjN4gamsTikIROudOL3ScvBzwkuShhth0rR9P'
+              }
+          })
+      }, 300000); //5 mins timer to delete QR automatically
       }
     };
 
