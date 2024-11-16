@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, Edit } from 'lucide-react';
-import axiosInstance from '../../api';
+import axiosInstance, { fastURL } from '../../api';
 import './catalog.css';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { Position } from "@xyflow/react";
@@ -25,12 +25,10 @@ const Catalog = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.post('/create-spreadsheet/');
-        const products = response.data.products;
-        console.log("rcvd products: ", response.data)
-
-        setTextToCopy(prevState => ({ ...prevState, url: response.data.spreadsheet_url }));
-        setCatalogID(response.data.catalog_id)
+        const django_promise = axiosInstance.post(`/create-spreadsheet/`);
+        const fastResponse = await axiosInstance.get(`${fastURL}/catalog`)
+        
+        const products = fastResponse.data
         
         const initialData = products.map(product => ({
           product_id: product.product_id || generateRandomProductID(),
@@ -56,6 +54,12 @@ const Catalog = () => {
           }
         });
         setImageURLs(initialImageURLs);
+
+        const djangoResponse = await django_promise
+        setTextToCopy(prevState => ({ ...prevState, url: djangoResponse.data.spreadsheet_url }));
+        setCatalogID(djangoResponse.data.catalog_id)
+
+
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally{
@@ -164,7 +168,7 @@ const Catalog = () => {
       console.log("Changes: ", changes)
       const filteredChanges = changes.filter(row => row.row_status !== 'unchanged');
       console.log("Filtered Changes: ", filteredChanges)
-      const response = await axiosInstance.post('/catalog/', filteredChanges);
+      const response = await axiosInstance.post(`/catalog/`, filteredChanges);
       console.log("Response catalog: ", response);
       setIsSubmitting(false)
     } catch (error) {

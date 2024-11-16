@@ -26,7 +26,7 @@ const Models = () => {
     useEffect(() => {
         const fetchModels = async () => {
             try {
-                const response = await axiosInstance.get(`${djangoURL}/dynamic-models/`);
+                const response = await axiosInstance.get(`${fastURL}/dynamic-models/`);
                 setModels(response.data);
             } catch (error) {
                 console.error('Error fetching models:', error);
@@ -128,7 +128,7 @@ const Models = () => {
                 {selectedModel && (
                     <div className="bg-white shadow-md rounded-lg p-6">
                         <h2 className="text-2xl font-semibold mb-4">{selectedModel.model_name} Model</h2>
-                        <p className="mb-2">Created by: {selectedModel.created_by}</p>
+                        {/* <p className="mb-2">Created by: {selectedModel.created_by}</p> */}
                         <h3 className="text-xl font-semibold mb-2">Fields:</h3>
                         <ul className="list-disc list-inside mb-4">
                             {selectedModel.fields.map((field, index) => (
