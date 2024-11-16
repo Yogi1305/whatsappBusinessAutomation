@@ -66,6 +66,7 @@ const App = () => {
                     <ContactPage />
                   </ProtectedRoute>
                 } />
+                <Route path="catalog" element={<Catalog/>}/>
                 <Route path="chatbot" element={<Chatbot />} />
                 <Route path="catalog" element={<Catalog/>}/>
                 <Route path="assign" element={<AssignContact />} />
@@ -84,7 +85,6 @@ const App = () => {
               <Route path="privacypolicy" element={<PrivacyPolicy />} />
               <Route path="termsandconditions" element={<TermsAndConditions />} />
               <Route path="pricing" element={<PricingPage />} />
-              <Route path="catalog" element={<Catalog/>}/>
               <Route path="blogs" element={<Blogs/>} />
               <Route path="blogs/learn-more" element={<Learn />} />
               <Route path="blogs/chatbot" element={<AIChatbotsPage/>} />

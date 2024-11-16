@@ -4,6 +4,7 @@ import { useAuth } from '../../authContext';
 import logo from '../../assets/logo.png';
 import axiosInstance from '../../api';
 import axios from 'axios';
+import {whatsappURL}  from '../../Navbar';
 
 const PopupCard = ({ message, onClose }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -76,7 +77,11 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
           phoneNumbers: [phone],
         };
     
-        const response = await axios.post('https://whatsappbotserver.azurewebsites.net/send-template/', payload,
+        const response = await axios.post(`${whatsappURL}/send-template/`, payload,{
+          headers: {
+            'X-Tenant-Id': 'ai' //keep this ll
+          }
+        }
         );
         if (response.status == 200) return true
         else return false

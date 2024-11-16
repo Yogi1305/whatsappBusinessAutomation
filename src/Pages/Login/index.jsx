@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../authContext';
 import logo from '../../assets/logo.png';
-import axiosInstance from '../../api';
+import axiosInstance, { fastURL, djangoURL } from '../../api';
 import axios from 'axios';
 
 const PopupCard = ({ message, onClose }) => (
@@ -37,7 +37,7 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await fetch('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/login/', {
+      const response = await fetch(`${djangoURL}/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

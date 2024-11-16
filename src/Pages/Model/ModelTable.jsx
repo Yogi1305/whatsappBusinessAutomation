@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from "../../api.jsx";
+import axiosInstance, { fastURL, djangoURL } from "../../api.jsx";
 import { UploadCloud, Download, FileText, Plus } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -26,7 +26,7 @@ const Models = () => {
     useEffect(() => {
         const fetchModels = async () => {
             try {
-                const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/dynamic-models/');
+                const response = await axiosInstance.get(`${fastURL}/dynamic-models/`);
                 setModels(response.data);
             } catch (error) {
                 console.error('Error fetching models:', error);
@@ -41,7 +41,7 @@ const Models = () => {
         setSelectedModel(model);
         setLoading(true);
         try {
-            const response = await axiosInstance.get(`https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/dynamic-model-data/${model.model_name}/`);
+            const response = await axiosInstance.get(`${djangoURL}/dynamic-model-data/${model.model_name}/`);
             setModelData(response.data);
         } catch (error) {
             console.error('Error fetching model data:', error);
@@ -61,7 +61,7 @@ const Models = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axiosInstance.post(`https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/dynamic-model-data/${selectedModel.model_name}/`, formValues, {
+            const response = await axiosInstance.post(`${djangoURL}/dynamic-model-data/${selectedModel.model_name}/`, formValues, {
                 headers: {
                     'X-Tenant-Id': tenantId
                 }
@@ -69,7 +69,7 @@ const Models = () => {
             console.log('Data sent successfully:', response.data);
             setShowModal(false);
             // Refresh model data
-            const updatedData = await axiosInstance.get(`https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/dynamic-model-data/${selectedModel.model_name}/`);
+            const updatedData = await axiosInstance.get(`${djangoURL}/dynamic-model-data/${selectedModel.model_name}/`);
             setModelData(updatedData.data);
             toast.success('Data submitted successfully');
         } catch (error) {
@@ -128,7 +128,7 @@ const Models = () => {
                 {selectedModel && (
                     <div className="bg-white shadow-md rounded-lg p-6">
                         <h2 className="text-2xl font-semibold mb-4">{selectedModel.model_name} Model</h2>
-                        <p className="mb-2">Created by: {selectedModel.created_by}</p>
+                        {/* <p className="mb-2">Created by: {selectedModel.created_by}</p> */}
                         <h3 className="text-xl font-semibold mb-2">Fields:</h3>
                         <ul className="list-disc list-inside mb-4">
                             {selectedModel.fields.map((field, index) => (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Select, Input, message, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import axiosInstance from '../../api';
+import {axiosInstance, fastURL, djangoURL} from '../../api';
 
 const { Option } = Select;
 
@@ -19,8 +19,8 @@ const AssignContact = () => {
   const fetchUsersAndLeads = async () => {
     try {
       const [usersResponse, leadsResponse] = await Promise.all([
-        axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/get-all-user/'),
-        axiosInstance.get('/contacts/')
+        axiosInstance.get(`${djangoURL}/get-all-user/`),
+        axiosInstance.get(`${fastURL}/contacts/`)
       ]);
 
       setUsers(usersResponse.data);

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Edit2, Save, X, Upload } from 'lucide-react';
 import axios from 'axios';
-import axiosInstance from '../../api';
+import axiosInstance, { fastURL, djangoURL } from '../../api';
 
 
 
@@ -43,17 +43,17 @@ const ProfilePage = () => {
     const fetchData = async () => {
       try {
         // First, fetch the business phone ID
-        const bpidResponse = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
+        const bpidResponse = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-ID': tenantId
           }
         });
-        const businessPhoneNumberId = bpidResponse.data.business_phone_number_id;
+        const businessPhoneNumberId = bpidResponse.data.whatsapp_data.business_phone_number_id;
         setBusinessPhoneNumberId(businessPhoneNumberId);
   
         // Then, fetch the tenant data using the obtained business phone ID
-        const tenantResponse = await axiosInstance.get(`/whatsapp_tenant/`);
-        setAccessToken(tenantResponse.data.access_token);
+        const tenantResponse = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
+        setAccessToken(tenantResponse.data.whatsapp_data.access_token);
   
         // Fetch user profile
         const profileResponse = await axiosInstance.get(`/get-user/${tenantId}`);

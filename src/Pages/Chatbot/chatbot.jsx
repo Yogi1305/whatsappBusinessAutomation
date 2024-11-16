@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './chatbot.css';
 // import OpenAI from "openai";
 import { Navigate, useNavigate, useParams } from "react-router-dom"; 
-import axiosInstance from "../../api.jsx";
+import {axiosInstance,fastURL, djangoURL} from "../../api.jsx";
 import MailIcon from '@mui/icons-material/Mail';
 import SearchIcon from '@mui/icons-material/Search';
 import CallRoundedIcon from '@mui/icons-material/CallRounded';
@@ -18,23 +18,24 @@ import Picker from 'emoji-picker-react';
 import shortid from 'shortid';
 import ImageEditorComponent from "../../Components/ImageEditor/imageeditor.jsx";
 import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid'; 
+import { parse, v4 as uuidv4 } from 'uuid'; 
+import {whatsappURL}  from '../../Navbar';
 
 import io from 'socket.io-client';
 import { PhoneIcon, PlusCircle, PlusIcon, Upload, X } from 'lucide-react';
 import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
-import { div } from 'framer-motion/client';
+import { base, div } from 'framer-motion/client';
 import { Button, Input } from 'antd';
 
-const socket = io('https://whatsappbotserver.azurewebsites.net');
+const socket = io(whatsappURL);
 
 
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
     var tenant_id = pathArray[1]
-    if(tenant_id == "demo") tenant_id = 'tlb'
+    if(tenant_id == "demo") tenant_id = 'ai'
     return tenant_id; // Assumes tenant_id is the first part of the path
   }
   return null; 
@@ -128,10 +129,12 @@ const Chatbot = () => {
 
   useEffect(() => {
     const contactID = getContactIDfromURL()
-    const contact = contacts.find(c => c.id == parseInt(contactID))
-    console.log("CONTATATATATATTA: ", contact)
+    const contact = contacts.find(c => c.id === parseInt(contactID))
     setSelectedContact(contact)
-  })
+    console.log("Selected Contact 1: ", selectedContact)
+
+  }, [])
+  
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -142,13 +145,13 @@ const Chatbot = () => {
     const fetchBusinessPhoneId = async () => {
       try {
         console.log("fetching business phone number id")
-        const response = await axios.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_tenant/', {
+        const response = await axios.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-Id': tenantId
           }
         });
-        console.log(response.data.business_phone_number_id,"THIS IS BPID");
-        setBusinessPhoneNumberId(response.data.business_phone_number_id);
+        console.log(response.data.whatsapp_data[0].business_phone_number_id,"THIS IS BPID");
+        setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
       } catch (error) {
         console.error('Error fetching business phone ID:', error);
       }
@@ -196,9 +199,10 @@ const Chatbot = () => {
 
   const renderInteractiveMessage = (parsedMessage) => {
     const { type, interactive, text, image, template } = parsedMessage;
-
+    // console.log("Parsed Message: ", parsedMessage)
     if (type === 'interactive') {
       if (interactive.type === 'list') {
+        // console.log("interactive: ",interactive)
         return (
           <div className="interactive-message list-message">
             <p className="message-text">{interactive.body.text}</p>
@@ -251,6 +255,7 @@ const Chatbot = () => {
 
   const fixJsonString = (jsonString) => {
     try {
+      console.log("Json String: ", jsonString)
       // Replace single quotes with double quotes
       const regex = /("(?:[^"\\]|\\.)*")|'/g;
 
@@ -261,8 +266,9 @@ const Chatbot = () => {
               return match;
           }
           // Replace single quotes with double quotes
-          return match.replace(/'/g, '"');
+          return match.replace(/'(?![^"]*")/g, '"');
       });
+      console.log("Pre Fixed String: ", fixedString)
       // Ensure proper escape sequences
       fixedString = fixedString.replace(/\\"/g, '\\\\"');
       return fixedString;
@@ -272,11 +278,10 @@ const Chatbot = () => {
     }
   };
 
-
-    
+``
   const fetchContacts = async () => {
     try {
-      const response = await axiosInstance.get('/contacts/', {
+      const response = await axiosInstance.get(`${fastURL}/contacts/`, {
         headers: {
           token: localStorage.getItem('token'),
         },
@@ -339,8 +344,8 @@ const Chatbot = () => {
       try {
         // const business_phone_number_id = 241683569037594;
         console.log("bpiddddddd: ", businessPhoneNumberId)
-        const response = await axiosInstance.get(`/whatsapp_tenant/`);
-        setAccessToken(response.data.access_token);
+        const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
+        setAccessToken(response.data.whatsapp_data.access_token);
 
       } catch (error) {
         console.error('Error fetching tenant data:', error);
@@ -419,7 +424,6 @@ const Chatbot = () => {
     setInputFields(newInputFields);
   };
 
-
   const handleImageSend = async () => {
     if (!imageToSend || !selectedContact) return;
     let phoneNumber = selectedContact.phone;
@@ -428,7 +432,7 @@ const Chatbot = () => {
     }
     try {
       const response = await axiosInstance.post(
-        'https://whatsappbotserver.azurewebsites.net/send-message',
+        `${whatsappURL}/send-message`,
         {
           phoneNumbers: [phoneNumber],
           messageType: "image",
@@ -466,50 +470,15 @@ const Chatbot = () => {
     hasNewMessage: true // Default or initial state
   });
 
-  // Scroll to bottom of chat
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messageEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [conversation]);
-
-
-    
 
   useEffect(() => {
     socket.on('connect', () => {
       console.log('Connected to the server');
     });
-
-    socket.on('new-message', (message) => {
-      if (message) {
-        console.log('Got New Message', message.message);
-        updateContactPriority(message.contactPhone, message.message);
-        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
-          console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
-          setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
-          //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
-          } else {
-          // Update unread count for non-selected contacts
-          setContacts(prevContacts => 
-            prevContacts.map(contact => 
-              contact.phone === message.contactPhone
-                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
-                : contact
-            )
-          );
-      }}
-    });
-
-    socket.on('node-message', (message) => {
-      console.log(message.message, "this is node");
-      console.log(selectedContact,"yahandekhhhhhh");
-      if (message) {
-          if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
-            console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-            setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'bot' }]);
-          }
-
-      }
-    });
+    
     socket.on('temp-user', (message) => {
       console.log("New temp user logged");
     
@@ -549,12 +518,42 @@ const Chatbot = () => {
           });
         
           setShowNewChatInput(false);
-          console.log("Selected contact:", message.contactPhone);
         }else {
           console.log("Session ID does not match.");
         }
       } else {
         console.log("Message is undefined or null.");
+      }
+    });
+    socket.on('new-message', (message) => {
+      if (message) {
+        console.log('Got New Message', message.message);
+        updateContactPriority(message.contactPhone, message.message);
+        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
+          console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
+          setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
+          //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
+          } else {
+          // Update unread count for non-selected contacts
+          setContacts(prevContacts => 
+            prevContacts.map(contact => 
+              contact.phone === message.contactPhone
+                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
+                : contact
+            )
+          );
+      }}
+    });
+
+    socket.on('node-message', (message) => {
+      console.log(message.message, "this is node");
+      console.log(selectedContact,"yahandekhhhhhh");
+      if (message) {
+          if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
+            console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+            setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'bot' }]);
+          }
+
       }
     });
     return () => {
@@ -590,13 +589,13 @@ const Chatbot = () => {
           }
           
           return axiosInstance.post(
-            'https://whatsappbotserver.azurewebsites.net/send-message',
+            `${whatsappURL}/send-message`,
             {
               phoneNumbers: [phoneNumber],
               message: newMessage.content,
               business_phone_number_id: businessPhoneNumberId,
               messageType: "text",
-            }
+            }                                                                  /////
           );
         });
         await Promise.all(sendPromises);
@@ -607,7 +606,7 @@ const Chatbot = () => {
           phoneNumber = phoneNumber.slice(2);
         }
         await axiosInstance.post(
-          'https://whatsappbotserver.azurewebsites.net/send-message',
+          `${whatsappURL}/send-message`,
           {
             phoneNumbers: [phoneNumber],
             message: newMessage.content,
@@ -684,7 +683,7 @@ const Chatbot = () => {
   const fetchConversation = async (contactId) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
+      const response = await fetch(`${djangoURL}/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
         method: 'GET',
         headers: {
           'X-Tenant-Id': tenantId
@@ -695,7 +694,7 @@ const Chatbot = () => {
         throw new Error('Failed to fetch data from backend');
       }
       const data = await response.json();
-      const conversations = data.slice(0,-1)
+      console.log("Conversations: ", data)
       const sentiment = data.at(-1).dominant_emotion
       const rgb = sentimentColors[sentiment]
       setCSSVariable('--sentiment-shadow', `0 4px 6px rgba(${rgb}, 0.8)`)
@@ -704,7 +703,7 @@ const Chatbot = () => {
       // Merge fetched data with any new messages
       const mergedConversation = [
         ...(allConversations[contactId] || []),
-        ...conversations
+        ...data
       ];
       setAllConversations(prev => ({
         ...prev,
@@ -722,7 +721,6 @@ const Chatbot = () => {
     setInputFields([...inputFields, { value: '' }]);
   };
 
-
   const deleteInputField = (index) => {
     const newInputFields = inputFields.filter((_, i) => i !== index);
     setInputFields(newInputFields);
@@ -730,16 +728,13 @@ const Chatbot = () => {
     
   
   useEffect(() => {
-    // Clear current conversation
     setConversation(['']);
     setNewMessages(['']);
-
-    // Fetch conversation data for the new selected contact
+    console.log("selected contact 3:", selectedContact)
+    
     if(selectedContact){
     fetchConversation(selectedContact.phone);}
-    
   }, [selectedContact]);
-
 
   const handleContactSelection = async (contact) => {
     if (selectedContact) {
@@ -784,7 +779,6 @@ const Chatbot = () => {
     }));
   };
 
-
   const handleUpload = async () => {
     if (!file) {
       setUploadStatus('Please select a file to upload.');
@@ -818,7 +812,6 @@ const Chatbot = () => {
     }
   };
     
-
   const handleRedirect = () => {
     window.location.href = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=1546607802575879&redirect_uri=https%3A%2F%2Fwhatsapp.nuren.ai%2Fchatbotredirect&response_type=code&config_id=1573657073196264&state=pass-through%20value';
   };
@@ -829,7 +822,7 @@ const Chatbot = () => {
 
   const fetchFlows = async () => {
     try {
-      const response = await axiosInstance.get('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/node-templates/', {
+      const response = await axiosInstance.get(`${fastURL}/node-templates/`, {
         headers: { token: localStorage.getItem('token') },
       });
       // Ensure each flow has an id property
@@ -879,7 +872,7 @@ const Chatbot = () => {
     
       // First POST request to insert data
       const insertResponse = await axiosInstance.post(
-        'https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/insert-data/',
+        `${djangoURL}/insert-data/`,
         dataToSend,
         {
           headers: {
@@ -895,7 +888,7 @@ const Chatbot = () => {
       if (insertResponse.status === 200) {
         // Second POST request to reset the session
         const resetSessionResponse = await axiosInstance.post(
-          'https://whatsappbotserver.azurewebsites.net/reset-session',
+          `${whatsappURL}/reset-session`,
           { business_phone_number_id: businessPhoneNumberId },
           {
             headers: {
@@ -919,14 +912,16 @@ const Chatbot = () => {
     }
   };
   
-
-
+  useEffect(() => { 
+    navigate(window.location.pathname, { replace: true });
+    console.log("selected contact 2 : ", selectedContact)
+  }, [])
 
   const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
 
   try {
-  const response = await axiosInstance.post('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/contacts/', {
+  const response = await axiosInstance.post(`${djangoURL}/contacts/`, {
     phone: newPhoneNumber,
     tenant: tenantId,
     // Add other required fields for creating a new contact
@@ -1059,10 +1054,13 @@ const Chatbot = () => {
           try {
             const fixedMessage = fixJsonString(message.text);
             const parsedMessage = JSON.parse(fixedMessage);
-            //console.log('Parsed Message:', parsedMessage);
+            // console.log('Parsed Message:', parsedMessage);
             return renderInteractiveMessage(parsedMessage);
           } catch (e) {
-            console.error('Failed to parse JSON message:', e);
+            const fixedMessage = fixJsonString(message.text);
+            console.log("Fixed Message: ", fixedMessage)
+            const parsedMessage = JSON.parse(fixedMessage);
+            console.error(`Failed to parse JSON message: ${JSON.stringify(parsedMessage, null, 4)}`, e);
             return <div className="error">Failed to parse message</div>;
           }
         }

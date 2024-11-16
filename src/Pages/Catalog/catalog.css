@@ -1,34 +1,33 @@
-
-h1 {
+.bp-catalog h1 {
   font-size: 36px;
   font-weight: 600;
   font-family: sans-serif;
   margin-bottom: 20px;
 }
 
-table {
+.bp-catalog table {
   width: 100%;
   border-collapse: collapse;
 }
 
-th, td {
+.bp-catalog th, .bp-catalog td {
   padding: 15px;
   text-align: left;
   border: 1px solid #ddd;
 }
 
-th {
+.bp-catalog th {
   background-color: #f4f4f4;
 }
 
-td input {
+.bp-catalog td input {
   width: 90%;
   padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-button {
+.bp-catalog button {
   background-color: #4CAF50; /* Green */
   color: white;
   padding: 10px 15px;
@@ -38,10 +37,10 @@ button {
   transition: background-color 0.3s ease;
 }
 
-.submit-button {
+.bp-catalog .submit-button {
   position: absolute;
-  top: 95px; 
-  right: 15px; 
+  top: 95px;
+  right: 15px;
   width: 90px;
   height: 45px;
   border-radius: 15px;
@@ -57,50 +56,49 @@ button {
   transition: background-color 0.3s ease;
 }
 
-.add-row-button {
-  position: fixed; /* Fixes the button to the viewport */
-  bottom: 20px; /* Distance from the bottom */
-  right: 20px; /* Distance from the right */
-  width: 50px; /* Width of the button */
-  height: 50px; /* Height of the button */
-  border-radius: 50%; /* Makes it circular */
-  background-color: #4CAF50; /* Green background */
-  color: white; /* White text color */
-  border: none; /* No border */
-  font-size: 24px; /* Font size for the plus sign */
-  display: flex; /* Center the content */
-  align-items: center; /* Center vertically */
-  justify-content: center; /* Center horizontally */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow effect */
-  cursor: pointer; /* Pointer cursor on hover */
-  transition: background-color 0.3s ease; /* Transition effect */
-}
-
-.add-row-button:hover {
-  background-color: #45a049; /* Darker green on hover */
-}
-
-
-.btn {
+.bp-catalog .add-row-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  font-size: 24px;
   display: flex;
   align-items: center;
-  background: none;/* Assuming gray is #A9A9A9 */
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.bp-catalog .add-row-button:hover {
+  background-color: #45a049;
+}
+
+.bp-catalog .btn {
+  display: flex;
+  align-items: center;
+  background: none;
   height: 48px;
-  padding: 0 15px 0 15px;
-  letter-spacing: .25px;
+  padding: 0 15px;
+  letter-spacing: 0.25px;
   border-radius: 24px;
   cursor: pointer;
 }
 
-.btn:focus {
+.bp-catalog .btn:focus {
   outline: none;
 }
 
-.btn-delete {
+.bp-catalog .btn-delete {
   font-size: 16px;
   color: red;
 }
 
-.btn-delete:hover {
-  background-color: rgba(255, 0, 0, 0.13); /* lighten(red, 48%) */
+.bp-catalog .btn-delete:hover {
+  background-color: rgba(255, 0, 0, 0.13);
 }

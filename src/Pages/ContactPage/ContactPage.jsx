@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Dropdown } from "react-bootstrap";
-import axiosInstance from "../../api";
+import axiosInstance, { fastURL, djangoURL } from "../../api";
 import { FaFileExcel, FaFilePdf, FaSearch, FaPlus } from 'react-icons/fa';
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -35,7 +35,7 @@ const ContactPage = () => {
   const fetchContacts = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get('/contacts/');
+      const response = await axiosInstance.get(`${fastURL}/contacts/`);
       setContacts(response.data);
       setFilteredContacts(response.data);
     } catch (error) {
@@ -79,7 +79,7 @@ const ContactPage = () => {
     formData.append('model_name', "Contact");
 
     try {
-      const response = await axiosInstance.post('https://backeng4whatsapp-dxbmgpakhzf9bped.centralindia-01.azurewebsites.net/upload/', formData, {
+      const response = await axiosInstance.post(`${djangoURL}/upload/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

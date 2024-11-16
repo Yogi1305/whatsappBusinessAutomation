@@ -1,5 +1,5 @@
 import { Height } from '@mui/icons-material';
-import { AlignCenter } from 'lucide-react';
+import { ShoppingBag, Bot } from 'lucide-react';
 import React from 'react';
 
 const Sidebar = () => {
@@ -32,11 +32,9 @@ const Sidebar = () => {
 
   const smallNodeStyle = {
     ...nodeStyle,
-    padding: '5px',
     fontSize: '15px',
-    marginLeft: '10px',
     marginBottom: '5px',
-    width:'5rem',
+    width:'8rem',
     height:'3rem',
     display:'flex',
     alignItems:'center',
@@ -75,6 +73,7 @@ const Sidebar = () => {
         Ask a Question
         <div style={{fontSize: '12px', fontWeight: 'normal'}}>Ask question and store user input in variable</div>
       </div>
+
       <div 
         style={{...nodeStyle, backgroundColor: '#4169E1'}}
         onDragStart={(event) => onDragStart(event, 'setCondition')} 
@@ -88,12 +87,32 @@ const Sidebar = () => {
       <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
 
       <div 
-        style={{...smallNodeStyle, backgroundColor: '#6495ED'}}
+        style={{
+          ...smallNodeStyle, 
+          backgroundColor: 'blueviolet', 
+          padding: '12px',      // Add padding inside the div
+          display: 'flex',      // Align items horizontally
+          alignItems: 'center', // Center-aligns the Bot icon vertically
+          gap: '8px'            // Adds spacing between <Bot /> and "AI" text
+        }} 
         onDragStart={(event) => onDragStart(event, 'ai')} 
         draggable
+      >
+        <Bot />
+        <span>AI</span>
+      </div>
+
+      
+      <div 
+        style={{...smallNodeStyle, backgroundColor: 'yellowgreen',           padding: '12px',      // Add padding inside the div
+          display: 'flex',      // Align items horizontally
+          alignItems: 'center', // Center-aligns the Bot icon vertically
+          gap: '8px'    }}
+        onDragStart={(event) => onDragStart(event, 'product')} 
+        draggable
         >
-        <span style={smallIconStyle}>🤖</span>
-        AI
+          <ShoppingBag />    
+        <span>Product</span>
       </div>
     </div>
     </aside>

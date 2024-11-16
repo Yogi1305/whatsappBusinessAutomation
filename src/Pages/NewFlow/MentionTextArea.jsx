@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axiosInstance from "../../api";  // Assuming this is the correct path to your axiosInstance
+import axiosInstance, { fastURL } from "../../api";  // Assuming this is the correct path to your axiosInstance
 
+import { FaTrash, FaCopy, FaMinus, FaPlus } from 'react-icons/fa';
 const textAreaStyles = {
   width: '100%',
   padding: '10px',
@@ -41,7 +42,7 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
   useEffect(() => {
     const fetchContactFields = async () => {
       try {
-        const response = await axiosInstance.get('/contacts/');
+        const response = await axiosInstance.get(`${fastURL}/contacts/`);
         if (response.data && response.data.length > 0) {
           const sampleContact = response.data[0];
           const fields = Object.keys(sampleContact).filter(key => 
@@ -54,7 +55,6 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
         console.error("Error fetching contact fields:", error);
       }
     };
-
     fetchContactFields();
   }, []);
 
@@ -131,4 +131,24 @@ export const convertMentionsForFrontend = (text) => {
   return text.replace(/{{(\w+)}}/g, '@$1');
 };
 
-export default MentionTextArea;
+
+export const ShowProducts = ({ products, selectedProductId, onSelect }) => {
+  return (
+    <div style={{ position: 'relative' }}>
+      <select
+        value={selectedProductId}
+        onChange={(e) => onSelect(e.target.value)}
+        style={{ width: '100%', padding: '8px', borderRadius: '4px', marginTop: '10px' }}
+      >
+        <option value="" disabled>Select a product ID</option>
+        {products.map((item) => (
+          <option key={item.product_id} value={item.product_id}>
+            {item.title}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+export default {MentionTextArea, ShowProducts};
