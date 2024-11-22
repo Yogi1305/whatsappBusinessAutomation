@@ -28,7 +28,7 @@ import PrivacyPolicy from './Pages/Misc/privacypolicy.jsx';
 import TermsAndConditions from './Pages/Misc/terms&conditions.jsx';
 import ContactUs from './Pages/Misc/contactus.jsx';
 import Catalog from './Pages/Catalog/catalog.jsx';
-
+import { Toaster } from 'sonner';
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
   return authenticated ? children : <Navigate to="/login" replace />;

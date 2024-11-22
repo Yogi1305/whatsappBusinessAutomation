@@ -1,44 +1,44 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import './BroadcastPage.css';
-import {axiosInstance, fastURL, djangoURL} from '../../../api';
+import { axiosInstance, fastURL } from '../../../api';
 import axios from 'axios';
-import { Edit2, Trash2, X } from 'lucide-react';
-import {whatsappURL}  from '../../../Navbar';
-import { v4 as uuidv4 } from 'uuid'; 
-// import { uploadToBlob } from '../../../utils/azureStorage';
-import { useAuth } from '../../../authContext';
-import uploadToBlob from '../../../azureUpload';
-import { MentionTextArea,convertMentionsForBackend, convertMentionsForFrontend } from '../../NewFlow/MentionTextArea';
-import { base } from 'framer-motion/client';
-
+import { whatsappURL } from '../../../Navbar';
+import { v4 as uuidv4 } from 'uuid';
+import BroadcastHistory from './BroadcastHistory';
+import TemplateMessages from './TemplateMessages';
+import { MentionTextArea, convertMentionsForFrontend } from '../../NewFlow/MentionTextArea';
+import BroadcastPopup from './BroadcastPopup';
+import GroupPopup from './GroupPopup';
+import WhatsAppTemplatePopup from './WhatsAppTemplatePopup';
+import { toast } from "sonner"; 
 const getTenantIdFromUrl = () => {
-  // Example: Extract tenant_id from "/3/home"
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
-    return pathArray[1]; // Assumes tenant_id is the first part of the path
+    return pathArray[1];
   }
-  return null; // Return null if tenant ID is not found or not in the expected place
+  return null;
 };
 
 const initial_bg = [
   {id: 1, name: 'first group', contacts: [919548265904, 919864436756]}
-]
+];
 
 const BroadcastPage = () => {
+  const [accessToken, setAccessToken] = useState('');
+  const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
+  const [accountId, setAccountId] = useState('');
+  const [activeTab, setActiveTab] = useState('history');
+
   const [showTemplatePopup, setShowTemplatePopup] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [broadcasts, setBroadcasts] = useState([]);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [activeTab, setActiveTab] = useState('history');
+  
   const [showBroadcastPopup, setShowBroadcastPopup] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
-  const [broadcastMessage, setBroadcastMessage] = useState('');
   const [contacts, setContacts] = useState([]);
-  const [broadcastGroup, setBroadcastGroup] = useState(initial_bg)
+  const [broadcastGroup, setBroadcastGroup] = useState(initial_bg);
   const [selectedPhones, setSelectedPhones] = useState([]);
-  const [selectedBCGroups, setSelectedBCGroups] = useState([])
+  const [selectedBCGroups, setSelectedBCGroups] = useState([]);
   const [templateName, setTemplateName] = useState('');
   const [category, setCategory] = useState('');
   const [language, setLanguage] = useState('');
@@ -49,114 +49,71 @@ const BroadcastPage = () => {
   const [buttons, setButtons] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [headerImage, setHeaderImage] = useState(null);
-  const [accessToken, setAccessToken] = useState('');
-  const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
+  
   const [broadcastHistory, setBroadcastHistory] = useState([]);
   const [selectedTemplateDetails, setSelectedTemplateDetails] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [headerImageUrl, setHeaderImageUrl] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [headerMediaId, setHeaderMediaId] = useState('');
-  const { userId } = useAuth();
-  const fileInputRef = useRef(null);
-  const tenantId=getTenantIdFromUrl();
   const [filteredBroadcastHistory, setFilteredBroadcastHistory] = useState([]);
-  const [filteredTemplates, setFilteredTemplates] = useState([]);
-  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
   const [bodyVariables, setBodyVariables] = useState([]);
-  const [headerVariables, setHeaderVariables] = useState([]);
-  const [accountId, setAccountId] = useState('');
-
-
-
-
-  const handleTemplateFilter = (query) => {
-    setTemplateSearchQuery(query);
-    const filtered = templates.filter(template =>
-      template.name.toLowerCase().includes(query.toLowerCase()) ||
-      template.category.toLowerCase().includes(query.toLowerCase()) ||
-      template.language.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredTemplates(filtered);
-  };
- 
-
-    useEffect(() => {
-      const fetchBusinessPhoneId = async () => {
-        try {
-          const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
-            headers: {
-              'X-Tenant-ID': tenantId
-            }
-          });
-          console.log("response: ", response.data.whatsapp_data)
-          console.log("bpid ac id at: ", response.data.whatsapp_data.access_token, response.data.whatsapp_data.business_phone_number_id, response.data.whatsapp_data.accountId)
-          setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
-          setAccountId(response.data.whatsapp_data[0].business_account_id);
-          setAccessToken(response.data.whatsapp_data[0].access_token)
-          return response.data.whatsapp_data;
-        } catch (error) {
-          console.error('Error fetching business phone ID:', error);
-        }
-      };
-      
-      const fetchTenantData = async (bpid) => {
-        console.log("NIGIAAHFBYEVKJABHCJABHCHVJB")
-        try {
-          const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
-            headers: {
-              'X-Tenant-ID': tenantId
-            }
-          });
-          
-          setAccessToken(response.data.whatsapp_data.access_token);
-        } catch (error) {
-          console.error('Error fetching tenant data:', error);
-        }
-      };
   
-      fetchBusinessPhoneId().then((data) => {
-        if (data && data.business_phone_number_id) {
-          fetchTenantData(data.business_phone_number_id);
-        }
-      });
-    }, [tenantId]);
-  
+  const [showGroupPopup, setShowGroupPopup] = useState(false);
+  const tenantId = getTenantIdFromUrl();
 
-
-    const handleEditTemplate = async (template) => {
-      setIsEditing(true);
-      setSelectedTemplate(template);
-      setShowTemplatePopup(true);
-      setTemplateName(template.name);
-      setCategory(template.category);
-      setLanguage(template.language);
-      
-      const headerComponent = template.components.find(c => c.type === "HEADER");
-      if (headerComponent) {
-        setHeaderType(headerComponent.format.toLowerCase());
-        setHeaderContent(headerComponent.text || headerComponent.example?.header_handle?.[0] || '');
-      }
-  
-      const bodyComponent = template.components.find(c => c.type === "BODY");
-      if (bodyComponent) {
-        setBodyText(bodyComponent.text);
-      }
-  
-      const footerComponent = template.components.find(c => c.type === "FOOTER");
-      if (footerComponent) {
-        setFooterText(footerComponent.text);
-      }
-  
-      const buttonsComponent = template.components.find(c => c.type === "BUTTONS");
-      if (buttonsComponent) {
-        setButtons(buttonsComponent.buttons.map(button => ({ text: button.text })));
-      } else {
-        setButtons([]);
+  useEffect(() => {
+    const fetchBusinessPhoneId = async () => {
+      try {
+        const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
+          headers: {
+            'X-Tenant-ID': tenantId
+          }
+        });
+        setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
+        setAccountId(response.data.whatsapp_data[0].business_account_id);
+        setAccessToken(response.data.whatsapp_data[0].access_token);
+        return response.data.whatsapp_data;
+      } catch (error) {
+        console.error('Error fetching business phone ID:', error);
       }
     };
 
-      const fetchTemplates = useCallback(async () => {
+    fetchBusinessPhoneId();
+  }, [tenantId]);
+
+  const handleEditTemplate = async (template) => {
+    setIsEditing(true);
+    setSelectedTemplate(template);
+    setShowTemplatePopup(true);
+    setTemplateName(template.name);
+    setCategory(template.category);
+    setLanguage(template.language);
+    
+    const headerComponent = template.components.find(c => c.type === "HEADER");
+    if (headerComponent) {
+      setHeaderType(headerComponent.format.toLowerCase());
+      setHeaderContent(headerComponent.text || headerComponent.example?.header_handle?.[0] || '');
+    }
+
+    const bodyComponent = template.components.find(c => c.type === "BODY");
+    if (bodyComponent) {
+      setBodyText(bodyComponent.text);
+    }
+
+    const footerComponent = template.components.find(c => c.type === "FOOTER");
+    if (footerComponent) {
+      setFooterText(footerComponent.text);
+    }
+
+    const buttonsComponent = template.components.find(c => c.type === "BUTTONS");
+    if (buttonsComponent) {
+      setButtons(buttonsComponent.buttons.map(button => ({ text: button.text })));
+    } else {
+      setButtons([]);
+    }
+  };
+
+  const fetchTemplates = useCallback(async () => {
     if (!accessToken || !accountId) return;
     try {
       const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates?fields=name,status,components,language,category`;
@@ -178,20 +135,17 @@ const BroadcastPage = () => {
         })
       }));
       setTemplates(formattedTemplates);
-      setFilteredTemplates(formattedTemplates);
     } catch (error) {
       console.error('Error fetching templates:', error);
     }
   }, [accessToken, accountId]);
 
-
-    useEffect(() => {
-    console.log("at and ac id: ", accessToken, accountId)
-      if (accessToken && accountId) {
-        fetchTemplates();
-        fetchBroadcastHistory();
-      }
-    }, [accessToken, accountId, fetchTemplates]);
+  useEffect(() => {
+    if (accessToken && accountId) {
+      fetchTemplates();
+      fetchBroadcastHistory();
+    }
+  }, [accessToken, accountId, fetchTemplates]);
 
   const handleDeleteTemplate = async (templateId) => {
     if (window.confirm('Are you sure you want to delete this template?')) {
@@ -202,45 +156,42 @@ const BroadcastPage = () => {
             'Authorization': `Bearer ${accessToken}`
           }
         });
-        await fetchTemplates(); // Refresh the template list
+        await fetchTemplates();
       } catch (error) {
         console.error('Error deleting template:', error);
       }
     }
   };
 
-
   const handleSendBroadcast = async () => {
     if (selectedPhones.length === 0 && selectedBCGroups.length === 0) {
-      alert("Please select at least one contact or group and enter a message.");
+      toast.error("Please select at least one contact or group and enter a message.", {
+        position: "top-right",
+        duration: 3000
+      });
+     
       return;
     }
   
     setIsSendingBroadcast(true);
-  
+    
     try {
-      // Create a new group and save it to local storage
-      const newGroup = {
-        id: uuidv4(),
-        name: groupName || `Broadcast Group ${new Date().toISOString()}`,
-        members: selectedPhones,
-      };
-      // saveGroupToLocalStorage(newGroup);
-  
+      let bg_id;
+      let bg_name;
 
       const phoneNumbers = [
-        ...selectedPhones.map((contactId) => {
-        const contact = contacts.find((c) => c.id === contactId);
-        return parseInt(contact.phone);
-      }),
-      ...selectedBCGroups.flatMap((bgId) => {
-        const bcg = broadcastGroup.find((bg) => bg.id === bgId);
-        return bcg.contacts.map(phone => parseInt(phone))
-      }) 
-    ].filter(Boolean)
+        ...selectedPhones.map((contact) => parseInt(contact.phone)),
+        ...selectedBCGroups.flatMap((bgId) => {
+          const bcg = broadcastGroup.find((bg) => bg.id === bgId);
+          bg_id = bcg.id;
+          bg_name = bcg.name;
+          return bcg.members.map(member => parseInt(member.phone));
+        })
+      ].filter(Boolean);
   
       const payload = {
-        bg_id: newGroup.id,
+        bg_id: bg_id,
+        bg_name: bg_name,
         template: {
           id: selectedTemplate.id,
           name: selectedTemplate?.name || "under_name",
@@ -248,121 +199,116 @@ const BroadcastPage = () => {
         business_phone_number_id: businessPhoneNumberId,
         phoneNumbers: phoneNumbers,
       };
-  
-      // Send the broadcast message
-      const response = await axios.post(`${whatsappURL}/send-template/`, payload,
-        {
-          headers: {
-            'X-Tenant-ID': tenantId // Replace with the actual tenant_id
-          }
+
+      const response = await axios.post(`${whatsappURL}/send-template/`, payload, {
+        headers: {
+          'X-Tenant-ID': tenantId
         }
-      );
+      });
   
       if (response.status === 200) {
-        console.log("Broadcast sent successfully");
-        alert("Broadcast message sent successfully!");
+        toast.success("Broadcast message sent successfully!", {
+          position: "top-center",
+          duration: 3000
+        });
         handleCloseBroadcastPopup();
       } else {
         throw new Error("Failed to send broadcast");
       }
-  
-      // const broadcastMessageObj = { text: broadcastMessage, sender: 'bot' };
     } catch (error) {
       console.error("Error sending broadcast:", error);
-      alert("Failed to send broadcast message. Please try again.");
+      toast.error("Failed to send broadcast message. Please try again.", {
+        position: "top-center",
+        duration: 3000
+      });
+    
     } finally {
       setIsSendingBroadcast(false);
     }
   };
 
   const handleCreateGroup = async () => {
-    console.log("selected phones for groups: ", selectedPhones)
-    console.log("group name: ", groupName)
-    try{
+    try {
+      const members = selectedPhones.map(contact => ({
+        phone: contact.phone,
+        name: contact.name
+      }));
+      
       const payload = {
-        contact_id : selectedPhones,
-        bgid : uuidv4(),
-        name: groupName 
+        members: members,
+        id: uuidv4(),
+        name: groupName
       };
-      const response = await axiosInstance.patch('/update-contacts/', payload,
-        {
-          headers: {
-            'X-Tenant-ID': tenantId
-          }
+      
+      const response = await axiosInstance.post(`${fastURL}/broadcast-groups/`, payload, {
+        headers: {
+          'X-Tenant-ID': tenantId
         }
-      );
+      });
 
       if (response.status === 200) {
-        console.log("Group created successfully");
-        alert("Contacts added to group successfully!");
+        toast.success("Contacts added to group successfully!", {
+          position: "top-center",
+          duration: 3000
+        });
+        setBroadcastGroup((prevGroups) => [...prevGroups, payload]);
+        setSelectedPhones([]);
       } else {
-        throw new Error("Failed to send broadcast");
+        throw new Error("Failed to create broadcast group");
       }
     } catch (error) {
       console.error("Error creating broadcast group:", error);
     }
-  }
-
+  };
 
   const handleCloseBroadcastPopup = () => {
     setShowBroadcastPopup(false);
-    setBroadcastMessage('');
     setSelectedPhones([]);
-    setSelectedBCGroups([])
+    setSelectedBCGroups([]);
     setGroupName('');
     setIsSendingBroadcast(false);
   };
-  
 
+  const handleCloseGroupPopup = () => {
+    setShowGroupPopup(false);
+    setSelectedPhones([]);
+    setSelectedBCGroups([]);
+    setGroupName('');
+  };
 
   const handleCreateTemplate = async (e) => {
     e.preventDefault();
     
     const components = [];
 
-      if ((headerType === 'text' && headerContent.trim()) || (headerType === 'image' && headerMediaId)) {
-        components.push({
-          type: "HEADER",
-          format: headerType.toUpperCase(),
-          text: headerType === 'text' ? headerContent : undefined,
-          example: headerType === 'image' ? { header_handle: [headerMediaId] } : undefined,
-        });
-      }
-  
-      // components.push({
-      //   type: "BODY",
-      //   text: convertBodyTextToIndexedFormat(bodyText),
-      //   example: {
-      //     body_text: [bodyVariables.map(variable => `{{${variable}}}`)]
-      //   }
-      // });
+    if ((headerType === 'text' && headerContent.trim()) || (headerType === 'image' && headerMediaId)) {
+      components.push({
+        type: "HEADER",
+        format: headerType.toUpperCase(),
+        text: headerType === 'text' ? headerContent : undefined,
+        example: headerType === 'image' ? { header_handle: [headerMediaId] } : undefined,
+      });
+    }
 
-      const bodyComponent = {
-        type: "BODY",
-        text: convertBodyTextToIndexedFormat(bodyText),
+    const bodyComponent = {
+      type: "BODY",
+      text: convertBodyTextToIndexedFormat(bodyText),
+    };
+  
+    if (bodyVariables && bodyVariables.length > 0) {
+      bodyComponent.example = {
+        body_text: [bodyVariables.map(variable => `{{${variable}}}`)]
       };
-    
-      if (bodyVariables && bodyVariables.length > 0) {
-        bodyComponent.example = {
-          body_text: [bodyVariables.map(variable => `{{${variable}}}`)]
-        };
-      }
-    
-      components.push(bodyComponent);
+    }
   
-      if (footerText.trim()) {
-        components.push({
-          type: "FOOTER",
-          text: footerText
-        });
-      }
+    components.push(bodyComponent);
 
-    // if (footerText) {
-    //   components.push({
-    //     type: "FOOTER",
-    //     text: footerText
-    //   });
-    // }
+    if (footerText.trim()) {
+      components.push({
+        type: "FOOTER",
+        text: footerText
+      });
+    }
 
     if (buttons.length > 0) {
       components.push({
@@ -412,19 +358,14 @@ const BroadcastPage = () => {
         }
       });
 
-      console.log('Template created/updated:', response.data);
       setShowTemplatePopup(false);
       resetTemplateForm();
       await fetchTemplates();
       setActiveTab('templates');
     } catch (error) {
       console.error('Error creating/updating template:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-      }
     }
   };
-
 
   const fetchTemplateDetails = async (templateId) => {
     try {
@@ -440,7 +381,6 @@ const BroadcastPage = () => {
     }
   };
 
-
   const handleTemplateClick = (template) => {
     setSelectedTemplate(template);
     fetchTemplateDetails(template.id);
@@ -449,9 +389,11 @@ const BroadcastPage = () => {
   const handleBroadcastMessage = () => {
     setShowBroadcastPopup(true);
   };
-  
 
-  
+  const handleGroup = () => {
+    setShowGroupPopup(true);
+  };
+
   const resetTemplateForm = () => {
     setTemplateName('');
     setCategory('');
@@ -470,28 +412,12 @@ const BroadcastPage = () => {
     try {
       const response = await axiosInstance.get(`${fastURL}/get-status/`);
       const formattedHistory = formatBroadcastHistory(response.data);
-      console.log("Formatted History: ", formattedHistory)
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);
     } catch (error) {
       console.error('Error fetching broadcast history:', error);
     }
   };
-
-  useEffect(() => {
-    fetchBroadcastHistory()
-  },[])
-
-  // const handleDateFilter = () => {
-  //   const filtered = broadcastHistory.filter(broadcast => {
-  //     const broadcastDate = new Date(broadcast.date);
-  //     const fromDate = dateFrom ? new Date(dateFrom) : new Date(0);
-  //     const toDate = dateTo ? new Date(dateTo) : new Date();
-  //     return broadcastDate >= fromDate && broadcastDate <= toDate;
-  //   });
-  //   setFilteredBroadcastHistory(filtered);
-  // };
-
 
   const sortContacts = (contactsToSort) => {
     return contactsToSort.sort((a, b) => {
@@ -505,11 +431,38 @@ const BroadcastPage = () => {
       const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim();
       return nameA.localeCompare(nameB);
     });
+  };  
+
+  const formatGroups = async (data) => {
+    const groups = {};
+    let idCounter = 1;
+  
+    data.forEach(group => {
+      const groupName = group.name
+  
+      // Initialize the group if it doesn't exist
+      // console.log("DOING GROUP: ", groupName)
+      if (!groups[groupName]) {
+        groups[groupName] = {
+          id: group.id, // Increment ID for each new group
+          name: groupName,
+          contacts: group.members
+        };
+      }
+    });
+  
+    // Convert the groups object into an array and join contact names with commas
+    return Object.values(groups).map(group => ({
+      id: group.id,
+      name: group.name || null,
+      members: group.contacts
+    }));
   };
 
 
   const fetchContacts = async () => {
     try {
+      const broadcastGroupPromise = axiosInstance.get(`${fastURL}/broadcast-groups/`)
       const response = await axiosInstance.get(`${fastURL}/contacts/`, {
         headers: {
           token: localStorage.getItem('token'),
@@ -524,64 +477,45 @@ const BroadcastPage = () => {
         hasNewMessage: contact.hasNewMessage || false
       }));
       setContacts(sortContacts(processedContacts));
+
+      const broadcastGroupResponse = await broadcastGroupPromise
+      console.log("Broadcast Group Response: ", broadcastGroupResponse.data)
+      const formattedGroups = await formatGroups(broadcastGroupResponse.data)
+      console.log("Formatted groups: ", formattedGroups)
+      setBroadcastGroup(formattedGroups)
     } catch (error) {
       console.error("Error fetching contacts data:", error);
     }
   };
-
   useEffect(() => {
     fetchContacts();
   }, []);
 
 
-  // const formatBroadcastHistory = (messageStatuses) => {
-  //   const groupedStatuses = messageStatuses.reduce((acc, status) => {
-  //     if (!acc[status.broadcast_group]) {
-  //       acc[status.broadcast_group] = [];
-  //     }
-  //     acc[status.broadcast_group].push(status);
-  //     return acc;
-  //   }, {});
-
-  //   console.log("grouped status: " ,groupedStatuses)
-  
-  //   return Object.entries(groupedStatuses).map(([broadcastGroup, statuses]) => ({
-  //     id: broadcastGroup,
-  //     name: `Broadcast Group ${broadcastGroup}`,
-  //     sent: statuses.length,
-  //     delivered: statuses.filter(s => s.is_delivered).length,
-  //     read: statuses.filter(s => s.is_read).length,
-  //     replied: statuses.filter(s => s.is_replied).length,
-  //     failed: statuses.filter(s => s.is_failed).length,
-  //     date: new Date(statuses[0].timestamp).toLocaleDateString(), // Assuming there's a timestamp field
-  //     status: statuses.every(s => s.is_delivered) ? 'Completed' : 'In Progress',
-  //     recipients: statuses.map(s => s.user_phone_number)
-  //   }));
-  // };
 
   const formatBroadcastHistory = (groupedStatuses) => {
-
     return Object.entries(groupedStatuses).map(([broadcastGroup, statuses]) => ({
-          id: broadcastGroup,
-          name: `Broadcast Group ${broadcastGroup}`,
-          sent: statuses.sent,
-          delivered: statuses.delivered,
-          read: statuses.read,
-          replied: statuses.replied,
-          failed: statuses.failed,
-          status: statuses.delivered ? 'Completed' : 'In Progress'
-        }));
+      id: broadcastGroup,
+      name: statuses.name || `Broadcast Group ${broadcastGroup}`,
+      sent: statuses.sent,
+      delivered: statuses.delivered,
+      read: statuses.read,
+      replied: statuses.replied,
+      failed: statuses.failed,
+      status: statuses.delivered ? 'Completed' : 'In Progress'
+    }));
   }
 
-  const handlePhoneSelection = (contactId) => {
+  const handlePhoneSelection = (contact) => {
     setSelectedPhones(prevSelected => 
-      prevSelected.includes(contactId)
-        ? prevSelected.filter(id => id !== contactId)
-        : [...prevSelected, contactId]
+      prevSelected.includes(contact)
+        ? prevSelected.filter(id => id !== contact)
+        : [...prevSelected, contact]
     );
   };
 
   const handleBCGroupSelection = (bgId) => {
+    console.log("Broadcast::::::::", bgId)
     setSelectedBCGroups(prevSelected => 
       prevSelected.includes(bgId)
         ? prevSelected.filter(id => id !== bgId)
@@ -621,18 +555,6 @@ const BroadcastPage = () => {
       fetchBroadcastHistory();
       fetchTemplates();
     }
-  };
-  
-  const formatPhoneNumber = (phoneNumber) => {
-    // Remove all non-digit characters
-    const digits = phoneNumber.replace(/\D/g, '');
-    
-    // Ensure the number starts with a '+'
-    if (!digits.startsWith('+')) {
-      return '+' + digits;
-    }
-    
-    return digits;
   };
 
   const deleteButton = (index) => {
@@ -679,371 +601,101 @@ const BroadcastPage = () => {
     }
   };
 
-  const [tableData, setTableData] = useState([]);
-
-  const handleCellChange = (e, rowIndex, field) => {
-    const newData = [...tableData];
-    newData[rowIndex][field] = e.target.value;
-    setTableData(newData);
-  };
-
-  const addRow = () => {
-    const newRow = { id: tableData.length + 1, name: "", price: 0 };
-    setTableData([...tableData, newRow]);
-  };
-
-  const deleteRow = (rowIndex) => {
-    const newData = tableData.filter((_, index) => index !== rowIndex);
-    setTableData(newData);
-  };
-
-  const handleSubmitCatalog  = async (tableData) => {
-    console.log("tableDData: ", tableData)
-    const response = await  axiosInstance.post('/catalog/', tableData)
-    console.log("Response catalog: ", response)
-  }
-
   return (
-    <div className="bp-broadcast-page">
-      <div className="bp-left-sidebar">
-      <div className={`bp-menu-item ${activeTab === 'history' ? 'bp-active' : ''}`} onClick={() => handleTabChange('history')}>Broadcast History</div>
-      <div className={`bp-menu-item ${activeTab === 'templates' ? 'bp-active' : ''}`} onClick={() => handleTabChange('templates')}>Template Messages</div>
-      </div>
-      <div className="bp-main-content">
-      {activeTab === 'history' && (
-        <div className="bp-broadcast-history">
-          <h1 style={{fontSize:'36px', fontWeight:'600', fontFamily:'sans-serif'}}>Broadcast History</h1>
-          <div className="bp-action-bar">
-            <button className="bp-btn-create" onClick={handleBroadcastMessage}>New Broadcast</button>
-          </div>
-      {showBroadcastPopup && (
-  <div className="cb-broadcast-popup">
-    <div className="cb-broadcast-content">
-      <h2>Broadcast Message</h2>
-      <input
-        type="text"
-        value={groupName}
-        onChange={(e) => setGroupName(e.target.value)}
-        placeholder="Enter group name (optional)"
-        className="cb-group-name-input"
-      />
-      <div className="bp-template-actions">
-        <select
-          value={selectedTemplate?.id || ''}
-          onChange={(e) => handleTemplateClick(templates.find(t => t.id === e.target.value))}
+    <div className="flex min-h-screen">
+      <div className="w-64 border-r bg-gray-50">
+        <div
+          className={`p-4 cursor-pointer hover:bg-gray-100 ${
+            activeTab === 'history' ? 'bg-gray-200' : ''
+          }`}
+          onClick={() => handleTabChange('history')}
         >
-          <option value="">Select Template</option>
-          {templates.map(template => (
-            <option key={template.id} value={template.id}>
-              {template.name}
-            </option>
-          ))}
-        </select>
-        <button className="bp-btn-create" onClick={() => setShowTemplatePopup(true)}>Create Template</button>
-      </div>
-      <div className="cb-broadcast-contact-list">
-        <h3>Select Contacts:</h3>
-        {contacts.map(contact => (
-          <div key={contact.id} className="cb-broadcast-contact-item">
-            <input
-              type="checkbox"
-              id={`contact-${contact.id}`}
-              checked={selectedPhones.includes(contact.id)}
-              onChange={() => handlePhoneSelection(contact.id)}
-            />
-            <label htmlFor={`contact-${contact.id}`}>
-              <span className="cb-broadcast-contact-name">{contact.name}</span>
-              <span className="cb-broadcast-contact-phone">({contact.phone})</span>
-            </label>
-          </div>
-        ))}
-        {broadcastGroup.map(bg => (
-          <div key={bg.id} className="cb-broadcast-contact-item">
-            <input
-              type="checkbox"
-              id={`broadcast-group-${bg.id}`}
-              checked={selectedBCGroups.includes(bg.id)}
-              onChange={() => handleBCGroupSelection(bg.id)}
-            />
-            <label htmlFor={`broadcast-group-${bg.id}`}>
-              <span className="cb-broadcast-contact-name">{bg.name}</span>
-              <span className="cb-broadcast-contact-phone">({bg.contacts.join(', ')})</span>
-            </label>
-          </div>
-        ))}
-      </div>
-      <div className="cb-broadcast-actions">
-        <button
-          onClick={handleSendBroadcast}
-          disabled={isSendingBroadcast || (selectedPhones.length === 0 && selectedBCGroups.length === 0) || !selectedTemplate }
-          className="cb-send-broadcast-btn"
+          Broadcast History
+        </div>
+        <div
+          className={`p-4 cursor-pointer hover:bg-gray-100 ${
+            activeTab === 'templates' ? 'bg-gray-200' : ''
+          }`}
+          onClick={() => handleTabChange('templates')}
         >
-          {isSendingBroadcast ? "Sending..." : "Send Broadcast"}
-        </button>
-        <button onClick={handleCloseBroadcastPopup} className="cb-cancel-broadcast-btn">Cancel</button>
-        <button 
-        onClick={handleCreateGroup}
-        disabled={selectedPhones.length === 0 || selectedBCGroups.length > 0}
-        className='cb-create-group-btn'
-        >Create Group</button>
+          Template Messages
+        </div>
       </div>
-    </div>
-  </div>
-)}
-          <div className="bp-broadcast-stats">
-            <div className="bp-stat-item">
-              <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.sent, 0)}</span>
-              <span className="bp-stat-label">Sent</span>
-            </div>
-            <div className="bp-stat-item">
-              <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.delivered, 0)}</span>
-              <span className="bp-stat-label">Delivered</span>
-            </div>
-            <div className="bp-stat-item">
-              <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.read, 0)}</span>
-              <span className="bp-stat-label">Read</span>
-            </div>
-            <div className="bp-stat-item">
-    <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.replied, 0)}</span>
-    <span className="bp-stat-label">Replied</span>
-  </div>
-  <div className="bp-stat-item">
-    <span className="bp-stat-value">{broadcastHistory.reduce((sum, b) => sum + b.failed, 0)}</span>
-    <span className="bp-stat-label">Failed</span>
-  </div>
-          </div>
-          <div className="bp-broadcast-list">
-          <table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Sent</th>
-      <th>Delivered</th>
-      <th>Read</th>
-      <th>Replied</th>
-      <th>Failed</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    {filteredBroadcastHistory.map(broadcast => (
-      <tr key={broadcast.id}>
-        <td>{broadcast.name}</td>
-        <td>{broadcast.sent}</td>
-        <td>{broadcast.delivered}</td>
-        <td>{broadcast.read}</td>
-        <td>{broadcast.replied}</td>
-        <td>{broadcast.failed}</td>
-        {/* <td>{broadcast.date}</td> */}
-        <td><span className={`bp-status bp-${broadcast.status.toLowerCase().replace(' ', '-')}`}>{broadcast.status}</span></td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-          </div>
-        </div>
-      )}
-      {activeTab === 'templates' && (
-        <div className="bp-template-messages">
-          <h1 style={{fontSize:'36px', fontWeight:'600', fontFamily:'sans-serif'}}>Template Messages</h1>
-          <button className="bp-btn-create" onClick={() => {
-            resetTemplateForm();
-            setShowTemplatePopup(true);
-          }}>Create Template</button>
-          <div className="bp-template-list">
-            {templates.map((template, index) => (
-              <div key={index} className="bp-template-item">
-                <h3>{template.name}</h3>
-                <p className={`bp-status-${template.status.toLowerCase()}`}>
-                  Status: {template.status}
-                </p>
-                <p>Category: {template.category}</p>
-                <p>Language: {template.language}</p>
-                <p>Body: {template.components.find(c => c.type === "BODY")?.text.substring(0, 50)}...</p>
-                {template.components.find(c => c.type === "BUTTONS") && (
-                  <p>Buttons: {template.components.find(c => c.type === "BUTTONS").buttons.length}</p>
-                )}
-                <div className="bp-template-actions">
-                  <button onClick={() => handleEditTemplate(template)} className="bp-btn-edit">
-                    <Edit2 size={18} />
-                    Edit
-                  </button>
-                  <button onClick={() => handleDeleteTemplate(template.name)} className="bp-btn-delete">
-                    <Trash2 size={18} />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
+      <div className="flex-1 p-6">
+        {activeTab === 'history' && (
+          <BroadcastHistory
+            broadcastHistory={broadcastHistory}
+            filteredBroadcastHistory={filteredBroadcastHistory}
+            handleBroadcastMessage={handleBroadcastMessage}
+            handleGroup={handleGroup}
+            showBroadcastPopup={showBroadcastPopup}
+            templates={templates}
+            selectedTemplate={selectedTemplate}
+            contacts={contacts}
+            broadcastGroup={broadcastGroup}
+            selectedPhones={selectedPhones}
+            selectedBCGroups={selectedBCGroups}
+            isSendingBroadcast={isSendingBroadcast}
+            handleTemplateClick={handleTemplateClick}
+            setShowTemplatePopup={setShowTemplatePopup}
+            handlePhoneSelection={handlePhoneSelection}
+            handleBCGroupSelection={handleBCGroupSelection}
+            handleSendBroadcast={handleSendBroadcast}
+            handleCloseBroadcastPopup={handleCloseBroadcastPopup}
+            showGroupPopup={showGroupPopup}
+            groupName={groupName}
+            setGroupName={setGroupName}
+            handleCreateGroup={handleCreateGroup}
+            handleCloseGroupPopup={handleCloseGroupPopup}
+            BroadcastPopup={BroadcastPopup}
+            GroupPopup={GroupPopup}
+          />
+        )}
+
+        {activeTab === 'templates' && (
+          <TemplateMessages
+            templates={templates}
+            resetTemplateForm={resetTemplateForm}
+            setShowTemplatePopup={setShowTemplatePopup}
+            handleEditTemplate={handleEditTemplate}
+            handleDeleteTemplate={handleDeleteTemplate}
+          />
+        )}
+
+        <WhatsAppTemplatePopup
+          showTemplatePopup={showTemplatePopup}
+          isEditing={isEditing}
+          templateName={templateName}
+          category={category}
+          language={language}
+          headerType={headerType}
+          headerContent={headerContent}
+          headerImage={headerImage}
+          bodyText={bodyText}
+          footerText={footerText}
+          buttons={buttons}
+          uploadProgress={uploadProgress}
+          setTemplateName={setTemplateName}
+          setCategory={setCategory}
+          setLanguage={setLanguage}
+          setHeaderType={setHeaderType}
+          setHeaderContent={setHeaderContent}
+          handleImageUpload={handleImageUpload}
+          setBodyText={setBodyText}
+          setFooterText={setFooterText}
+          updateButton={updateButton}
+          deleteButton={deleteButton}
+          addButton={addButton}
+          handleCreateTemplate={handleCreateTemplate}
+          setShowTemplatePopup={setShowTemplatePopup}
+          resetTemplateForm={resetTemplateForm}
+          setBodyVariables={setBodyVariables}
+          extractVariables={extractVariables}
+          convertMentionsForFrontend={convertMentionsForFrontend}
+          MentionTextArea={MentionTextArea}
+        />
       </div>
-       {showTemplatePopup && (
-        <div className="bp-popup-overlay">
-          <div className="bp-popup bp-template-popup">
-            <h2>{isEditing ? 'Edit' : 'Create'} WhatsApp Template Message</h2>
-            <div className="bp-template-form-container">
-              <form onSubmit={handleCreateTemplate}>
-                <div className="bp-form-group">
-                  <label>Template Name</label>
-                  <input type="text" value={templateName} onChange={(e) => setTemplateName(e.target.value)} required />
-                </div>
-                <div className="bp-form-group">
-                  <label>Category</label>
-                  <select value={category} onChange={(e) => setCategory(e.target.value)} required>
-                    <option value="">Select category...</option>
-                    <option value="MARKETING">Marketing</option>
-                    <option value="UTILITY">Utility</option>
-                    <option value="AUTHENTICATION">Authentication</option>
-                  </select>
-                </div>
-                <div className="bp-form-group">
-                  <label>Language</label>
-                  <select value={language} onChange={(e) => setLanguage(e.target.value)} required>
-                    <option value="">Select language...</option>
-                    <option value="en_US">English (US)</option>
-                    <option value="es_ES">Spanish (Spain)</option>
-                  </select>
-                </div>
-                <div className="bp-form-group">
-                  <label>Header (Optional)</label>
-                  <select value={headerType} onChange={(e) => setHeaderType(e.target.value)}>
-                    <option value="">No header</option>
-                    <option value="text">Text</option>
-                    <option value="image">Image</option>
-                  </select>
-                  {headerType === 'text' && (
-                    <input
-                      type="text"
-                      value={headerContent}
-                      onChange={(e) => setHeaderContent(e.target.value)}
-                      placeholder="Header Text"
-                    />
-                  )}
-                  {headerType === 'image' && (
-                    <>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        style={{ display: 'none' }}
-                        ref={fileInputRef}
-                      />
-                      <button type="button" onClick={() => fileInputRef.current.click()} className="bp-btn-upload">
-                        Upload Image
-                      </button>
-                      {headerImage && <span className="bp-file-name">{headerImage.name}</span>}
-                      {uploadProgress > 0 && <progress value={uploadProgress} max="100" className="bp-upload-progress" />}
-                    </>
-                  )}
-                </div>
-                <div className="bp-form-group">
-                  <label>Body Text</label>
-                  <MentionTextArea
-                    value={convertMentionsForFrontend(bodyText)}
-                    onChange={(e) => {
-                      setBodyText(e.target.value);
-                      setBodyVariables(extractVariables(e.target.value));
-                    }}
-                    placeholder="Use @name, @phoneno, etc. for variables"
-                  />
-                </div>
-                <div className="bp-form-group">
-                  <label>Footer (Optional)</label>
-                  <input
-                    type="text"
-                    value={footerText}
-                    onChange={(e) => setFooterText(e.target.value)}
-                    placeholder="Footer Text"
-                  />
-                </div>
-                <div className="bp-form-group">
-                  <label>Buttons (Optional)</label>
-                  {buttons.map((button, index) => (
-                    <div key={index} className="bp-button-inputs">
-                      <select
-                        value={button.type}
-                        onChange={(e) => updateButton(index, 'type', e.target.value)}
-                      >
-                        <option value="QUICK_REPLY">Quick Reply</option>
-                        <option value="PHONE_NUMBER">Phone Number</option>
-                        <option value="URL">URL</option>
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="Button Text"
-                        value={button.text}
-                        onChange={(e) => updateButton(index, 'text', e.target.value)}
-                      />
-                      {button.type === 'PHONE_NUMBER' && (
-                        <input
-                          type="tel"
-                          placeholder="Phone Number (e.g., +1 555 123 4567)"
-                          value={button.phoneNumber}
-                          onChange={(e) => updateButton(index, 'phoneNumber', e.target.value)}
-                        />
-                      )}
-                      {button.type === 'URL' && (
-                        <input
-                          type="url"
-                          placeholder="URL"
-                          value={button.url}
-                          onChange={(e) => updateButton(index, 'url', e.target.value)}
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => deleteButton(index)}
-                        className="bp-btn-delete-button"
-                      >
-                        <X size={18} />
-                      </button>
-                    </div>
-                  ))}
-                  <button type="button" onClick={addButton} className="bp-btn-add-button">Add Button</button>
-                </div>
-                <div className="bp-form-actions">
-                  <button type="submit" className="bp-btn-save">
-                    {isEditing ? 'Update' : 'Save'} Template
-                  </button>
-                  <button type="button" className="bp-btn-cancel" onClick={() => {
-                    setShowTemplatePopup(false);
-                    resetTemplateForm();
-                  }}>Cancel</button>
-                </div>
-              </form>
-              <div className="bp-template-preview">
-                <div className="bp-whatsapp-preview">
-                  <h3>WhatsApp Template Preview</h3>
-                  <div className="bp-message-container">
-                    {headerType === 'text' && headerContent && (
-                      <div className="bp-message-header">{headerContent}</div>
-                    )}
-                    {headerType === 'image' && headerContent && (
-                      <img src={headerContent} alt="Header" className="bp-message-header-image" />
-                    )}
-                    <div className="bp-message-body">
-                      {convertMentionsForFrontend(bodyText)}
-                    </div>
-                    {footerText && <div className="bp-message-footer">{footerText}</div>}
-                    {buttons.length > 0 && (
-                      <div className="bp-message-buttons">
-                        {buttons.map((button, index) => (
-                          <a key={index} href={button.url} className="bp-message-button">
-                            {button.text}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                    <div className="bp-message-time">1:10 PM</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

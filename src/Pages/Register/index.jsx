@@ -1,25 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { Check, ChevronLeft, ChevronRight, Building2, Lock, User, Mail, Phone } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import axiosInstance, { fastURL, djangoURL } from '../../api';
-import { header } from 'framer-motion/client';
-
 const PopupCard = ({ message, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg p-8 max-w-sm w-full">
-      <h2 className="text-xl font-bold mb-4">{message}</h2>
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+    <div className="bg-white rounded-xl p-8 max-w-sm w-full shadow-2xl transform animate-scaleIn">
+      <div className="flex items-center justify-center mb-4">
+        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+          <Check className="w-6 h-6 text-green-600" />
+        </div>
+      </div>
+      <h2 className="text-xl font-bold text-center mb-4">{message}</h2>
       <button
         onClick={onClose}
-        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-300"
+        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition duration-300 font-medium"
       >
-        OK
+        Continue to Login
       </button>
     </div>
   </div>
 );
 
 const Register = () => {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -198,204 +202,228 @@ const Register = () => {
       console.error('Error creating new organisation:', error);
     }
   };
+  // ... keep all your existing state and handlers ...
+
+  const renderStepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      <div className={`w-3 h-3 rounded-full ${step === 1 ? 'bg-blue-600' : 'bg-gray-300'} transition-colors duration-300`} />
+      <div className="w-12 h-0.5 bg-gray-300" />
+      <div className={`w-3 h-3 rounded-full ${step === 2 ? 'bg-blue-600' : 'bg-gray-300'} transition-colors duration-300`} />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col justify-center items-center p-4" style={{width:"100vw"}}>
-      <div className="bg-white shadow-2xl rounded-2xl w-full max-w-md overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col justify-center items-center p-4">
+      <div className="bg-white/80 backdrop-blur-lg shadow-2xl rounded-2xl w-full max-w-md overflow-hidden border border-white/20">
         <div className="p-8">
-          <div className="flex items-center justify-center mb-8">
-            <img src={logo} alt="Logo" className="h-12 w-auto mr-2" />
-            <span className="text-2xl font-bold text-gray-800">Nuren AI</span>
+          {/* Logo Section */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-xl">
+              <img src={logo} alt="Logo" className="h-8 w-auto" />
+            </div>
           </div>
-          <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-6">Register</h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">Create Account</h2>
+          <p className="text-center text-gray-600 mb-6">Join us to get started with your AI journey</p>
+          
+          {renderStepIndicator()}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             {step === 1 && (
-              <>
-              <div>
-                  <label htmlFor="organisation" className="sr-only">Organisation</label>
+              <div className="space-y-4 animate-slideIn">
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <select
-                    id="organisation"
                     name="organisation"
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     value={formData.organisation}
-                    onChange={ (e) => {
-                      setErrors({});
-                      handleInputChange(e);
-                    }
-                  }
+                    onChange={handleInputChange}
                   >
-                    <option value="">Select an organisation</option>
+                    <option value="">Select your organization</option>
                     {organisations.map((org) => (
-                      <option key={org.id} value={org.name}>
-                        {org.name}
-                      </option>
+                      <option key={org.id} value={org.name}>{org.name}</option>
                     ))}
-                    <option value="createNew">Create New Organization</option>
+                    <option value="createNew">➕ Create New Organization</option>
                   </select>
-                  {errors.organisation && <p className="mt-2 text-sm text-red-600">{errors.organisation}</p>}
+                  {errors.organisation && 
+                    <p className="mt-1 text-sm text-red-500 animate-shake">{errors.organisation}</p>
+                  }
                 </div>
-                <div>
-                  <label htmlFor="password" className="sr-only">Password</label>
+
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <input
-                    id="password"
-                    name="password"
                     type="password"
-                    required
-                    className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                    placeholder="Password"
+                    name="password"
+                    placeholder="Organization Password"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     value={formData.password}
-                    onChange={(e) => {
-                      setErrors({});
-                      handleInputChange(e);
-                    }}
+                    onChange={handleInputChange}
                   />
-                  {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password}</p>}
+                  {errors.password && 
+                    <p className="mt-1 text-sm text-red-500 animate-shake">{errors.password}</p>
+                  }
                 </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={ async () => {
-                    const response = await handleNext(formData.organisation, formData.password); 
-                    console.log("response is : ", response)
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const response = await handleNext();
                     if(response) setStep(2);
-                    
                   }}
-                    className= {`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${verifyingTenant ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {verifyingTenant ? 'Verifying Tenant...' : 'Next'}
-                  </button>
-                  
-                </div>
-              </>
+                  className="group relative w-full h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
+                  disabled={verifyingTenant}
+                >
+                  {verifyingTenant ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                      Verifying...
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      Continue
+                      <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  )}
+                </button>
+              </div>
             )}
+
             {step === 2 && (
-              <>
-              <div>
-                  <label htmlFor="username" className="sr-only">Username</label>
+              <div className="space-y-4 animate-slideIn">
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <input
-                    id="username"
-                    name="username"
                     type="text"
-                    required
-                    className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    name="username"
                     placeholder="Username"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     value={formData.username}
-                    onChange={(e) => {
-                      handleInputChange(e)
-                    }}
+                    onChange={handleInputChange}
                   />
-                  {errors.username && <p className="mt-2 text-sm text-red-600">{errors.username}</p>}
+                  {errors.username && 
+                    <p className="mt-1 text-sm text-red-500 animate-shake">{errors.username}</p>
+                  }
                 </div>
-                <div>
-                  <label htmlFor="email" className="sr-only">Email</label>
+
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <input
-                    id="email"
-                    name="email"
                     type="email"
-                    required
-                    className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                    placeholder="Email"
+                    name="email"
+                    placeholder="Email address"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     value={formData.email}
                     onChange={handleInputChange}
                   />
-                  {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
+                  {errors.email && 
+                    <p className="mt-1 text-sm text-red-500 animate-shake">{errors.email}</p>
+                  }
                 </div>
-                <div>
-                  <label htmlFor="phone" className="sr-only">Phone</label>
+
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <input
-                    id="phone"
-                    name="phone"
                     type="text"
-                    required
-                    className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                    placeholder="Phone"
+                    name="phone"
+                    placeholder="Phone number"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     value={formData.phone}
-                    onChange={(e) => {
-                      handleInputChange(e)
-                    }}
-                  />
-                  {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone}</p>}
-                </div>
-                <div>
-                  <label htmlFor="password" className="sr-only">Password</label>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                    placeholder="Password"
-                    value={formData.password}
                     onChange={handleInputChange}
                   />
-                  {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password}</p>}
                 </div>
-                <div className="flex justify-between">
+
+                <div className="flex space-x-3">
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="flex-1 h-12 flex items-center justify-center border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300"
                   >
+                    <ChevronLeft className="mr-2 h-5 w-5" />
                     Back
                   </button>
+                  
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className="flex-1 h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
                   >
-                    {isSubmitting ? 'Registering...' : 'Register'}
+                    {isSubmitting ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                        Creating...
+                      </div>
+                    ) : (
+                      'Create Account'
+                    )}
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </form>
+
           <div className="mt-6 text-center">
-            <NavLink to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Already have an account? Login
+            <NavLink 
+              to="/login" 
+              className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
+            >
+              Already have an account? Sign in
             </NavLink>
           </div>
         </div>
       </div>
 
+      {/* Create New Organization Modal */}
       {showNewOrgForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3 text-center">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Create New Organisation</h3>
-              <div className="mt-2 px-7 py-3">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl transform animate-scaleIn">
+            <h3 className="text-xl font-bold mb-4">Create New Organization</h3>
+            <div className="space-y-4">
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
                   name="name"
-                  placeholder="Organisation Name"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="Organization Name"
+                  className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={newOrg.name}
                   onChange={handleNewOrgInputChange}
                 />
+              </div>
+              
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="password"
                   name="password"
-                  placeholder="Password"
-                  className="mt-3 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="Organization Password"
+                  className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={newOrg.password}
                   onChange={handleNewOrgInputChange}
                 />
               </div>
-              <div className="items-center px-4 py-3">
+
+              <div className="flex space-x-3">
                 <button
-                  id="ok-btn"
-                  className={`px-4 py-2 bg-indigo-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 ${creatingOrg ? 'opacity-50 cursor-not-allowed' : '' }`}
-                  onClick={handleCreateNewOrg}
-                >
-                  {creatingOrg ? 'Creating Organization...': 'Create Organization'}
-                </button>
-              </div>
-              <div className="items-center px-4 py-3">
-                <button
-                  id="cancel-btn"
-                  className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"
                   onClick={() => setShowNewOrgForm(false)}
+                  className="flex-1 h-12 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300"
                 >
                   Cancel
+                </button>
+                
+                <button
+                  onClick={handleCreateNewOrg}
+                  disabled={creatingOrg}
+                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
+                >
+                  {creatingOrg ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                      Creating...
+                    </div>
+                  ) : (
+                    'Create Organization'
+                  )}
                 </button>
               </div>
             </div>
@@ -405,7 +433,7 @@ const Register = () => {
 
       {showPopup && (
         <PopupCard
-          message={`Registration successful`}
+          message="Registration successful! Welcome aboard."
           onClose={() => {
             setShowPopup(false);
             navigate('/login');

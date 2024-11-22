@@ -203,10 +203,10 @@ const FlowBuilderContent = () => {
     try {
       const response = await axiosInstance.get(`${fastURL}/node-templates/`);
       setExistingFlows(response.data);
-      toast.success("Existing flows fetched successfully");
+      //toast.success("Existing flows fetched successfully");
     } catch (error) {
       console.error('Error fetching existing flows:', error);
-      toast.error("Failed to fetch existing flows");
+      //toast.error("Failed to fetch existing flows");
     }
     setIsLoading(false);
   };

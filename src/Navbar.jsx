@@ -1,24 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Bell, User, ChevronDown } from 'lucide-react';
-import { useAuth } from './authContext'; // Assuming you have this hook
+import { 
+  NavigationMenu, 
+  NavigationMenuItem, 
+  NavigationMenuLink, 
+  NavigationMenuList,
+  navigationMenuTriggerStyle 
+} from "@/components/ui/navigation-menu";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Workflow,
+  MessageSquare, 
+  LayoutGrid, 
+  Contact, 
+  Megaphone, 
+  Bell, 
+  UserCircle2, 
+  LogOut, 
+  MenuIcon
+} from "lucide-react";
+import { useAuth } from './authContext';
 import logo from "./assets/logo.png";
 import io from 'socket.io-client';
+export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
 import axiosInstance from './api';
 
-export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
-// export const whatsappURL = 'http://localhost:8080'
-
-
-const socket = io(whatsappURL);
+const socket = io('https://whatsappbotserver.azurewebsites.net');
 
 const Navbar = () => {
   const { authenticated, logout, tenantId } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -46,14 +74,6 @@ const Navbar = () => {
     };
   }, []);
 
-  const handleNotificationClick = () => {
-    setShowNotifications(!showNotifications);
-    if (showNotifications) {
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      setUnreadCount(0);
-    }
-  };
-
   const removeNotification = (id) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
     setUnreadCount(prev => Math.max(0, prev - 1));
@@ -73,141 +93,252 @@ const Navbar = () => {
     navigate('/');
   };
 
-  const profileDropdownItems = [
-    { label: 'Profile', path: '/profile' },
-    { label: 'Models', path: '/models' },
-    { label: 'Assign', path: '/assign' },
-    { label: 'Logout', action: handleLogout },
-  ];
+  if (isAuthPage) return null;
 
-  if (isAuthPage) {
-    return null;
-  }
+  const NavLinks = () => {
+    const linkBaseClasses = authenticated 
+      ? "group flex items-center gap-2 hover:bg-primary/10 transition-all duration-300 px-3 py-2 rounded-md"
+      : "group flex items-center gap-2 hover:bg-gray-800 transition-all duration-300 px-3 py-2 rounded-md";
+    
+    const iconClasses = authenticated
+      ? "w-5 h-5 text-primary group-hover:scale-110 transition-transform"
+      : "w-5 h-5 text-gray-300 group-hover:text-white transition-transform";
+    
+    const textClasses = authenticated
+      ? "text-foreground group-hover:text-primary"
+      : "text-gray-300 group-hover:text-white";
+
+    return (
+      <NavigationMenuList className="flex items-center space-x-2">
+        {authenticated && (
+          <>
+            <NavigationMenuItem>
+              <Link to={getPath('/contact')}>
+                <NavigationMenuLink className={linkBaseClasses}>
+                  <Contact className={iconClasses} />
+                  <span className={textClasses}>Contact</span>
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to={getPath('/broadcast')}>
+                <NavigationMenuLink className={linkBaseClasses}>
+                  <Megaphone className={iconClasses} />
+                  <span className={textClasses}>Broadcast</span>
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+          </>
+        )}
+        <NavigationMenuItem>
+          <Link to={getPath('/catalog')}>
+            <NavigationMenuLink className={linkBaseClasses}>
+              <LayoutGrid className={iconClasses} />
+              <span className={textClasses}>Catalog</span>
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link to={getPath('/chatbot')}>
+            <NavigationMenuLink className={linkBaseClasses}>
+              <MessageSquare className={iconClasses} />
+              <span className={textClasses}>Chatbot</span>
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link to={getPath('/flow-builder')}>
+            <NavigationMenuLink className={linkBaseClasses}>
+              <Workflow className={iconClasses} />
+              <span className={textClasses}>Flow Builder</span>
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    );
+  };
 
   return (
-    <nav className="bg-black p-4 transition-colors duration-300">
-      <div className="container mx-auto flex justify-between items-center px-6 lg:px-12">
-        <Link style={{ display: 'flex', alignItems: 'center' }} className="text-white text-2xl font-gliker" to="/">
-          <img style={{ height: '2.5rem', marginRight: '2px' }} src={logo} alt="" />
-          Nuren AI
+    <div className={`w-full z-40 ${authenticated 
+      ? 'bg-background border-b border-border/40 shadow-sm' 
+      : 'bg-black border-b border-gray-900 shadow-lg'}`}>
+      <div className="container mx-auto flex justify-between items-center py-3 px-4">
+        {/* Logo Section */}
+        <Link 
+          to="/" 
+          className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105"
+        >
+          <img 
+            src={logo} 
+            alt="Nuren AI Logo" 
+            className="h-10 w-10 group-hover:rotate-6 transition-transform"
+          />
+          <span className={`text-2xl font-bold ${
+            authenticated 
+              ? 'text-primary group-hover:text-primary/80' 
+              : 'text-white group-hover:text-gray-300'
+          }`}>
+            Nuren AI
+          </span>
         </Link>
-        
-        {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-4 items-center">
-          {authenticated && (
-            <>
-              <Link to={getPath('/contact')} className="text-white hover:text-gray-300">Contact</Link>
-              <Link to={getPath('/broadcast')} className="text-white hover:text-gray-300">Broadcast</Link>
-            </>
-          )}
-          <Link to={getPath('/catalog')} className="text-white hover:text-gray-300">Catalog</Link>
-          {!authenticated ? <Link to={getPath('/pricing')} className="text-white hover:text-gray-300">Pricing</Link> : '' } {/* temporary fix */}
-          <Link to={getPath('/chatbot')} className="text-white hover:text-gray-300">Chatbot</Link>
-          <Link to={getPath('/flow-builder')} className="text-white hover:text-gray-300">Flow Builder</Link>
-          
-          {/* User Options */}
+
+        {/* Desktop Navigation */}
+        <NavigationMenu className="hidden md:block">
+          <NavLinks />
+        </NavigationMenu>
+
+        {/* Right Side Actions */}
+        <div className="flex items-center space-x-4">
           {authenticated ? (
-            <div className="flex items-center space-x-4">
-              <Bell
-                className="text-white cursor-pointer"
-                onClick={handleNotificationClick}
-              />
-              {unreadCount > 0 && (
-                <span className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs absolute -top-1 -right-1">
-                  {unreadCount}
-                </span>
-              )}
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-10 max-h-96 overflow-y-auto">
+            <>
+              {/* Notifications Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="relative group hover:bg-primary/10 transition-all duration-300"
+                  >
+                    <Bell className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+                    {unreadCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-2 -right-2 px-1.5 py-0.5 text-xs animate-pulse"
+                      >
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
                   {notifications.length > 0 ? (
                     notifications.map(notification => (
-                      <div key={notification.id} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center">
-                        <span className={notification.read ? 'text-gray-500' : 'font-semibold'}>{notification.text}</span>
-                        <button onClick={() => removeNotification(notification.id)} className="text-red-500 hover:text-red-700">
+                      <DropdownMenuItem 
+                        key={notification.id} 
+                        onSelect={() => removeNotification(notification.id)}
+                        className="flex justify-between items-center hover:bg-primary/10 transition-colors"
+                      >
+                        <span className="truncate max-w-[250px]">{notification.text}</span>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:bg-destructive/10"
+                        >
                           &times;
-                        </button>
-                      </div>
+                        </Button>
+                      </DropdownMenuItem>
                     ))
                   ) : (
-                    <div className="px-4 py-2 text-sm text-gray-700">No new notifications</div>
+                    <div className="text-muted-foreground text-center py-4">
+                      No new notifications
+                    </div>
                   )}
-                </div>
-              )}
-              
-              {/* Profile Dropdown */}
-              <div className="relative">
-                <button onClick={() => setShowProfileDropdown(!showProfileDropdown)} className="flex items-center text-white hover:text-gray-300 focus:outline-none">
-                  <User className="mr-1" />
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                {showProfileDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                    {profileDropdownItems.map((item, index) => (
-                      <div key={index}>
-                        {item.path ? (
-                          <Link to={getPath(item.path)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setShowProfileDropdown(false)}>
-                            {item.label}
-                          </Link>
-                        ) : (
-                          <button onClick={() => { item.action(); setShowProfileDropdown(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            {item.label}
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* User Profile Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="group hover:bg-primary/10 transition-all duration-300"
+                  >
+                    <UserCircle2 className="w-7 h-7 text-primary group-hover:scale-110 transition-transform" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onSelect={() => navigate(getPath('/profile'))}
+                    className="hover:bg-primary/10 transition-colors"
+                  >
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onSelect={() => navigate(getPath('/models'))}
+                    className="hover:bg-primary/10 transition-colors"
+                  >
+                    Models
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onSelect={() => navigate(getPath('/assign'))}
+                    className="hover:bg-primary/10 transition-colors"
+                  >
+                    Assign
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onSelect={handleLogout} 
+                    className="text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
+                  >
+                    <LogOut className="mr-2" /> Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <Link to="/login">
+              <Button 
+                variant="ghost" 
+                className="text-gray-300 bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-300"
+              >
+                Login
+              </Button>
+            </Link>
+          )}
+
+          {/* Mobile Menu */}
+          <Sheet>
+            <SheetTrigger asChild className="md:hidden">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`${
+                  authenticated 
+                    ? "hover:bg-primary/10" 
+                    : "text-gray-300 hover:bg-gray-800 bg-transparent"
+                } transition-all duration-300`}
+              >
+                <MenuIcon className={
+                  authenticated 
+                    ? "w-6 h-6 text-primary group-hover:scale-110 transition-transform"
+                    : "w-6 h-6 text-gray-300 group-hover:text-white group-hover:scale-110 transition-transform"
+                } />
+              </Button>
+            </SheetTrigger>
+            <SheetContent 
+              side="left" 
+              className={`w-[300px] ${
+                authenticated ? "" : "bg-black border-r border-gray-900"
+              }`}
+            >
+              <SheetHeader>
+                <SheetTitle className={`flex items-center space-x-2 ${
+                  authenticated ? "" : "text-white"
+                }`}>
+                  <img src={logo} alt="Nuren AI Logo" className="h-8 w-8" />
+                  <span>Nuren AI</span>
+                </SheetTitle>
+              </SheetHeader>
+              <div className="grid gap-4 py-4">
+                <NavLinks />
+                {!authenticated && (
+                  <Link to="/login">
+                    <Button className="w-full bg-gray-900 text-gray-300 hover:bg-gray-800 hover:text-white">
+                      Login
+                    </Button>
+                  </Link>
                 )}
               </div>
-            </div>
-          ) : (
-            <Link to="/login" className="text-white hover:text-gray-300">Login</Link>
-          )}
+            </SheetContent>
+          </Sheet>
         </div>
-        
-        {/* Mobile Menu Button */}
-        <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white">
-          {isOpen ? <X/> : <Menu />}
-        </button>
       </div>
-      
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-black text-white pt-8 pl-9 space-y-4">
-          {authenticated && (
-            <>
-              <Link to={getPath('/contact')} className="block hover:text-gray-300">Contact</Link>
-              <Link to={getPath('/broadcast')} className="block hover:text-gray-300">Broadcast</Link>
-            </>
-          )}
-          <Link to={getPath('/catalog')} className="block hover:text-gray-300">Catalog</Link>
-          <Link to="/pricing" className="block hover:text-gray-300">Pricing</Link>
-          <Link to={getPath('/chatbot')} className="block hover:text-gray-300">Chatbot</Link>
-          <Link to={getPath('/flow-builder')} className="block hover:text-gray-300">Flow Builder</Link>
-          
-          {/* Mobile Profile Dropdown */}
-          {authenticated && (
-            <>
-              {profileDropdownItems.map((item, index) => (
-                <div key={index}>
-                  {item.path ? (
-                    <Link to={getPath(item.path)} className="block py-2 hover:text-gray-300">
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <button onClick={() => { item.action(); setIsOpen(false); }} className="block py-2 text-left hover:text-gray-300">
-                      {item.label}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </>
-          )}
-          {!authenticated && (
-            <Link to="/login" className="block hover:text-gray-300">Login</Link>
-          )}
-        </div>
-      )}
-    </nav>
+    </div>
   );
 };
 

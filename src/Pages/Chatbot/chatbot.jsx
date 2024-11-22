@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './chatbot.css';
+import { getTenantIdFromUrl,fixJsonString,setCSSVariable,getContactIDfromURL} from './chatbot/utilityfunctions.jsx';
+import { renderMessageContent, renderInteractiveMessage,renderTemplateMessage } from './messageRenderers';
 // import OpenAI from "openai";
 import { Navigate, useNavigate, useParams } from "react-router-dom"; 
 import {axiosInstance,fastURL, djangoURL} from "../../api.jsx";
@@ -7,16 +9,32 @@ import MailIcon from '@mui/icons-material/Mail';
 import SearchIcon from '@mui/icons-material/Search';
 import CallRoundedIcon from '@mui/icons-material/CallRounded';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import EditIcon from '@mui/icons-material/Edit';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close'
-import uploadToBlob from "../../azureUpload.jsx";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
 import Picker from 'emoji-picker-react';
-import shortid from 'shortid';
-import ImageEditorComponent from "../../Components/ImageEditor/imageeditor.jsx";
+
 import axios from 'axios';
 import { parse, v4 as uuidv4 } from 'uuid'; 
 import {whatsappURL}  from '../../Navbar';
@@ -26,25 +44,14 @@ import { PhoneIcon, PlusCircle, PlusIcon, Upload, X } from 'lucide-react';
 import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { base, div } from 'framer-motion/client';
-import { Button, Input } from 'antd';
-
+//import { Button, Input } from 'antd';
+import { 
+  Phone, 
+  Mail, 
+  Plus, 
+} from "lucide-react";  
 const socket = io(whatsappURL);
 
-
-const getTenantIdFromUrl = () => {
-  const pathArray = window.location.pathname.split('/');
-  if (pathArray.length >= 2) {
-    var tenant_id = pathArray[1]
-    if(tenant_id == "demo") tenant_id = 'ai'
-    return tenant_id; // Assumes tenant_id is the first part of the path
-  }
-  return null; 
-};
-
-const setCSSVariable = (variable, value) => {
-  let root = document.documentElement;
-  root.style.setProperty(variable, value);
-};
 
 const sentimentColors = {
   anger: '255,0,0',
@@ -53,13 +60,6 @@ const sentimentColors = {
   trust: '0,128,255',
   fear: '128,0,128',
   surprise: '255,140,0'
-}
-
-const getContactIDfromURL =() => {
-  const url  =window.location.href;
-  const params = new URLSearchParams(new URL(url).search);
-  const id = params.get('id')
-  return id;
 }
 
 const Chatbot = () => {
@@ -104,8 +104,6 @@ const Chatbot = () => {
   const navigate = useNavigate();
   const [prioritizedContacts, setPrioritizedContacts] = useState([]);
   const [file, setFile] = useState(null);
-  // const [inputFields, setInputFields] = useState([{ value: '' }]);
-  // const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
   
   const [isOpen, setIsOpen] = useState(false);
@@ -160,123 +158,7 @@ const Chatbot = () => {
     fetchBusinessPhoneId();
   }, [tenantId]);
     
-  const renderMessageContent = (message) => {
-    if (typeof message.text === 'object' && message.text !== null) {
-      // Handle message types
-      switch (message.text.type) {
-        case 'text':
-          return message.text.body || <div className="error">No text body provided</div>;
 
-        case 'interactive':
-          // Replace `renderInteractiveMessage` with your logic to handle interactive messages
-          return renderInteractiveMessage(message.text.interactive) || <div className="error">Interactive message rendering failed</div>;
-
-          case 'template':
-          return renderTemplateMessage(message.text.template) || <div className="error">Template message rendering failed</div>;
-
-
-        default:
-          return <div className="error">Unknown message type: {message.text.type}</div>;
-      }
-    } else if (typeof message.text === 'string') {
-      // Fallback for plain text messages
-      return message.text || <div className="error">Message content is undefined</div>;
-    }
-
-    return <div className="error">Invalid message format</div>;
-  };
-
-  const renderTemplateMessage = (template) => {
-    if (!template || !template.name) {
-      return <div className="error">Invalid template message</div>;
-    }
-    return (
-      <div className="template-message">
-        <p>Template: {template.name}</p>
-      </div>
-    );
-  };
-
-  const renderInteractiveMessage = (parsedMessage) => {
-    const { type, interactive, text, image, template } = parsedMessage;
-    // console.log("Parsed Message: ", parsedMessage)
-    if (type === 'interactive') {
-      if (interactive.type === 'list') {
-        // console.log("interactive: ",interactive)
-        return (
-          <div className="interactive-message list-message">
-            <p className="message-text">{interactive.body.text}</p>
-            <ul className="message-list">
-              {interactive.action.sections.map((section, sectionIndex) => (
-                <li key={sectionIndex} className="list-section">
-                  {section.title && <h4 className="section-title">{section.title}</h4>}
-                  <ul>
-                    {section.rows.map((row) => (
-                      <li key={row.id} className="list-item">
-                        {row.title}
-                        {row.description && <p className="item-description">{row.description}</p>}
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      } else if (interactive.type === 'button') {
-        return (
-          <div className="interactive-message button-message">
-            <p className="message-text">{interactive.body.text}</p>
-            <div className="message-buttons">
-              {interactive.action.buttons.map((button, buttonIndex) => (
-                <button key={buttonIndex} className="interactive-button">
-                  {button.reply.title}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      }
-    } else if (type === 'text') {
-      return <p className="plain-message">{text.body}</p>;
-    } else if (type === 'image') {
-      return (
-        <div className="image-message">
-          <img src={image.id} alt="Sent image" className="message-image" />
-          {image.caption && <p className="message-caption">{image.caption}</p>}
-        </div>
-      );
-    } else if (type === 'template') {
-      return renderTemplateMessage(template);
-    }
-
-    return <p className="error-message">Unsupported message type</p>;
-  };
-
-  const fixJsonString = (jsonString) => {
-    try {
-      console.log("Json String: ", jsonString)
-      // Replace single quotes with double quotes
-      const regex = /("(?:[^"\\]|\\.)*")|'/g;
-
-      // Replace single quotes with double quotes outside of double-quoted segments
-      let fixedString = jsonString.replace(regex, (match) => {
-          if (match.startsWith('"') && match.endsWith('"')) {
-              // If the segment is within double quotes, return it as is
-              return match;
-          }
-          // Replace single quotes with double quotes
-          return match.replace(/'(?![^"]*")/g, '"');
-      });
-      console.log("Pre Fixed String: ", fixedString)
-      // Ensure proper escape sequences
-      fixedString = fixedString.replace(/\\"/g, '\\\\"');
-      return fixedString;
-    } catch (e) {
-      console.error('Error fixing JSON string:', e);
-      return jsonString; // Return as-is if fixing fails
-    }
-  };
 
 ``
   const fetchContacts = async () => {
@@ -295,33 +177,6 @@ const Chatbot = () => {
   };
 
 
-  //   const fetchProfileImage = async (contactId) => {
-  //     try {
-  //         console.log('Tenant ID:', tenantId);
-  //         console.log("this is id", contactId);
-
-  //         const response = await axiosInstance.get(`/return-documents/10/${contactId}`);
-  //         console.log('GET request successful, response:', response.data);
-
-  //         const documents = response.data.documents;
-  //         console.log('Documents array:', documents);
-
-  //         if (documents && documents.length > 0) {
-  //             const profileImage = documents[0].file;
-  //             console.log('Found profile image:', profileImage);
-  //             setProfileImage(profileImage);
-  //         } else {
-  //             const initials = getInitials(contact.name, contact.last_name);
-  //             const avatarColorClass = getAvatarColor(initials);
-  //             console.log('No profile image found. Using initials:', initials);
-  //             setProfileImage(initials);
-  //             setAvatarColorClass(avatarColorClass);
-  //         }
-  //     } catch (error) {
-  //         console.error('Error fetching profile image:', error);
-  //     }
-  // };
-
   const getInitials = (firstName, lastName) => {
       const firstInitial = firstName && firstName.charAt(0) ? firstName.charAt(0).toUpperCase() : '';
       const lastInitial = lastName && lastName.charAt(0) ? lastName.charAt(0).toUpperCase() : '';
@@ -333,11 +188,6 @@ const Chatbot = () => {
       return `avatar-bg-${(charCode % 10) + 1}`;
   };
 
-  //   useEffect(() => {
-  //     if ( tenantId) {
-  //         fetchProfileImage();
-  //     }
-  // }, [ tenantId]);
 
   useEffect(() => {
     const fetchTenantData = async () => {
@@ -616,12 +466,6 @@ const Chatbot = () => {
         );
       }
 
-      // Update local state with the new message
-      // setConversation(prevConversation => [
-      //   ...prevConversation,
-      //   { text: newMessage.content, sender: 'bot', timestamp: newMessage.timestamp }
-      // ]);
-      // setNewMessages(prevMessages => [...prevMessages, newMessage]);
       setMessageTemplates(prevTemplates => ({
         ...prevTemplates,
         [selectedContact.id]: ''
@@ -944,63 +788,55 @@ const Chatbot = () => {
     {authPopupp && <AuthPopup onClose={handleCloseAuthPopupp} />}
     <div className={`${showPopup ? 'filter blur-lg' : ''}`}>
   <div className="cb-container">
-    <div className="cb-sidebar">
-      <div className="cb-sidebar-header">
-      <button className="cb-signup-btn" onClick={handleRedirect}>
-    {businessPhoneNumberId ? businessPhoneNumberId : 'Sign Up'}
-  </button>
-      <h1 className='cb-sidebar-title'>
-    {/* <ArrowBackIcon className="cb-back-icon" onClick={handleBack} />  */}
-        Contacts 
-        </h1>
-        <button onClick={() => setShowNewChatInput(!showNewChatInput)} className="text-blue-500 hover:text-blue-700">
-        <PlusIcon />
-      </button>
-      </div>
+  <Card className="col-span-1 border-r overflow-hidden">
+      <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
+        <CardTitle>Contacts</CardTitle>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => setShowNewChatInput(!showNewChatInput)}
+        >
+          <Plus />
+        </Button>
+      </CardHeader>
+      
       {showNewChatInput && (
         <div className="p-4 border-b">
-          <input
-            type="text"
+          <Input
             value={newPhoneNumber}
             onChange={(e) => setNewPhoneNumber(e.target.value)}
             placeholder="Enter phone number"
-            className="w-full p-2 border rounded"
+            className="w-full mb-2"
           />
-          <button onClick={handleNewChat} className="mt-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+          <Button onClick={handleNewChat} className="w-full">
             Start New Chat
-          </button>
+          </Button>
         </div>
       )}
-      <div className='cb-search-container'>
-        <input
-          type="text"
-          placeholder="Search contacts..."
-          value={searchText}
-          className='cb-search-input'
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-        <SearchIcon className="cb-search-icon" />
-      </div>
-      <div className="cb-contact-list">
-        <h2 className='cb-contact-title'>Contacts</h2>
-        
-        {prioritizedContacts.map(contact => (
-      <div
-        key={contact.id || contact.phone}
-        className={`cb-contact-item ${selectedContact?.phone === contact.phone ? 'cb-selected' : ''}`}
-        onClick={() => handleContactSelection(contact)}
-      >
-        <div className="cb-contact-info">
-          <span className="cb-contact-name">{contact.name || 'Unknown Name'}</span>
-          <span className="cb-contact-phone">{contact.phone || 'No Phone'}</span>
-        </div>
-        {contact.unreadCount > 0 && (
-          <span className="cb-unread-count">{contact.unreadCount}</span>
-        )}
+      
+      {/* Contact List */}
+      <CardContent className="p-0 overflow-y-auto max-h-[calc(100vh-200px)]">
+        <div className="divide-y">
+          {prioritizedContacts.map((contact) => (
+            <div 
+              key={contact.id || contact.phone} 
+              className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${selectedContact?.phone === contact.phone ? 'bg-blue-50' : ''}`}
+              onClick={() => handleContactSelection(contact)}
+            >
+              <div>
+                <p className="font-semibold">{contact.name || 'Unknown Name'}</p>
+                <p className="text-sm text-gray-500">{contact.phone || 'No Phone'}</p>
               </div>
-            ))}
-      </div>
-    </div>
+              {contact.unreadCount > 0 && (
+                <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
+                  {contact.unreadCount}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
     <div className="cb-main">
     {selectedContact && (
   <div className="cb-chat-header">
@@ -1108,96 +944,130 @@ const Chatbot = () => {
         </div>
       )}
     </div>
-    <div className="cb-details-panel">
-    
-      {selectedContact && (
-  <div className="cb-contact-full-details">
-  <div className="cb-profile-section">
-
-  {profileImage && typeof profileImage === 'string' ? (
-    <img src={profileImage} alt="Profile" className="cb-profile-image" />
-  ) : (
-    <div className={`cb-default-avatar-large`}>
-      {getInitials(selectedContact.name, selectedContact.last_name)}
-    </div>
-  )}
-    <h2>{selectedContact.name} {selectedContact.last_name}</h2>
-  </div>
-  <div className="cb-contact-info-details">
-    <p className='cb-info-item'>
-      <CallRoundedIcon className="cb-info-icon" />
-      {selectedContact.phone}
-    </p>
-    <p className='cb-info-item'>
-      <MailIcon className="cb-info-icon" />
-      {selectedContact.email}
-    </p>
-  </div>
-  </div>
-  )}
-      <div className="cb-actions">
-        {/* <button onClick={handleCreateFlow} className="cb-action-btn">Create Flow</button> */}
-        <select value={selectedFlow} onChange={handleFlowChange} className="cb-flow-select">
-          <option value="" disabled>Select a flow</option>
-          {flows.map(flow => (
-            <option key={flow.id} value={flow.id}>
-              {flow.name || flow.id}
-            </option>
-          ))}
-        </select>
-        <button 
-          onClick={handleSendFlowData} 
-          className="cb-flow-btn"
-          disabled={isSending}
-        >
-          {isSending ? "Sending..." : "Send Flow Data"}
-        </button>
+    <Card className="col-span-1">
+      <Tabs defaultValue="contact">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="contact">Contact</TabsTrigger>
+          <TabsTrigger value="ai-actions">AI Actions</TabsTrigger>
+        </TabsList>
         
-      </div>
+        {/* Contact Details Tab */}
+        <TabsContent value="contact">
+          <CardContent className="space-y-4">
+            {selectedContact && (
+              <>
+                <div className="flex flex-col items-center">
+                  {profileImage && typeof profileImage === 'string' ? (
+                    <img 
+                      src={profileImage} 
+                      alt="Profile" 
+                      className="w-24 h-24 rounded-full mb-4"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-3xl mb-4">
+                      {getInitials(selectedContact.name, selectedContact.last_name)}
+                    </div>
+                  )}
+                  <h2 className="text-xl font-semibold">
+                    {selectedContact.name} {selectedContact.last_name}
+                  </h2>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Phone className="text-gray-500" size={20} />
+                    <span>{selectedContact.phone}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Mail className="text-gray-500" size={20} />
+                    <span>{selectedContact.email}</span>
+                  </div>
+                </div>
+              </>
+            )}
 
-      <div className="ai-content-container">
-    <h1 className="ai-content-title">AI Content</h1>
-    <div className="ai-content-fields flex flex-col items-center space-y-4 p-4">
-    <Input
-      type="file"
-      onChange={handleFileChange}
-      className="ai-content-file-input w-full"
-    />
-    {inputFields.map((field, index) => (
-      <div key={index} className="flex items-center space-x-2 w-full">
-        <Input
-          type="text"
-          value={field.value}
-          onChange={(e) => handleInputChange(index, e)}
-          placeholder="Enter content description"
-          className="flex-grow"
-        />
-        <Button
-          type="button"
-          onClick={() => deleteInputField(index)}
-          variant="outline"
-          size="icon"
-          className="text-red-500 hover:bg-red-100"
-          aria-label="Delete"
-        >
-          <X size={18} />
-        </Button>
-      </div>
-    ))}
-    <Button onClick={addInputField} variant="outline" style={{backgroundColor:'#4299e1', color:'white'}}  className="w-full">
-      Add Description Field
-    </Button>
-    <Button onClick={handleUpload} disabled={isUploading} style={{backgroundColor:'green', color:'white'}} className="w-full">
-      {isUploading ? 'Uploading...' : 'Upload'}
-    </Button>
-    {uploadStatus && (
-      <p className={uploadStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}>
-        {uploadStatus}
-      </p>
-    )}
-  </div>
-    </div>
-    </div>
+            {/* Flow Selection */}
+            <div className="space-y-2">
+              <Select 
+                value={selectedFlow} 
+                onValueChange={setSelectedFlow}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a flow" />
+                </SelectTrigger>
+                <SelectContent>
+                  {flows.map(flow => (
+                    <SelectItem key={flow.id} value={flow.id}>
+                      {flow.name || flow.id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                className="w-full" 
+                onClick={handleSendFlowData} 
+                disabled={isSending}
+              >
+                {isSending ? "Sending..." : "Send Flow Data"}
+              </Button>
+            </div>
+          </CardContent>
+        </TabsContent>
+
+        {/* AI Actions Tab */}
+        <TabsContent value="ai-actions">
+          <CardContent className="space-y-4">
+            <Input 
+              type="file" 
+              onChange={handleFileChange}
+              className="mb-4"
+            />
+            
+            <div className="space-y-2">
+              {inputFields.map((field, index) => (
+                <div key={index} className="flex space-x-2">
+                  <Input 
+                    value={field.value}
+                    onChange={(e) => handleInputChange(index, e)}
+                    placeholder="Enter content description" 
+                    className="flex-1"
+                  />
+                  <Button 
+                    variant="destructive" 
+                    size="icon"
+                    onClick={() => deleteInputField(index)}
+                  >
+                    <X />
+                  </Button>
+                </div>
+              ))}
+              
+              <Button 
+                variant="secondary" 
+                className="w-full"
+                onClick={addInputField}
+              >
+                <Plus className="mr-2" /> Add Description
+              </Button>
+              
+              <Button 
+                className="w-full" 
+                onClick={handleUpload}
+                disabled={isUploading}
+              >
+                {isUploading ? 'Uploading...' : 'Upload'}
+              </Button>
+              
+              {uploadStatus && (
+                <p className={uploadStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}>
+                  {uploadStatus}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </TabsContent>
+      </Tabs>
+    </Card>
     {showImagePreview && (
     <div className="cb-image-preview-overlay">
       <div className="cb-image-preview-container">
