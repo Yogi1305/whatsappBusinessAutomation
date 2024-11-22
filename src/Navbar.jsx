@@ -108,7 +108,7 @@ const Navbar = () => {
       ? "text-foreground group-hover:text-primary"
       : "text-gray-300 group-hover:text-white";
 
-    return (
+    const navigationItems = (
       <NavigationMenuList className="flex items-center space-x-2">
         {authenticated && (
           <>
@@ -156,6 +156,12 @@ const Navbar = () => {
         </NavigationMenuItem>
       </NavigationMenuList>
     );
+
+    return (
+      <NavigationMenu>
+        {navigationItems}
+      </NavigationMenu>
+    );
   };
 
   return (
@@ -183,9 +189,9 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <NavigationMenu className="hidden md:block">
+        <div className="hidden md:block">
           <NavLinks />
-        </NavigationMenu>
+        </div>
 
         {/* Right Side Actions */}
         <div className="flex items-center space-x-4">
