@@ -28,7 +28,7 @@ import PrivacyPolicy from './Pages/Misc/privacypolicy.jsx';
 import TermsAndConditions from './Pages/Misc/terms&conditions.jsx';
 import ContactUs from './Pages/Misc/contactus.jsx';
 import Catalog from './Pages/Catalog/catalog.jsx';
-import { Toaster } from 'sonner';
+
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
   return authenticated ? children : <Navigate to="/login" replace />;
@@ -61,22 +61,49 @@ const App = () => {
                     <BroadcastPage />
                   </ProtectedRoute>
                 } />
+
                 <Route path="contact" element={
                   <ProtectedRoute>
                     <ContactPage />
                   </ProtectedRoute>
                 } />
-                <Route path="catalog" element={<Catalog/>}/>
-                <Route path="chatbot" element={<Chatbot />} />
-                <Route path="catalog" element={<Catalog/>}/>
-                <Route path="assign" element={<AssignContact />} />
-                <Route path="flow-builder" element={<FlowBuilder />} />
-                <Route path="models" element={<ProtectedRoute><Models /></ProtectedRoute>} />
-                <Route path="/profile" element={
+
+                <Route path="catalog" element={
                   <ProtectedRoute>
-                    <ProfilePage />
+                  <Catalog/>
+                  </ProtectedRoute>
+                }/>
+
+                <Route path="models" element={
+                  <ProtectedRoute>
+                  <Models />
                   </ProtectedRoute>
                 } />
+
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                  <ProfilePage />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="chatbot" element={
+                  <ProtectedRoute>
+                    <Chatbot />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="assign" element={
+                  <ProtectedRoute>
+                    <AssignContact />
+                  </ProtectedRoute>
+                } />
+                <Route path="flow-builder" element={
+                  <ProtectedRoute>
+                    <FlowBuilder />
+                  </ProtectedRoute>
+                } />
+
+
                  <Route path="*" element={<NotFound />} />
               </Routes>
             } />

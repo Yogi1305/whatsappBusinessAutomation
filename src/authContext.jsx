@@ -2,10 +2,31 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
+const getTenantIdFromUrl = () => {
+  // Example: Extract tenant_id from "/3/home"
+  const pathArray = window.location.pathname.split('/');
+  if (pathArray.length >= 2) {
+    return pathArray[1]; // Assumes tenant_id is the first part of the path
+  }
+  return null; // Return null if tenant ID is not found or not in the expected place
+};
+
 export const AuthProvider = ({ children }) => {
+
+  const [tenantId, setTenantId] = useState(() => {
+    const storedTenantId = localStorage.getItem("tenant_id");
+    return storedTenantId ? JSON.parse(storedTenantId) : null;
+  });
+
   const [authenticated, setAuthenticated] = useState(() => {
-    const storedAuth = localStorage.getItem("authenticated");
-    return storedAuth ? JSON.parse(storedAuth) : false;
+    const tenant_id = getTenantIdFromUrl()
+    if (tenant_id == tenantId){
+      const storedAuth = localStorage.getItem("authenticated");
+      return storedAuth ? JSON.parse(storedAuth) : false;
+    }
+    else{
+      return false
+    }
   });
 
   const [userId, setUserId] = useState(() => {
@@ -13,10 +34,7 @@ export const AuthProvider = ({ children }) => {
     return storedUserId ? JSON.parse(storedUserId) : null;
   });
 
-  const [tenantId, setTenantId] = useState(() => {
-    const storedTenantId = localStorage.getItem("tenant_id");
-    return storedTenantId ? JSON.parse(storedTenantId) : null;
-  });
+
 
   const [userRole, setUserRole] = useState(() => {
     const storedUserRole = localStorage.getItem("user_role");
