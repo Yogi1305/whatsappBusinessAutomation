@@ -28,7 +28,8 @@ import PrivacyPolicy from './Pages/Misc/privacypolicy.jsx';
 import TermsAndConditions from './Pages/Misc/terms&conditions.jsx';
 import ContactUs from './Pages/Misc/contactus.jsx';
 import Catalog from './Pages/Catalog/catalog.jsx';
-
+import ScheduledEventsPage from './ScheduleEvent.jsx';
+import { Toaster } from 'sonner';
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
   return authenticated ? children : <Navigate to="/login" replace />;
@@ -39,6 +40,7 @@ const App = () => {
 
   return (
     <Router>
+      <Toaster position="top-center" duration={3000} style={{border:'none'}}/>
       <div className="flex flex-col min-h-screen">
         <Navbar isAuthenticated={authenticated} onLogout={logout} />
         <main className="flex-grow container">
@@ -67,7 +69,11 @@ const App = () => {
                     <ContactPage />
                   </ProtectedRoute>
                 } />
-
+                <Route path="scheduled-events/" element={
+                  <ProtectedRoute>
+                    <ScheduledEventsPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="catalog" element={
                   <ProtectedRoute>
                   <Catalog/>

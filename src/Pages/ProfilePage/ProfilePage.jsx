@@ -48,12 +48,12 @@ const ProfilePage = () => {
             'X-Tenant-ID': tenantId
           }
         });
-        const businessPhoneNumberId = bpidResponse.data.whatsapp_data.business_phone_number_id;
+        const businessPhoneNumberId = bpidResponse.data.whatsapp_data[0].business_phone_number_id;
         setBusinessPhoneNumberId(businessPhoneNumberId);
   
         // Then, fetch the tenant data using the obtained business phone ID
         const tenantResponse = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
-        setAccessToken(tenantResponse.data.whatsapp_data.access_token);
+        setAccessToken(tenantResponse.data.whatsapp_data[0].access_token);
   
         // Fetch user profile
         const profileResponse = await axiosInstance.get(`/get-user/${tenantId}`);

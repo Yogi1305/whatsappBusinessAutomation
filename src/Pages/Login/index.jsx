@@ -74,7 +74,7 @@ const Login = () => {
         <div className="p-8">
           {/* Logo Section */}
           <div className="flex items-center justify-center mb-6">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-xl">
+            <div className="bg-white p-3 rounded-xl">
               <img src={logo} alt="Logo" className="h-8 w-auto" />
             </div>
           </div>

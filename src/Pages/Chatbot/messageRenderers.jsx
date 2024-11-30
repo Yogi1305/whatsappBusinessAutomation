@@ -49,8 +49,26 @@ export const renderInteractiveMessage = (parsedMessage) => {
           </div>
         </div>
       );
+    } 
+    else if (interactive.type === 'product') {
+      return (
+        <div className='interactive-message product-card'>
+          <div className='product-image'>
+            <img 
+              src={interactive.action.product_details.image_link} 
+              alt={interactive.action.product_details.title}
+              className='product-img'
+            />
+          </div>
+          <div className='product-info'>
+            <h3 className='product-title'>{interactive.action.product_details.title}</h3>
+            <p className='product-price'>Rs. {interactive.action.product_details.price}</p>
+            <p className='product-quantity'>In Stock: {interactive.action.product_details.quantity}</p>
+          </div>
+        </div>
+      );
     }
-  } else if (type === 'text') {
+  }else if (type === 'text') {
     return <p className="plain-message">{text.body}</p>;
   } else if (type === 'image') {
     return (

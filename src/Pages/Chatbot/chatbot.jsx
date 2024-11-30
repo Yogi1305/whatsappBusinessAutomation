@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef,useMemo } from 'react';
 import './chatbot.css';
 import { getTenantIdFromUrl,fixJsonString,setCSSVariable,getContactIDfromURL} from './chatbot/utilityfunctions.jsx';
 import { renderMessageContent, renderInteractiveMessage,renderTemplateMessage } from './messageRenderers';
 // import OpenAI from "openai";
+import { toast } from "sonner";
 import { Navigate, useNavigate, useParams } from "react-router-dom"; 
 import {axiosInstance,fastURL, djangoURL} from "../../api.jsx";
 import MailIcon from '@mui/icons-material/Mail';
@@ -12,6 +13,7 @@ import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close'
+import FullPageLoader from './FullPageLoader.jsx';
 import { 
   Card, 
   CardContent, 
@@ -40,7 +42,7 @@ import { parse, v4 as uuidv4 } from 'uuid';
 import {whatsappURL}  from '../../Navbar';
 
 import io from 'socket.io-client';
-import { PhoneIcon, PlusCircle, PlusIcon, Upload, X } from 'lucide-react';
+import { PhoneIcon, PlusCircle, PlusIcon, Upload, X,Search } from 'lucide-react';
 import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { base, div } from 'framer-motion/client';
@@ -195,7 +197,7 @@ const Chatbot = () => {
         // const business_phone_number_id = 241683569037594;
         console.log("bpiddddddd: ", businessPhoneNumberId)
         const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
-        setAccessToken(response.data.whatsapp_data.access_token);
+        setAccessToken(response.data.whatsapp_data[0].access_token);
 
       } catch (error) {
         console.error('Error fetching tenant data:', error);
@@ -418,7 +420,7 @@ const Chatbot = () => {
 
   const handleSend = async () => {
     if (!selectedContact || !messageTemplates[selectedContact.id]) {
-      console.error('Message template or contact not selected');
+      toast.error('Please select a contact and enter a message');
       return;
     }
 
@@ -445,7 +447,7 @@ const Chatbot = () => {
               message: newMessage.content,
               business_phone_number_id: businessPhoneNumberId,
               messageType: "text",
-            }                                                                  /////
+            }
           );
         });
         await Promise.all(sendPromises);
@@ -470,8 +472,12 @@ const Chatbot = () => {
         ...prevTemplates,
         [selectedContact.id]: ''
       }));
-      console.log("Message sent successfully");
+      
+      // Add success toast
+      toast.success("Message sent successfully");
     } catch (error) {
+      // Add error toast with specific error message
+      toast.error(`Failed to send message: ${error.response?.data?.message || error.message || 'Unknown error'}`);
       console.error('Error sending message:', error);
     }
   };
@@ -580,35 +586,53 @@ const Chatbot = () => {
     fetchConversation(selectedContact.phone);}
   }, [selectedContact]);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleContactSelection = async (contact) => {
-    if (selectedContact) {
-      setPreviousContact(selectedContact);
+    try {
+      // Set loading state to true at the start of the function
+      setIsLoading(true);
+  
+      // Existing contact selection logic
+      if (selectedContact) {
+        setPreviousContact(selectedContact);
+      }
+      setSelectedContact({ ...contact, isGroup: false });
+  
+      // Reset unread count for selected contact
+      setContacts(prevContacts =>
+        prevContacts.map(c =>
+          c?.id === contact.id ? { ...c, unreadCount: 0 } : c
+        )
+      );
+  
+      // Fetch conversation
+      let contactMessages = [];
+      if (!allConversations[contact.phone]) {
+        await fetchConversation(contact.phone);
+      }
+  
+      // Filter messages for the selected contact
+      contactMessages = allMessages
+        .filter(message => message.contactPhone === contact.phone)
+        .map(message => ({
+          text: message.text,
+          sender: message.sender,
+          timestamp: message.timestamp
+        }));
+  
+      // Update conversation and reset states
+      setConversation(contactMessages);
+      setNewMessages([]);
+      setUnreadCounts(prev => ({ ...prev, [contact.phone]: 0 }));
+  
+    } catch (error) {
+      console.error('Error selecting contact:', error);
+      // Optionally, add error handling or toast notification
+    } finally {
+      // Always set loading to false when operation completes
+      setIsLoading(false);
     }
-    setSelectedContact({ ...contact, isGroup: false });
-    
-    
-    setContacts(prevContacts => 
-      prevContacts.map(c => 
-        c?.id === contact.id ? { ...c, unreadCount: 0 } : c
-      )
-    );
-
-    setConversation(allConversations[contact.phone] || []);
-    if (!allConversations[contact.phone]) {
-      fetchConversation(contact.phone);
-    }
-
-    const contactMessages = allMessages
-      .filter(message => message.contactPhone === contact.phone)
-      .map(message => ({ 
-        text: message.text, 
-        sender: message.sender, 
-        timestamp: message.timestamp 
-      }));
-    
-    setConversation(contactMessages);
-    setNewMessages([]);
-    setUnreadCounts(prev => ({ ...prev, [contact.phone]: 0 }));
   };
   
   const handleToggleSmileys = () => {
@@ -656,14 +680,6 @@ const Chatbot = () => {
     }
   };
     
-  const handleRedirect = () => {
-    window.location.href = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=1546607802575879&redirect_uri=https%3A%2F%2Fwhatsapp.nuren.ai%2Fchatbotredirect&response_type=code&config_id=1573657073196264&state=pass-through%20value';
-  };
-
-  const handleCreateFlow = () => {
-    navigate(`/${tenantId}/flow-builder`); // Use navigate instead of history.push
-  };
-
   const fetchFlows = async () => {
     try {
       const response = await axiosInstance.get(`${fastURL}/node-templates/`, {
@@ -782,23 +798,48 @@ const Chatbot = () => {
   console.error("Error creating new contact:", error);
   }
   };
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // Filtered and prioritized contacts based on search term
+  const filteredContacts = useMemo(() => {
+    if (!searchTerm) return contacts;
+    
+    const lowercasedSearch = searchTerm.toLowerCase();
+    return contacts.filter(contact => 
+      contact.name?.toLowerCase().includes(lowercasedSearch) ||
+      contact.phone?.toLowerCase().includes(lowercasedSearch)
+    );
+  }, [contacts, searchTerm]);
   return (
   <div>
-    {authPopupp && <AuthPopup onClose={handleCloseAuthPopupp} />}
-    <div className={`${showPopup ? 'filter blur-lg' : ''}`}>
-  <div className="cb-container">
-  <Card className="col-span-1 border-r overflow-hidden">
-      <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
-        <CardTitle>Contacts</CardTitle>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setShowNewChatInput(!showNewChatInput)}
-        >
-          <Plus />
-        </Button>
-      </CardHeader>
+     {isLoading && <FullPageLoader />}
+     {authPopupp && <AuthPopup onClose={handleCloseAuthPopupp} />}
+      <div className={`${showPopup ? 'filter blur-lg' : ''}`}>
+        <div className="cb-container flex">
+          {/* Contact List - Fixed width of 300px */}
+          <Card className="w-[300px] border-r overflow-hidden">
+            <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
+              <CardTitle>Contacts</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowNewChatInput(!showNewChatInput)}
+              >
+                <Plus />
+              </Button>
+            </CardHeader>
+            
+            <div className="p-4 border-b">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search contacts"
+            className="w-full pl-10"
+          />
+        </div>
+      </div>
       
       {showNewChatInput && (
         <div className="p-4 border-b">
@@ -815,29 +856,35 @@ const Chatbot = () => {
       )}
       
       {/* Contact List */}
-      <CardContent className="p-0 overflow-y-auto max-h-[calc(100vh-200px)]">
+      <CardContent className="custom-scrollbar p-0 overflow-y-auto max-h-[calc(100vh-250px)]">
         <div className="divide-y">
-          {prioritizedContacts.map((contact) => (
-            <div 
-              key={contact.id || contact.phone} 
-              className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${selectedContact?.phone === contact.phone ? 'bg-blue-50' : ''}`}
-              onClick={() => handleContactSelection(contact)}
-            >
-              <div>
-                <p className="font-semibold">{contact.name || 'Unknown Name'}</p>
-                <p className="text-sm text-gray-500">{contact.phone || 'No Phone'}</p>
+          {filteredContacts.length > 0 ? (
+            filteredContacts.map((contact) => (
+              <div 
+                key={contact.id || contact.phone} 
+                className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${selectedContact?.phone === contact.phone ? 'bg-blue-50' : ''}`}
+                onClick={() => handleContactSelection(contact)}
+              >
+                <div>
+                  <p className="font-semibold">{contact.name || 'Unknown Name'}</p>
+                  <p className="text-sm text-gray-500">{contact.phone || 'No Phone'}</p>
+                </div>
+                {contact.unreadCount > 0 && (
+                  <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
+                    {contact.unreadCount}
+                  </span>
+                )}
               </div>
-              {contact.unreadCount > 0 && (
-                <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
-                  {contact.unreadCount}
-                </span>
-              )}
+            ))
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              No contacts found
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
-    </Card>
-    <div className="cb-main">
+          </Card>
+          <div className="cb-main flex-grow">
     {selectedContact && (
   <div className="cb-chat-header">
   {selectedContact && (
@@ -905,7 +952,7 @@ const Chatbot = () => {
         // Handle non-string message formats
         return renderMessageContent(message);
       }
-      return <div className="error">Please Select a contact</div>;
+      return <div className="erro">Please Select a contact</div>;
     })()}
   </div>
   ))}
@@ -944,7 +991,7 @@ const Chatbot = () => {
         </div>
       )}
     </div>
-    <Card className="col-span-1">
+    <Card className="w-[350px]">
       <Tabs defaultValue="contact">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="contact">Contact</TabsTrigger>

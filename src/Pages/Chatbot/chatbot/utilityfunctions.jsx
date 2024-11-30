@@ -21,21 +21,26 @@ export const getTenantIdFromUrl = () => {
   
   export const fixJsonString = (jsonString) => {
     try {
+      console.log("Json String: ", jsonString)
       // Replace single quotes with double quotes
       const regex = /("(?:[^"\\]|\\.)*")|'/g;
-  
+
       // Replace single quotes with double quotes outside of double-quoted segments
       let fixedString = jsonString.replace(regex, (match) => {
-        if (match.startsWith('"') && match.endsWith('"')) {
-          // If the segment is within double quotes, return it as is
-          return match;
-        }
-        // Replace single quotes with double quotes
-        return match.replace(/'(?![^"]*")/g, '"');
+          if (match.startsWith('"') && match.endsWith('"')) {
+              // If the segment is within double quotes, return it as is
+              console.log("match: ", match)
+              if(match.includes("'")){
+                return match
+              }
+              else return match.replace(/"/g , '\\"');
+          }
+          // Replace single quotes with double quotes
+          return match.replace(/'(?![^"]*")/g, '"');
       });
-  
+      console.log("Pre Fixed String: ", fixedString)
       // Ensure proper escape sequences
-      fixedString = fixedString.replace(/\\"/g, '\\\\"');
+      // fixedString = fixedString.replace(/\\"/g, '\\\\"');
       return fixedString;
     } catch (e) {
       console.error('Error fixing JSON string:', e);

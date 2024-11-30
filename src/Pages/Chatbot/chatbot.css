@@ -767,6 +767,30 @@
 
 /* .open-popup-button-cb {
   background- */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 3px !important; /* Make the scrollbar thinner */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px; /* Make edges more circular */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  
+  /* For Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.1);
+  }
+  
+  
 
   .cb-message-container::-webkit-scrollbar {
     width: 6px;
@@ -1205,6 +1229,45 @@
   margin-top: 5px;
 }
 
+.product-card {
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.product-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+.product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.product-info {
+  padding: 10px;
+}
+.product-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+.product-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2e7d32;
+  margin: 0;
+}
+.product-quantity {
+  font-size: 14px;
+  font-weight: bold;
+  margin:10px 0 0;
+  font-style: italic;
+}
 .message-buttons {
   display: flex;
   flex-wrap: wrap;

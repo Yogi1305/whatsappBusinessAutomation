@@ -7,7 +7,7 @@
     height: 80%;
     width: 80%;
 }
-section {
+.section1 {
     border-bottom: 5px solid transparent;  /* Transparent border as a base */
     border-image: url('../../assets/border.png') 30 stretch;  /* Apply tribal image as the border */
     border-image-slice: 120;  /* Adjust this value to fit the image properly */

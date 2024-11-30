@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 const GroupPopup = ({
   showGroupPopup = false,
@@ -16,6 +17,18 @@ const GroupPopup = ({
   onCreateGroup = () => {},
   onClose = () => {},
 }) => {
+  // State to track expanded groups
+  const [expandedGroups, setExpandedGroups] = useState([]);
+
+  // Toggle group expansion
+  const toggleGroupExpansion = (groupId) => {
+    setExpandedGroups(prev => 
+      prev.includes(groupId) 
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
+
   return (
     <Dialog open={showGroupPopup} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -64,16 +77,48 @@ const GroupPopup = ({
             <ScrollArea className="h-40 rounded-md border">
               <div className="p-4 space-y-4">
                 {broadcastGroup?.map(bg => (
-                  <div 
-                    key={bg.id} 
-                    className="p-2 rounded hover:bg-gray-50"
-                  >
-                    <div className="grid gap-1">
-                      <span className="font-medium">{bg.name}</span>
-                      <span className="text-sm text-gray-500">
-                        {bg.members?.map(contact => contact.name).join(', ')}
-                      </span>
+                  <div key={bg.id} className="space-y-2">
+                    <div 
+                      className="flex items-center justify-between p-2 rounded hover:bg-gray-50"
+                    >
+                      <div className="grid gap-1 flex-grow">
+                        <span className="font-medium">{bg.name}</span>
+                        <span className="text-sm text-gray-500">
+                          {bg.members?.length > 5 
+                            ? `${bg.members.length} contacts` 
+                            : bg.members?.map(contact => contact.name).join(', ')
+                          }
+                        </span>
+                      </div>
+                      
+                      {bg.members?.length > 5 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => toggleGroupExpansion(bg.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          {expandedGroups.includes(bg.id) 
+                            ? <ChevronDown className="w-4 h-4" /> 
+                            : <ChevronRight className="w-4 h-4" />}
+                        </Button>
+                      )}
                     </div>
+                    
+                    {/* Expanded Group Members */}
+                    {expandedGroups.includes(bg.id) && bg.members?.length > 5 && (
+                      <div className="ml-8 space-y-2 border-l pl-4">
+                        {bg.members.map(contact => (
+                          <div 
+                            key={contact.id} 
+                            className="flex items-center space-x-3"
+                          >
+                            <span className="font-medium">{contact.name}</span>
+                            <span className="text-sm text-gray-500">{contact.phone}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

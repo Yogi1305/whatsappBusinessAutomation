@@ -54,10 +54,10 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
       try {
         const response = await axios.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
-            'X-Tenant-Id': 'ai'
+            'X-Tenant-Id': getTenantIdFromUrl()
           }
         });
-        setBusinessPhoneNumberId(response.data.whatsapp_data.business_phone_number_id);
+        setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
       } catch (error) {
         console.error('Error fetching business phone ID:', error);
       }

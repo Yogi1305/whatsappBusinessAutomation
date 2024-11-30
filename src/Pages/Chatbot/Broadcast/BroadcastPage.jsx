@@ -19,8 +19,8 @@ const getTenantIdFromUrl = () => {
 };
 
 const initial_bg = [
-  {id: 1, name: 'first group', contacts: [919548265904, 919864436756]}
-];
+  
+]
 
 const BroadcastPage = () => {
   const [accessToken, setAccessToken] = useState('');
@@ -72,7 +72,7 @@ const BroadcastPage = () => {
         setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
         setAccountId(response.data.whatsapp_data[0].business_account_id);
         setAccessToken(response.data.whatsapp_data[0].access_token);
-        return response.data.whatsapp_data;
+        return response.data.whatsapp_data[0];
       } catch (error) {
         console.error('Error fetching business phone ID:', error);
       }
@@ -496,7 +496,7 @@ const BroadcastPage = () => {
   const formatBroadcastHistory = (groupedStatuses) => {
     return Object.entries(groupedStatuses).map(([broadcastGroup, statuses]) => ({
       id: broadcastGroup,
-      name: statuses.name || `Broadcast Group ${broadcastGroup}`,
+      name: statuses.name ? `${statuses.name}(G)` : statuses.template_name ||`Broadcast Group ${broadcastGroup}`,
       sent: statuses.sent,
       delivered: statuses.delivered,
       read: statuses.read,

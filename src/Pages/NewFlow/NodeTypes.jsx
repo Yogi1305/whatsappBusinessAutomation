@@ -133,7 +133,7 @@ const getTenantIdFromUrl = () => {
 };
 
 const NodeWrapper = ({ children, style, type }) => {
-  
+
   const { deleteElements, setNodes, getNode } = useReactFlow();
 
   const onDelete = useCallback(() => {
@@ -398,7 +398,7 @@ const errorStyle = {
 export const SendMessageNode = ({ id,data, isConnectable }) => {
   const [field, setField] = useState(data.fields || { type: 'Message', content: { text: '', caption: '', med_id: '' } });
  // const { id } = data;
-  console.log("this is a GOATA",id);
+  // console.log("this is a GOATA",id);
   const { updateNodeData } = useFlow();
   const textAreaRef = useRef(null);
   const { userId } = useAuth();
@@ -408,7 +408,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
 
-  
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -419,12 +419,16 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
             'X-Tenant-ID': tenantId
           }
         });
-        const fetchedBusinessPhoneNumberId = bpidResponse.data.whatsapp_data.business_phone_number_id;
+        console.log("fetch data response: ",bpidResponse.data)
+        const fetchedBusinessPhoneNumberId = bpidResponse.data.whatsapp_data[0].business_phone_number_id;
         setBusinessPhoneNumberId(fetchedBusinessPhoneNumberId);
+        console.log("BPID: ", businessPhoneNumberId)
+        const fetchedAccessToken = bpidResponse.data.whatsapp_data[0].access_token
+        setAccessToken(fetchedAccessToken);
+        console.log("ACCCES TOKEN: ", accessToken)
 
         // Fetch the access token using the obtained business phone ID
-        const tenantResponse = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
-        setAccessToken(tenantResponse.data.whatsapp_data.access_token);
+        // const tenantResponse = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -448,7 +452,8 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         formData.append('file', file);
         formData.append('type', file.type.startsWith('image/') ? 'image' : 'document');
         formData.append('messaging_product', 'whatsapp');
-
+        console.log("bpid: ",businessPhoneNumberId)
+        console.log("Access token: ", accessToken)
         const response = await axiosInstance.post(
           `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`,
           formData,
@@ -507,7 +512,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
     }
   }, [field]);
 
-  
+
 
   const renderInput = () => {
     switch (field.type) {
@@ -671,7 +676,7 @@ export const product = ({ id, data, isConnectable }) => {
     setSelectedProductIds([...selectedProductIds, ""])
   }
 
-  
+
   return (
     <Card className="w-304 h-200 border-pink-200">
       <Handle type="target" position="left" isConnectable={isConnectable} />
