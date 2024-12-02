@@ -86,18 +86,22 @@ const Navbar = () => {
     setNotifications(prev => [newNotification, ...prev]);
     setUnreadCount(prev => prev + 1);
   };
-
   useEffect(() => {
     const handleNewSocketMessage = (message) => {
-      if (message) {
-        handleNewMessage(message);
+      console.log("notification aaya", message); 
+      if (message&&message.phone_number_id==businessPhoneNumberId) {
+       // Log the received message
+        handleNewMessage(message); // Process the new message
       }
     };
+  
     socket.on('new-message', handleNewSocketMessage);
+  
     return () => {
-      socket.off('new-message');
+      socket.off('new-message', handleNewSocketMessage); // Use the same reference for cleanup
     };
-  }, []);
+  }, [handleNewMessage]); // Include handleNewMessage in the dependency array if it comes from props or context
+  
 
   const removeNotification = (id) => {
     setNotifications(prev => prev.filter(n => n.id !== id));

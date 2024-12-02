@@ -378,8 +378,8 @@ const Chatbot = () => {
       }
     });
     socket.on('new-message', (message) => {
-      if (message) {
-        console.log('Got New Message', message.message);
+      if (message&&message.phone_number_id==businessPhoneNumberId) {
+        console.log('Got New Message', message);
         updateContactPriority(message.contactPhone, message.message);
         if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
           console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
@@ -857,32 +857,34 @@ const Chatbot = () => {
       
       {/* Contact List */}
       <CardContent className="custom-scrollbar p-0 overflow-y-auto max-h-[calc(100vh-250px)]">
-        <div className="divide-y">
-          {filteredContacts.length > 0 ? (
-            filteredContacts.map((contact) => (
-              <div 
-                key={contact.id || contact.phone} 
-                className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${selectedContact?.phone === contact.phone ? 'bg-blue-50' : ''}`}
-                onClick={() => handleContactSelection(contact)}
-              >
-                <div>
-                  <p className="font-semibold">{contact.name || 'Unknown Name'}</p>
-                  <p className="text-sm text-gray-500">{contact.phone || 'No Phone'}</p>
-                </div>
-                {contact.unreadCount > 0 && (
-                  <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
-                    {contact.unreadCount}
-                  </span>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="p-4 text-center text-gray-500">
-              No contacts found
+  <div className="divide-y">
+    {filteredContacts.length > 0 ? (
+      filteredContacts
+        .sort((a, b) => (b.unreadCount || 0) - (a.unreadCount || 0)) // Sort by unread count in descending order
+        .map((contact) => (
+          <div
+            key={contact.id || contact.phone}
+            className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${
+              selectedContact?.phone === contact.phone ? 'bg-blue-50' : ''
+            }`}
+            onClick={() => handleContactSelection(contact)}
+          >
+            <div>
+              <p className="font-semibold">{contact.name || 'Unknown Name'}</p>
+              <p className="text-sm text-gray-500">{contact.phone || 'No Phone'}</p>
             </div>
-          )}
-        </div>
-      </CardContent>
+            {contact.unreadCount > 0 && (
+              <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
+                {contact.unreadCount}
+              </span>
+            )}
+          </div>
+        ))
+    ) : (
+      <div className="p-4 text-center text-gray-500">No contacts found</div>
+    )}
+  </div>
+</CardContent>
           </Card>
           <div className="cb-main flex-grow">
     {selectedContact && (

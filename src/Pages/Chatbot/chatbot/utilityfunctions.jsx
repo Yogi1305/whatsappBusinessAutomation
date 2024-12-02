@@ -21,29 +21,48 @@ export const getTenantIdFromUrl = () => {
   
   export const fixJsonString = (jsonString) => {
     try {
-      console.log("Json String: ", jsonString)
-      // Replace single quotes with double quotes
-      const regex = /("(?:[^"\\]|\\.)*")|'/g;
-
-      // Replace single quotes with double quotes outside of double-quoted segments
-      let fixedString = jsonString.replace(regex, (match) => {
-          if (match.startsWith('"') && match.endsWith('"')) {
-              // If the segment is within double quotes, return it as is
-              console.log("match: ", match)
-              if(match.includes("'")){
-                return match
-              }
-              else return match.replace(/"/g , '\\"');
-          }
-          // Replace single quotes with double quotes
-          return match.replace(/'(?![^"]*")/g, '"');
-      });
-      console.log("Pre Fixed String: ", fixedString)
-      // Ensure proper escape sequences
-      // fixedString = fixedString.replace(/\\"/g, '\\\\"');
+      // Trim the string and log for debugging
+      jsonString = jsonString.trim();
+      console.log("Original JSON String: ", jsonString);
+  
+      // Early return if it's already valid JSON
+      try {
+        JSON.parse(jsonString);
+        return jsonString;
+      } catch {}
+  
+      // Handle common JSON formatting issues
+      let fixedString = jsonString
+        // Replace single quotes with double quotes, preserving quotes within strings
+        .replace(/(?<!\\)'([^']*?)(?<!\\)'/g, '"$1"')
+        
+        // Ensure keys are properly quoted
+        .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3')
+        
+        // Remove trailing commas
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*\]/g, ']')
+        
+        // Handle escaped characters
+        .replace(/\\'/g, "'")
+        .replace(/\\"/g, '"');
+  
+      console.log("Processed JSON String: ", fixedString);
+  
+      // Attempt to parse the fixed string
+      JSON.parse(fixedString);
+      
       return fixedString;
     } catch (e) {
-      console.error('Error fixing JSON string:', e);
-      return jsonString; // Return as-is if fixing fails
+      console.error('Error fixing JSON string:', e, 'Original string:', jsonString);
+      
+      // Fallback strategies
+      try {
+        // Last resort: try to create a valid JSON object
+        return JSON.stringify(eval('(' + jsonString + ')'));
+      } catch {
+        console.error('Could not parse JSON string at all');
+        return '{}'; // Return an empty object as absolute fallback
+      }
     }
   };
