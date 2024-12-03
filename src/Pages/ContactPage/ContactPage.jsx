@@ -56,8 +56,9 @@ const ContactPage = () => {
   const [deleteContactId, setDeleteContactId] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [filterConfig, setFilterConfig] = useState({
-    sortBy: 'recent_interaction',
+    sortBy: 'last_delivered',
     sortOrder: 'desc',
+    messageStatus: 'all', // New field for message status filtering
   });
   const fileInputRef = useRef(null);
 
@@ -142,22 +143,41 @@ const ContactPage = () => {
         );
       }
 
+      // Message Status Filtering
+      if (filterConfig.messageStatus !== 'all') {
+        result = result.filter(contact => {
+          switch(filterConfig.messageStatus) {
+            case 'no_messages':
+              return !contact.last_replied && !contact.last_delivered;
+            case 'delivered':
+              return contact.last_delivered && !contact.last_replied;
+            case 'replied':
+              return contact.last_replied;
+            default:
+              return true;
+          }
+        });
+      }
+
       // Sorting Logic
       result.sort((a, b) => {
         let compareValue = 0;
         switch(filterConfig.sortBy) {
-          case 'recent_interaction':
-            compareValue = new Date(b.last_interaction_timestamp || 0).getTime() - 
-                           new Date(a.last_interaction_timestamp || 0).getTime();
+          case 'last_delivered':
+            compareValue = new Date(b.last_delivered || 0).getTime() - 
+                           new Date(a.last_delivered || 0).getTime();
             break;
-          case 'interaction_count':
-            compareValue = (b.interaction_count || 0) - (a.interaction_count || 0);
+          case 'last_seen':
+            compareValue = new Date(b.last_seen || 0).getTime() - 
+                           new Date(a.last_seen || 0).getTime();
             break;
-          case 'name':
-            compareValue = (a.name + a.last_name).localeCompare(b.name + b.last_name);
+          case 'last_replied':
+            compareValue = new Date(b.last_replied || 0).getTime() - 
+                           new Date(a.last_replied || 0).getTime();
             break;
-          case 'engagement':
-            compareValue = (b.broadcast_engagement_rate || 0) - (a.broadcast_engagement_rate || 0);
+          case 'created_on':
+            compareValue = new Date(b.createdOn || 0).getTime() - 
+                           new Date(a.createdOn || 0).getTime();
             break;
         }
 
@@ -214,29 +234,67 @@ const ContactPage = () => {
                 <SelectValue placeholder="Sort By" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent_interaction">
+                <SelectItem value="last_delivered">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Recent Interaction
+                    <Clock className="w-4 h-4" /> Last Delivered
                   </div>
                 </SelectItem>
-                <SelectItem value="interaction_count">
+                <SelectItem value="last_seen">
                   <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4" /> Interaction Count
+                    <Users className="w-4 h-4" /> Last Seen
                   </div>
                 </SelectItem>
-               {/*<SelectItem value="name">
+                <SelectItem value="last_replied">
                   <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" /> Name
+                    <MessageCircle className="w-4 h-4" /> Last Replied
                   </div>
-                </SelectItem> */}
-               <SelectItem value="engagement">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" /> Engagement Rate
-                </div>
-              </SelectItem>
+                </SelectItem>
+                <SelectItem value="created_on">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" /> Created On
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
+          
+          <div>
+            <h4 className="font-medium mb-2">Message Status</h4>
+            <Select 
+              value={filterConfig.messageStatus} 
+              onValueChange={(value) => setFilterConfig(prev => ({
+                ...prev, 
+                messageStatus: value
+              }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Message Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <div className="flex items-center gap-2">
+                    All Contacts
+                  </div>
+                </SelectItem>
+                <SelectItem value="no_messages">
+                  <div className="flex items-center gap-2">
+                    No Messages Sent
+                  </div>
+                </SelectItem>
+                <SelectItem value="delivered">
+                  <div className="flex items-center gap-2">
+                    Delivered (No Reply)
+                  </div>
+                </SelectItem>
+                <SelectItem value="replied">
+                  <div className="flex items-center gap-2">
+                    Replied
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <h4 className="font-medium mb-2">Sort Order</h4>
             <Select 
@@ -267,6 +325,7 @@ const ContactPage = () => {
       </PopoverContent>
     </Popover>
   );
+
 
   const handleContactClick = (contactId) => {
     navigate(`/${tenantId}/chatbot/?id=${contactId}`);

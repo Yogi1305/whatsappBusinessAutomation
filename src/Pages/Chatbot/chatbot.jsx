@@ -860,7 +860,47 @@ const Chatbot = () => {
   <div className="divide-y">
     {filteredContacts.length > 0 ? (
       filteredContacts
-        .sort((a, b) => (b.unreadCount || 0) - (a.unreadCount || 0)) // Sort by unread count in descending order
+        .sort((a, b) => {
+          // Priority order of interaction
+          const interactionPriority = [
+            'last_replied',
+            'last_seen',
+            'last_delivered',
+            'no_interaction'
+          ];
+
+          // Determine interaction status for each contact
+          const getInteractionStatus = (contact) => {
+            if (contact.last_replied) return 'last_replied';
+            if (contact.last_seen) return 'last_seen';
+            if (contact.last_delivered) return 'last_delivered';
+            return 'no_interaction';
+          };
+
+          const aStatus = getInteractionStatus(a);
+          const bStatus = getInteractionStatus(b);
+
+          // First, sort by interaction priority
+          const priorityDiff = interactionPriority.indexOf(aStatus) - 
+                                interactionPriority.indexOf(bStatus);
+          if (priorityDiff !== 0) return priorityDiff;
+
+          // If same interaction status, sort by timestamp within that status
+          switch (aStatus) {
+            case 'last_replied':
+              return new Date(b.last_replied).getTime() - 
+                     new Date(a.last_replied).getTime();
+            case 'last_seen':
+              return new Date(b.last_seen).getTime() - 
+                     new Date(a.last_seen).getTime();
+            case 'last_delivered':
+              return new Date(b.last_delivered).getTime() - 
+                     new Date(a.last_delivered).getTime();
+            default:
+              // For no interaction, sort by unread count
+              return (b.unreadCount || 0) - (a.unreadCount || 0);
+          }
+        })
         .map((contact) => (
           <div
             key={contact.id || contact.phone}
@@ -872,6 +912,13 @@ const Chatbot = () => {
             <div>
               <p className="font-semibold">{contact.name || 'Unknown Name'}</p>
               <p className="text-sm text-gray-500">{contact.phone || 'No Phone'}</p>
+              {/* Optional: Add interaction status hint */}
+              <p className="text-xs text-gray-400">
+                {contact.last_replied ? 'Replied' :
+                 contact.last_seen ? 'Seen' :
+                 contact.last_delivered ? 'Delivered' :
+                 'No Interaction'}
+              </p>
             </div>
             {contact.unreadCount > 0 && (
               <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
