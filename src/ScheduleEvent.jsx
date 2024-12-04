@@ -195,9 +195,11 @@ const ScheduledEventsPage = () => {
 
   // Handle creating a new event
   const handleCreateEvent = async () => {
+    console.log("raw_recipient",newEvent.recipients)
     try {
       const token = localStorage.getItem('token');
       // Construct payload for creating a scheduled event
+    
       const payload = {
         type: "Template",
         date: newEvent.date,
