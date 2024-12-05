@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import axiosInstance, { fastURL, djangoURL } from "../../api";
+import QuickAddContact from './quickaddcontact';
 import { 
   Upload, 
   Search, 
@@ -55,6 +56,7 @@ const ContactPage = () => {
   const [viewMode, setViewMode] = useState("tile");
   const [deleteContactId, setDeleteContactId] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
   const [filterConfig, setFilterConfig] = useState({
     sortBy: 'last_delivered',
     sortOrder: 'desc',
@@ -67,6 +69,9 @@ const ContactPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const tenantId = getTenantIdFromUrl();
   const navigate = useNavigate();
+  const handleNewContactAdded = (newContact) => {
+    setContacts(prev => [newContact, ...prev]);
+  };
   const handleDeleteContact = async () => {
     if (!deleteContactId) return;
 
@@ -422,6 +427,10 @@ const ContactPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
           
           <div className="flex items-center gap-4">
+          <QuickAddContact 
+          tenantId={tenantId} 
+          onContactAdded={handleNewContactAdded} 
+        />
             {/* File Upload Section */}
             <input
             type="file"
