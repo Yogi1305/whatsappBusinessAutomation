@@ -34,8 +34,8 @@ const Chatbotredirect = () => {
               if (prevProgress >= 100) {
                 clearInterval(timer);
                 if (tenantID) {
-                  window.location.href = `${tenantID}/chatbot`; // Redirect to tenantID/chatbot
-                } else {
+                  window.location.href = `https://nuren.ai/${tenantID}/chatbot`; // Redirect to nuren.ai/tenantID/chatbot
+              } else {
                   console.error('Tenant ID not found');
                 }
                 return 100;
