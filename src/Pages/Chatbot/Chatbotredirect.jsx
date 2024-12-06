@@ -13,6 +13,7 @@ const Chatbotredirect = () => {
       try {
         // Get authorization code from URL params
         const urlParams = new URLSearchParams(window.location.search);
+        const tenantID = JSON.parse(localStorage.getItem('tenant_id')); // Replace with your actual local storage key
         const code = urlParams.get('code');
         console.log("Here is the code",code);
         if (code) {
@@ -27,7 +28,7 @@ const Chatbotredirect = () => {
           console.log('Backend response:', response.data);
 
           // Get tenantID from local storage and redirect
-          const tenantID = JSON.parse(localStorage.getItem('tenant_id')); // Replace with your actual local storage key
+          
 
           const timer = setInterval(() => {
             setProgress((prevProgress) => {
