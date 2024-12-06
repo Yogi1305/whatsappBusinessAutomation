@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import logo from "../../assets/logo.png"
 import axios from 'axios';
-import axiosInstance from '../../api';
 import { whatsappURL } from '../../Navbar';
 
 const Chatbotredirect = () => {
