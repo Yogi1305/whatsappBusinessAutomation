@@ -176,13 +176,20 @@ const BroadcastPage = () => {
     setIsSendingBroadcast(true);
     
     try {
-      let bg_id;
-      let bg_name;
+      let bg_id = null;
+      let bg_name = null;
 
       const phoneNumbers = [
         ...selectedPhones.map((contact) => parseInt(contact.phone)),
         ...selectedBCGroups.flatMap((bgId) => {
           const bcg = broadcastGroup.find((bg) => bg.id === bgId);
+          
+          // Add a check to ensure the broadcast group exists
+          if (!bcg) {
+            console.warn(`Broadcast group with ID ${bgId} not found`);
+            return [];
+          }
+          
           bg_id = bcg.id;
           bg_name = bcg.name;
           return bcg.members.map(member => parseInt(member.phone));
