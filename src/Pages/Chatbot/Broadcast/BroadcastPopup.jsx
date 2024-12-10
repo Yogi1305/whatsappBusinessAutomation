@@ -332,8 +332,7 @@ const BroadcastPopup = ({
         business_phone_number_id: businessPhoneNumberId,
         phoneNumbers: phoneNumbers,
       };
-
-      const response = await axios.post(`https://8twdg37p-8080.inc1.devtunnels.ms/send-template/`, payload, {
+      const response = await axios.post(`${whatsappURL}/send-template/`, payload, {
         headers: {
           'X-Tenant-ID': tenantId
         }
