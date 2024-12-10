@@ -14,6 +14,7 @@ import outreach from "../../assets/outreach.png";
 import "./Homepage.css";
 import CalendlySection from './Calendly';
 import ChatbotDemoSection from './ChatbotDemo';
+import LeadCapturePopup from './LeadCapture';
 import ad from '../../assets/slider/ad.mp4';
 import { Link } from 'react-router-dom';
 import Footer from '../footer';
@@ -115,6 +116,45 @@ const FloatingElement = ({ children, yOffset = 20, duration = 3 }) => {
 
 const Homepage = () => {
   const { scrollYProgress } = useScroll();
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+
+  // Show popup after 10 seconds of page load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPopupVisible(true); // Show the popup after 10 seconds
+    }, 10000);
+
+    return () => clearTimeout(timer); // Cleanup timer on component unmount
+  }, []);
+
+  // Show popup when user scrolls 30% down the page
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollPosition = window.scrollY + window.innerHeight;
+
+      // Check if the user has scrolled 30% of the page height
+      if (scrollPosition >= scrollHeight * 0.3) {
+        setIsPopupVisible(true); // Show the popup
+        window.removeEventListener('scroll', handleScroll); // Remove scroll listener after triggering
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll); // Cleanup the scroll event listener
+    };
+  }, []);
+  
+
+  const handleEmailSubmit = (email) => {
+    console.log("Submitted email:", email);
+    setIsPopupVisible(false); // Close popup after submission
+  };
+  const handlePopupClose = () => {
+    setIsPopupVisible(false); 
+  };
   const handlePlayVideo = () => {
     if (videoRef.current) {
       videoRef.current.play();
@@ -135,6 +175,12 @@ const Homepage = () => {
         style={{ scaleX: scrollYProgress }}
       />
 
+{isPopupVisible && (
+        <LeadCapturePopup
+          onClose={handlePopupClose}
+          onSubmit={handleEmailSubmit}
+        />
+      )}
       {/* Hero Section */}
       <VideoSection 
         videoSrc={ad}

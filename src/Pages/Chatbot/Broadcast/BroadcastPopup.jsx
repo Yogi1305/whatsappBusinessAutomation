@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -7,20 +7,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Search, ChevronDown, ChevronRight, CheckCircle2, XCircle, Filter, X } from "lucide-react";
-
+import { Plus, Search, ChevronDown, ChevronRight, CheckCircle2, XCircle, Filter, X, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import axios from 'axios';
+import axiosInstance from '../../../api';
+import { fastURL } from '../../../api';
 const BroadcastPopup = ({
   showBroadcastPopup = false,
   templates = [],
   selectedTemplate = null,
-  contacts = [],
-  broadcastGroup = [],
-  selectedPhones = [],
   selectedBCGroups = [],
   isSendingBroadcast = false,
   onTemplateSelect = () => {},
   onCreateTemplate = () => {},
-  onPhoneSelection = () => {},
+  
   onBCGroupSelection = () => {},
   onSendBroadcast = () => {},
   onClose = () => {},
@@ -29,6 +28,109 @@ const BroadcastPopup = ({
   const [selectedTab, setSelectedTab] = useState('contacts');
   const [expandedGroups, setExpandedGroups] = useState([]);
   const [activeFilters, setActiveFilters] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // Default to 1
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPhones, setSelectedPhones] = useState([]);
+  const [broadcastGroup, setBroadcastGroup] = useState();
+  
+  const onPhoneSelection = (contact) => {
+    // Check if the contact is already in selectedPhones
+    const isCurrentlySelected = selectedPhones.some(selected => selected.id === contact.id);
+    
+    if (isCurrentlySelected) {
+      // If selected, remove from selectedPhones
+      setSelectedPhones(prevSelected => 
+        prevSelected.filter(selected => selected.id !== contact.id)
+      );
+    } else {
+      // If not selected, add to selectedPhones
+      setSelectedPhones(prevSelected => [...prevSelected, contact]);
+    }
+    
+    // Update the contacts list to reflect the selection
+    setContacts(prevContacts => 
+      prevContacts.map(c => 
+        c.id === contact.id 
+          ? { ...c, isSelected: !isCurrentlySelected } 
+          : c
+      )
+    );
+  };
+  
+  const fetchContacts = async (page = 1) => {
+    try {
+      setIsLoading(true);
+      
+      // If it's the first page, fetch total pages and broadcast groups
+      if (page === 1) {
+        
+        const broadcastGroupResponse = await axiosInstance.get(`${fastURL}/broadcast-groups/`);
+        const formattedGroups = await formatGroups(broadcastGroupResponse.data);
+        setBroadcastGroup(formattedGroups);
+      }
+      
+      // Fetch contacts for the specific page
+      const response = await axiosInstance.get(`${fastURL}/contacts/${page}/`);
+      setTotalPages(response.data.total_pages);
+      
+      // Process contacts for the current page
+      const processedContacts = response.data.contacts.map(contact => {
+        // Preserve the selected state for contacts that were previously selected
+        const isSelected = selectedPhones.some(selected => selected.id === contact.id);
+        
+        return {
+          ...contact,
+          first_name: contact.first_name || '',
+          last_name: contact.last_name || '',
+          lastMessageTime: contact.lastMessageTime || null,
+          hasNewMessage: contact.hasNewMessage || false,
+          isSelected: isSelected
+        };
+      });
+      
+      // Set contacts to only the current page's contacts
+      setContacts(processedContacts);
+      
+      // Update current page
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Error fetching contacts data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };  
+
+  // Initial fetch on component mount
+  useEffect(() => {
+    fetchContacts(1);
+  }, []);
+  const formatGroups = async (data) => {
+    const groups = {};
+    let idCounter = 1;
+  
+    data.forEach(group => {
+      const groupName = group.name
+  
+      // Initialize the group if it doesn't exist
+      // console.log("DOING GROUP: ", groupName)
+      if (!groups[groupName]) {
+        groups[groupName] = {
+          id: group.id, // Increment ID for each new group
+          name: groupName,
+          contacts: group.members
+        };
+      }
+    });
+  
+    // Convert the groups object into an array and join contact names with commas
+    return Object.values(groups).map(group => ({
+      id: group.id,
+      name: group.name || null,
+      members: group.contacts
+    }));
+  };
 
   // Enhanced filter strategies with more granular options
   const filterStrategies = [
@@ -94,7 +196,7 @@ const BroadcastPopup = ({
   // Apply active filters to contacts
   const filteredContacts = useMemo(() => {
     return contacts.filter(contact => {
-      // If no active filters, return all contacts
+      // If no active filters, return all contacts matching search
       if (activeFilters.length === 0) {
         return contact?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                contact?.phone?.includes(searchQuery);
@@ -114,11 +216,22 @@ const BroadcastPopup = ({
     });
   }, [contacts, searchQuery, activeFilters]);
 
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      fetchContacts(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      fetchContacts(currentPage - 1);
+    }
+  };
   // Filter groups based on search query
-  const filteredGroups = broadcastGroup.filter(group => 
+  const filteredGroups = (broadcastGroup || []).filter(group => 
     group?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  
   // Toggle group expansion
   const toggleGroupExpansion = (groupId) => {
     setExpandedGroups(prev => 
@@ -309,11 +422,36 @@ const BroadcastPopup = ({
             <TabsContent value="contacts">
             <ScrollArea className="h-64 rounded-md border">
               <div className="p-4 space-y-2">
-                <div className="text-sm text-gray-500 mb-2">
-                  {selectedPhones.length} of {filteredContacts.length} contacts selected
+                <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
+                  <span>
+                    {selectedPhones.length} contacts selected
+                  </span>
+                  {/* Pagination Controls */}
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1 || isLoading}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span>Page {currentPage} of {totalPages}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages || isLoading}
+                    >
+                      <ChevronRightIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                {filteredContacts.map(contact => (
-                  <label
+                {isLoading ? (
+                  <div className="text-center text-gray-500">Loading contacts...</div>
+                ) : (
+                  filteredContacts.map(contact => (
+                    <label
                     key={contact.id}
                     className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded cursor-pointer"
                   >
@@ -322,22 +460,23 @@ const BroadcastPopup = ({
                       onCheckedChange={() => onPhoneSelection(contact)}
                       id={`contact-${contact.id}`}
                     />
-                    <div className="grid gap-1 flex-grow">
-                      <div className="flex justify-between">
-                        <span className="font-medium">{contact.name}</span>
-                        <div className="text-xs text-gray-500 space-x-2">
-                          {contact.last_replied && (
-                            <span>Last Reply: {new Date(contact.last_replied).toLocaleDateString()}</span>
-                          )}
-                          {contact.last_seen && (
-                            <span>Last Seen: {new Date(contact.last_seen).toLocaleDateString()}</span>
-                          )}
+                      <div className="grid gap-1 flex-grow">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{contact.name}</span>
+                          <div className="text-xs text-gray-500 space-x-2">
+                            {contact.last_replied && (
+                              <span>Last Reply: {new Date(contact.last_replied).toLocaleDateString()}</span>
+                            )}
+                            {contact.last_seen && (
+                              <span>Last Seen: {new Date(contact.last_seen).toLocaleDateString()}</span>
+                            )}
+                          </div>
                         </div>
+                        <span className="text-sm text-gray-500">{contact.phone}</span>
                       </div>
-                      <span className="text-sm text-gray-500">{contact.phone}</span>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  ))
+                )}
               </div>
             </ScrollArea>
           </TabsContent>
