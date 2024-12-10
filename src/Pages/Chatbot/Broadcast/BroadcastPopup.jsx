@@ -10,7 +10,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, Search, ChevronDown, ChevronRight, CheckCircle2, XCircle, Filter, X, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import axios from 'axios';
 import axiosInstance from '../../../api';
-import { fastURL } from '../../../api';
+import { fastURL} from '../../../api';
+import { whatsappURL } from '../../../Navbar';
+const getTenantIdFromUrl = () => {
+  const pathArray = window.location.pathname.split('/');
+  if (pathArray.length >= 2) {
+    return pathArray[1];
+  }
+  return null;
+};
 const BroadcastPopup = ({
   showBroadcastPopup = false,
   templates = [],
@@ -19,7 +27,8 @@ const BroadcastPopup = ({
   isSendingBroadcast = false,
   onTemplateSelect = () => {},
   onCreateTemplate = () => {},
-  
+  setIsSendingBroadcast,
+ 
   onBCGroupSelection = () => {},
   onSendBroadcast = () => {},
   onClose = () => {},
@@ -34,7 +43,8 @@ const BroadcastPopup = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPhones, setSelectedPhones] = useState([]);
   const [broadcastGroup, setBroadcastGroup] = useState();
-  
+  const tenantId = getTenantIdFromUrl();
+  const [businessPhoneNumberId,setBusinessPhoneNumberId]=useState('');
   const onPhoneSelection = (contact) => {
     // Check if the contact is already in selectedPhones
     const isCurrentlySelected = selectedPhones.some(selected => selected.id === contact.id);
@@ -58,6 +68,24 @@ const BroadcastPopup = ({
       )
     );
   };
+  useEffect(() => {
+    const fetchBusinessPhoneId = async () => {
+      try {
+        const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
+          headers: {
+            'X-Tenant-ID': tenantId
+          }
+        });
+        setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
+        
+        return response.data.whatsapp_data[0];
+      } catch (error) {
+        console.error('Error fetching business phone ID:', error);
+      }
+    };
+
+    fetchBusinessPhoneId();
+  }, [tenantId]);
   
   const fetchContacts = async (page = 1) => {
     try {
@@ -268,6 +296,71 @@ const BroadcastPopup = ({
   const clearAllFilters = () => {
     setActiveFilters([]);
   };
+  const handleSendBroadcast = async () => {
+    if (selectedPhones.length === 0 && selectedBCGroups.length === 0) {
+      toast.error("Please select at least one contact or group and enter a message.", {
+        position: "top-right",
+        duration: 3000
+      });
+     
+      return;
+    }
+  
+    setIsSendingBroadcast(true);
+    
+    try {
+      let bg_id;
+      let bg_name;
+
+      const phoneNumbers = [
+        ...selectedPhones.map((contact) => parseInt(contact.phone)),
+        ...selectedBCGroups.flatMap((bgId) => {
+          const bcg = broadcastGroup.find((bg) => bg.id === bgId);
+          bg_id = bcg.id;
+          bg_name = bcg.name;
+          return bcg.members.map(member => parseInt(member.phone));
+        })
+      ].filter(Boolean);
+  
+      const payload = {
+        bg_id: bg_id,
+        bg_name: bg_name,
+        template: {
+          id: selectedTemplate.id,
+          name: selectedTemplate?.name || "under_name",
+        },
+        business_phone_number_id: businessPhoneNumberId,
+        phoneNumbers: phoneNumbers,
+      };
+
+      const response = await axios.post(`https://8twdg37p-8080.inc1.devtunnels.ms/send-template/`, payload, {
+        headers: {
+          'X-Tenant-ID': tenantId
+        }
+      });
+  
+      if (response.status === 200) {
+        toast.success("Broadcast message sent successfully!", {
+          position: "top-center",
+          duration: 3000
+        });
+        onClose();
+      } else {
+        throw new Error("Failed to send broadcast");
+      }
+    } catch (error) {
+      console.error("Error sending broadcast:", error);
+      toast.error("Failed to send broadcast message. Please try again.", {
+        position: "top-center",
+        duration: 3000
+      });
+    
+    } finally {
+      setIsSendingBroadcast(false);
+    }
+  };
+
+
 
   return (
     <Dialog open={showBroadcastPopup} onOpenChange={onClose}>
@@ -550,7 +643,7 @@ const BroadcastPopup = ({
               Cancel
             </Button>
             <Button
-              onClick={onSendBroadcast}
+              onClick={handleSendBroadcast}
               disabled={isSendingBroadcast || (selectedPhones.length === 0 && selectedBCGroups.length === 0) || !selectedTemplate}
             >
               {isSendingBroadcast ? "Sending..." : "Send Broadcast"}
