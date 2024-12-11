@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef,useMemo } from 'react';
+import React, { useState, useEffect, useRef,useMemo,useCallback } from 'react';
 import './chatbot.css';
 import { getTenantIdFromUrl,fixJsonString,setCSSVariable,getContactIDfromURL} from './chatbot/utilityfunctions.jsx';
 import { renderMessageContent, renderInteractiveMessage,renderTemplateMessage } from './messageRenderers';
@@ -42,7 +42,7 @@ import { parse, v4 as uuidv4 } from 'uuid';
 import {whatsappURL}  from '../../Navbar';
 
 import io from 'socket.io-client';
-import { PhoneIcon, PlusCircle, PlusIcon, Upload, X,Search } from 'lucide-react';
+import { PhoneIcon, PlusCircle, PlusIcon, Upload, X,Search, ChevronRight} from 'lucide-react';
 import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { base, div } from 'framer-motion/client';
@@ -55,14 +55,7 @@ import {
 const socket = io(whatsappURL);
 
 
-const sentimentColors = {
-  anger: '255,0,0',
-  happiness: '255,223,0',
-  sadness: '54,100,139',
-  trust: '0,128,255',
-  fear: '128,0,128',
-  surprise: '255,140,0'
-}
+
 
 const Chatbot = () => {
   const tenantId=getTenantIdFromUrl();
@@ -545,11 +538,9 @@ const Chatbot = () => {
       }
       const data = await response.json();
       console.log("Conversations: ", data)
-      const sentiment = data.at(-1).dominant_emotion
-      const rgb = sentimentColors[sentiment]
-      setCSSVariable('--sentiment-shadow', `0 4px 6px rgba(${rgb}, 0.8)`)
-      setCSSVariable('--sentiment-solid', `rgba(${rgb}, 0.8)`)
-      setCSSVariable('--sentiment-solid-light', `rgba(${rgb}, 0.4)`)
+     
+      
+     
       // Merge fetched data with any new messages
       const mergedConversation = [
         ...(allConversations[contactId] || []),
@@ -809,9 +800,246 @@ const Chatbot = () => {
       contact.name?.toLowerCase().includes(lowercasedSearch) ||
       contact.phone?.toLowerCase().includes(lowercasedSearch)
     );
-  }, [contacts, searchTerm]);
+  }, [contacts, searchTerm])
+  const [showContactsDrawer, setShowContactsDrawer] = useState(false);
+const [visibleMessages, setVisibleMessages] = useState([]);
+const [hasMoreMessages, setHasMoreMessages] = useState(true);
+const [currentPage, setCurrentPage] = useState(1);
+const MESSAGES_PER_PAGE = 10;
+
+// New function to load messages with pagination
+const loadMessages = useCallback(() => {
+  if (!selectedContact) return;
+
+  const startIndex = Math.max(0, conversation.length - (currentPage * MESSAGES_PER_PAGE));
+  const endIndex = conversation.length - ((currentPage - 1) * MESSAGES_PER_PAGE);
+  
+  const loadedMessages = conversation.slice(startIndex, endIndex);
+  
+  setVisibleMessages(prevMessages => [...loadedMessages, ...prevMessages]);
+  setHasMoreMessages(startIndex > 0);
+}, [conversation, currentPage, selectedContact]);
+
+// Function to load more messages
+const loadMoreMessages = useCallback(() => {
+  setCurrentPage(prevPage => prevPage + 1);
+}, []);
+
+// Effect to load initial messages or reload when contact changes
+useEffect(() => {
+  if (selectedContact) {
+    setCurrentPage(1);
+    setVisibleMessages([]);
+    setHasMoreMessages(true);
+    loadMessages();
+  }
+}, [selectedContact, loadMessages]);
+
+// Effect to load messages when current page changes
+useEffect(() => {
+  loadMessages();
+}, [currentPage, loadMessages]);
+
   return (
   <div>
+   <div className="md:hidden">
+   <div className="mobile-chat-container flex flex-col h-screen">
+  {/* Sliding Contacts Drawer */}
+  <div className={`contacts-drawer fixed inset-0 z-50 transform transition-transform duration-300 ${
+    showContactsDrawer ? 'translate-x-0' : '-translate-x-full'
+  } bg-white w-full h-full overflow-hidden`} style={{zIndex:'201'}}>
+    <div className="contacts-header flex items-center justify-between p-4 border-b">
+      <h2 className="text-xl font-semibold">Contacts</h2>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={() => setShowContactsDrawer(false)}
+      >
+        <X /> {/* Close icon */}
+      </Button>
+    </div>
+
+    {/* Search Input */}
+    <div className="p-4 border-b">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+        <Input
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search contacts"
+          className="w-full pl-10"
+        />
+      </div>
+    </div>
+
+    {/* Contact List */}
+    <div className="contacts-list overflow-y-auto max-h-[calc(100vh-150px)]">
+      {filteredContacts.length > 0 ? (
+        <div className="divide-y">
+          {filteredContacts
+            .sort((a, b) => {
+              // Previous sorting logic remains the same
+              // ... (keep the existing sorting logic)
+            })
+            .map((contact) => (
+              <div
+                key={contact.id || contact.phone}
+                className={`p-4 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${
+                  selectedContact?.phone === contact.phone ? 'bg-blue-50' : ''
+                }`}
+                onClick={() => {
+                  handleContactSelection(contact);
+                  setShowContactsDrawer(false);
+                }}
+              >
+                <div>
+                  <p className="font-semibold">{contact.name || 'Unknown Name'}</p>
+                  <p className="text-sm text-gray-500">{contact.phone || 'No Phone'}</p>
+                </div>
+                {contact.unreadCount > 0 && (
+                  <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
+                    {contact.unreadCount}
+                  </span>
+                )}
+              </div>
+            ))
+          }
+        </div>
+      ) : (
+        <div className="p-4 text-center text-gray-500">No contacts found</div>
+      )}
+    </div>
+  </div>
+
+  {/* Main Chat Interface */}
+  <div className="cb-main flex-grow relative">
+    {/* Chat Header with Contact Selector */}
+    {selectedContact ? (
+      <div className="cb-chat-header flex justify-between items-center p-4 border-b">
+        <div 
+          className="flex items-center cursor-pointer"
+          onClick={() => setShowContactsDrawer(true)}
+        >
+          {profileImage && typeof profileImage === 'string' ? (
+            <img src={profileImage} alt="Profile" className="w-10 h-10 rounded-full mr-3" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center mr-3">
+              {getInitials(selectedContact.name, selectedContact.last_name)}
+            </div>
+          )}
+          <div>
+            <span className="font-semibold">{selectedContact.name} {selectedContact.last_name}</span>
+            <span className="block text-xs text-gray-500">{selectedContact.phone}</span>
+          </div>
+        </div>
+        <ChevronRight onClick={() => setShowContactsDrawer(true)} className="text-gray-500" />
+      </div>
+    ) : (
+      <div className="p-4 text-center text-gray-500">
+        <Button onClick={() => setShowContactsDrawer(true)}>
+          Select a Contact
+        </Button>
+      </div>
+    )}
+
+    {/* Pagination and Load More */}
+    {selectedContact && visibleMessages.length > 0 && (
+     <div className="load-more-container top-0 z-10 bg-white p-2 text-center">
+        {hasMoreMessages && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadMoreMessages}
+            className="mx-auto"
+          >
+            Load More Messages
+          </Button>
+        )}
+      </div>
+    )}
+
+    {/* Message Container with Limited Messages */}
+    <div className="cb-message-container overflow-y-auto flex-grow relative">
+  {isLoading && (
+    <div className="absolute inset-0 flex items-center justify-center z-50 bg-white bg-opacity-75">
+      <div className="spinner border-4 border-blue-500 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
+    </div>
+  )}
+  {visibleMessages.map((message, index) => (
+    <div
+      key={index}
+      className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
+    >
+      {(() => {
+        if (typeof message.text === 'string') {
+          if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
+            try {
+              const fixedMessage = fixJsonString(message.text);
+              const parsedMessage = JSON.parse(fixedMessage);
+              return renderInteractiveMessage(parsedMessage);
+            } catch (e) {
+              console.error('Failed to parse message', e);
+              return <div className="error">Failed to parse message</div>;
+            }
+          }
+          return message.text || <div className="error">Message content is undefined</div>;
+        }
+        return <div className="error">Please Select a contact</div>;
+      })()}
+    </div>
+  ))}
+  <div ref={messageEndRef} />
+</div>
+
+    {/* Message Input Container */}
+    <div
+  className="cb-input-container sticky bottom-0 bg-white p-2 border-t flex flex-col md:flex-row items-end md:items-center"
+  style={{ zIndex: '200' }}
+>
+  <div className="cb-input-actions flex items-center gap-2 w-full">
+    <EmojiEmotionsIcon
+      className="cb-action-icon"
+      onClick={handleToggleSmileys}
+    />
+    <input
+      type="file"
+      accept="image/*"
+      style={{ display: 'none' }}
+      onChange={handleFileSelect}
+      ref={fileInputRef}
+    />
+    <AttachFileIcon
+      className="cb-action-icon"
+      onClick={() => fileInputRef.current.click()}
+    />
+    <textarea
+      value={(selectedContact && messageTemplates[selectedContact.id]) || ''}
+      onChange={(e) => {
+        if (selectedContact) {
+          setMessageTemplates((prevTemplates) => ({
+            ...prevTemplates,
+            [selectedContact.id]: e.target.value,
+          }));
+        }
+      }}
+      placeholder="Type a message"
+      className="cb-input-field flex-grow resize-none bg-gray-100 rounded-md p-2 border outline-none focus:ring-2 focus:ring-primary"
+      rows={1}
+    />
+    <SendIcon className="cb-send-icon text-primary cursor-pointer" onClick={handleSend} />
+  </div>
+
+  {showSmileys && (
+    <div className="cb-emoji-picker mt-2">
+      <Picker onEmojiClick={handleSelectSmiley} />
+    </div>
+  )}
+</div>
+
+  </div>
+</div>
+      </div>
+    <div className="hidden md:block">
      {isLoading && <FullPageLoader />}
      {authPopupp && <AuthPopup onClose={handleCloseAuthPopupp} />}
       <div className={`${showPopup ? 'filter blur-lg' : ''}`}>
@@ -1187,6 +1415,7 @@ const Chatbot = () => {
   )}
   </div>
   </div>
+ </div>
   </div>
   );
 
