@@ -317,22 +317,23 @@ const Register = () => {
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                     <input
-                                      type="email"
-                                      name={`email_${Math.random().toString(36).substring(7)}`}
-                                      placeholder="Email address"
-                                      className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                      value={formData.email}
-                                      onChange={handleInputChange}
-                                      autoComplete="new-email"
-                                      autoCorrect="off"
-                                      autoCapitalize="off"
-                                      spellCheck="false"
-                                      x-autocompletetype="off"
+                                        type="email"
+                                        name="email" // Use a static name
+                                        placeholder="Email address"
+                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                                        value={formData.email || ''} // Ensure it doesn't throw an error if formData.email is undefined
+                                        onChange={(e) => handleInputChange(e)} // Ensure `handleInputChange` updates the correct field
+                                        autoComplete="new-email"
+                                        autoCorrect="off"
+                                        autoCapitalize="off"
+                                        spellCheck="false"
+                                        x-autocompletetype="off"
                                     />
                                     {errors.email && 
                                         <p className="mt-1 text-sm text-red-500 animate-shake">{errors.email}</p>
                                     }
-                                </div>
+                                    </div>
+
 
                 <div className="relative">
                                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
