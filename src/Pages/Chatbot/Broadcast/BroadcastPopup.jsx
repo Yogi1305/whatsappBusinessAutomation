@@ -12,6 +12,7 @@ import axios from 'axios';
 import axiosInstance from '../../../api';
 import { fastURL} from '../../../api';
 import { whatsappURL } from '../../../Navbar';
+import { toast } from "sonner";
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
