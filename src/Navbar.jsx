@@ -40,10 +40,15 @@ import {
 import { useAuth } from './authContext';
 import logo from "./assets/logo.png";
 import io from 'socket.io-client';
-export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
 import axiosInstance from './api';
 import { fastURL} from './api.jsx';
-const socket = io('https://whatsappbotserver.azurewebsites.net');
+
+
+export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
+// export const whatsappURL = 'http://localhost:8080'
+
+
+const socket = io(whatsappURL);
 
 const Navbar = () => {
   const { authenticated, logout, tenantId } = useAuth();

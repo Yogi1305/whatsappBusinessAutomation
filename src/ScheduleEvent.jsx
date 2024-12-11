@@ -161,7 +161,6 @@ const ScheduledEventsPage = () => {
         axios.get(`${fastURL}/broadcast-groups/`, {
           headers: { 
             'X-Tenant-Id': tenantId,
-            'Authorization': `Bearer ${token}`
           }
         })
       ]);
@@ -177,9 +176,10 @@ const ScheduledEventsPage = () => {
         ...group,
         displayName: group.name
       }));
-      
+      console.log("Processed Contacts: ", processedContacts)
       setContacts(processedContacts);
       setBroadcastGroups(processedGroups);
+      console.log("Broadcast Groups: ", broadcastGroups)
     
     } catch (error) {
       console.error('Failed to fetch contacts or groups', error.response ? error.response.data : error.message);
@@ -433,8 +433,8 @@ const ScheduledEventsPage = () => {
                             </div>
                             {broadcastGroups.map((group) => (
                               <SelectItem 
-                                key={group.id} 
-                                value={`group_${group.id}`}
+                                key={group.id}
+                                value={group.members.map(member => member.phone)}
                               >
                                 {group.displayName}
                               </SelectItem>
