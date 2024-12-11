@@ -148,6 +148,7 @@ const Navbar = () => {
 
   if (isAuthPage) return null;
 
+
   const NavLinks = () => {
     const linkBaseClasses = authenticated 
       ? "group flex items-center gap-2 hover:bg-primary/10 transition-all duration-300 px-3 py-2 rounded-md"
@@ -160,9 +161,9 @@ const Navbar = () => {
     const textClasses = authenticated
       ? "text-foreground group-hover:text-primary"
       : "text-gray-300 group-hover:text-white";
-
+  
     const navigationItems = (
-      <NavigationMenuList className="flex items-center space-x-2">
+      <NavigationMenuList className="flex flex-col md:flex-row md:items-center md:space-x-2 gap-y-2">
         {authenticated && (
           <>
             <NavigationMenuItem>
@@ -181,7 +182,6 @@ const Navbar = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            {/* New Scheduled Messages Navigation Item */}
             <NavigationMenuItem>
               <Link to={getPath('/scheduled-events')}>
                 <NavigationMenuLink className={linkBaseClasses}>
@@ -200,7 +200,8 @@ const Navbar = () => {
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
-        <NavigationMenuItem>
+        <NavigationMenuItem className="hidden md:block">
+          {/* Hidden on mobile, visible on medium+ screens */}
           <Link to={getPath('/flow-builder')}>
             <NavigationMenuLink className={linkBaseClasses}>
               <Workflow className={iconClasses} />
@@ -208,7 +209,8 @@ const Navbar = () => {
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
-        <NavigationMenuItem>
+        <NavigationMenuItem className="hidden md:block">
+          {/* Hidden on mobile, visible on medium+ screens */}
           <Link to={getPath('/catalog')}>
             <NavigationMenuLink className={linkBaseClasses}>
               <LayoutGrid className={iconClasses} />
@@ -218,14 +220,14 @@ const Navbar = () => {
         </NavigationMenuItem>
       </NavigationMenuList>
     );
-
+  
     return (
       <NavigationMenu>
         {navigationItems}
       </NavigationMenu>
     );
   };
-
+  
   return (
     <>
       {isLogouting && <LogoutLoader />}
@@ -411,6 +413,7 @@ const Navbar = () => {
                 className={`w-[300px] ${
                   authenticated ? "" : "bg-black border-r border-gray-900"
                 }`}
+                style={{ zIndex: 205 }}
               >
                 <SheetHeader>
                   <SheetTitle className={`flex items-center space-x-2 ${

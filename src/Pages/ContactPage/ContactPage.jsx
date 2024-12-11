@@ -77,23 +77,89 @@ const ContactPage = () => {
   const tenantId = getTenantIdFromUrl();
   const navigate = useNavigate();
   const handleNewContactAdded = (newContact) => {
-    setContacts(prev => [newContact, ...prev]);
+    setContacts(prev => {
+      // Ensure prev is an object with a contacts array
+      const currentContacts = Array.isArray(prev?.contacts) 
+        ? prev.contacts 
+        : Array.isArray(prev) 
+          ? prev 
+          : [];
+  
+      // Prepare the new contact with default values
+      const processedNewContact = {
+        ...newContact,
+        email: newContact.email || null,
+        name: newContact.name || null,
+        phone: newContact.phone || null,
+        isActive: newContact.isActive || false,
+        createdOn: newContact.createdOn || new Date().toISOString(),
+        tenant_id: newContact.tenant_id || 'ai',
+        id: newContact.id || Date.now() // Fallback unique ID if missing
+      };
+  
+      // Prepare the new state
+      const updatedContacts = [processedNewContact, ...currentContacts];
+      
+      // If prev was an object with metadata, preserve that
+      if (prev && typeof prev === 'object' && !Array.isArray(prev)) {
+        return {
+          ...prev,
+          contacts: updatedContacts,
+          total_contacts: (prev.total_contacts || 0) + 1
+        };
+      }
+  
+      // If prev was a simple array or something else, return a new array
+      return {
+        contacts: updatedContacts,
+        total_contacts: updatedContacts.length,
+        page_no: 1,
+        page_size: 50,
+        total_pages: Math.ceil(updatedContacts.length / 50)
+      };
+    });
   };
+  
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
     }
   };
   const handleDeleteContact = async () => {
-    if (!deleteContactId) return;
-
     try {
       await axiosInstance.delete(`${fastURL}/contacts/${deleteContactId}/`);
       
-      // Remove the contact from the local state
-      setContacts(prevContacts => 
-        prevContacts.filter(contact => contact.id !== deleteContactId)
-      );
+      setContacts(prev => {
+        // Ensure we have a contacts array to work with
+        const currentContacts = Array.isArray(prev?.contacts) 
+          ? prev.contacts 
+          : Array.isArray(prev) 
+            ? prev 
+            : [];
+  
+        // Filter out the contact
+        const filteredContacts = currentContacts.filter(
+          contact => contact.id !== deleteContactId
+        );
+        
+        // If prev was an object with metadata, preserve that
+        if (prev && typeof prev === 'object' && !Array.isArray(prev)) {
+          return {
+            ...prev,
+            contacts: filteredContacts,
+            total_contacts: Math.max((prev.total_contacts || 0) - 1, 0)
+          };
+        }
+  
+        // If prev was a simple array or something else, return a new array
+        return {
+          contacts: filteredContacts,
+          total_contacts: filteredContacts.length,
+          page_no: 1,
+          page_size: 50,
+          total_pages: Math.ceil(filteredContacts.length / 50)
+        };
+      });
       
       toast.success("Contact deleted successfully");
       setIsDeleteDialogOpen(false);
@@ -103,6 +169,7 @@ const ContactPage = () => {
       toast.error("Failed to delete contact. Please try again.");
     }
   };
+  
 
   const openDeleteConfirmation = (contactId, event) => {
     // Prevent triggering contact click when delete button is clicked
@@ -222,7 +289,7 @@ const ContactPage = () => {
     setIsLoading(true);
     try {
       const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}/`);
-      setContacts(response.data);
+      setContacts(response.data.contacts);
       setTotalPages(response.data.total_pages);
     } catch (error) {
       console.error("Error fetching contacts:", error);

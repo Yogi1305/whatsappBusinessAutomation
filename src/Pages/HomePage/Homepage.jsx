@@ -18,7 +18,8 @@ import LeadCapturePopup from './LeadCapture';
 import ad from '../../assets/slider/ad.mp4';
 import { Link } from 'react-router-dom';
 import Footer from '../footer';
-
+import { fastURL } from '../../api';
+import axiosInstance from '../../api';
 const FeatureCard = ({ icon: Icon, title, description }) => {
   const [isHovered, setIsHovered] = useState(false);
   const springProps = useSpring({
@@ -147,10 +148,18 @@ const Homepage = () => {
     };
   }, []);
   
-
-  const handleEmailSubmit = (email) => {
-    console.log("Submitted email:", email);
-    setIsPopupVisible(false); // Close popup after submission
+  const handleEmailSubmit = async (email) => {
+    try {
+      const response = await axiosInstance.post(`${fastURL}/add_email`, { email });
+      
+      console.log("Submitted email:", email);
+      console.log("Server response:", response.data);
+      
+      setIsPopupVisible(false); // Close popup after successful submission
+    } catch (error) {
+      console.error("Error submitting email:", error);
+      // Optionally handle error (e.g., show error message to user)
+    }
   };
   const handlePopupClose = () => {
     setIsPopupVisible(false); 

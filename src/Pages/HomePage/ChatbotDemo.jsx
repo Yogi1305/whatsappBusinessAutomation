@@ -126,7 +126,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   
   const handleButtonClick = () => {
     const text = `${sessionId} Hi! How can your chatbot automation help grow my business?`
-    window.location.href = `https://wa.me/919266893634?text=${text}`;
+    window.location.href = `https://wa.me/16194560588?text=${text}`;
   };
 
   return (
