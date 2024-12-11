@@ -227,39 +227,7 @@ const BroadcastPage = () => {
     }
   };
 
-  const handleCreateGroup = async () => {
-    try {
-      const members = selectedPhones.map(contact => ({
-        phone: contact.phone,
-        name: contact.name
-      }));
-      
-      const payload = {
-        members: members,
-        id: uuidv4(),
-        name: groupName
-      };
-      
-      const response = await axiosInstance.post(`${fastURL}/broadcast-groups/`, payload, {
-        headers: {
-          'X-Tenant-ID': tenantId
-        }
-      });
 
-      if (response.status === 200) {
-        toast.success("Contacts added to group successfully!", {
-          position: "top-center",
-          duration: 3000
-        });
-        setBroadcastGroup((prevGroups) => [...prevGroups, payload]);
-        setSelectedPhones([]);
-      } else {
-        throw new Error("Failed to create broadcast group");
-      }
-    } catch (error) {
-      console.error("Error creating broadcast group:", error);
-    }
-  };
 
   const handleCloseBroadcastPopup = () => {
     setShowBroadcastPopup(false);
@@ -433,7 +401,7 @@ const BroadcastPage = () => {
     });
   };  
 
-  const formatGroups = async (data) => {
+  /*const formatGroups = async (data) => {
     const groups = {};
     let idCounter = 1;
   
@@ -460,7 +428,7 @@ const BroadcastPage = () => {
   };
 
 
-  const fetchContacts = async () => {
+ const fetchContacts = async () => {
     try {
       const broadcastGroupPromise = axiosInstance.get(`${fastURL}/broadcast-groups/`)
       const response = await axiosInstance.get(`${fastURL}/contacts/`, {
@@ -489,7 +457,7 @@ const BroadcastPage = () => {
   };
   useEffect(() => {
     fetchContacts();
-  }, []);
+  }, []);*/
 
 
 
@@ -506,13 +474,7 @@ const BroadcastPage = () => {
     }));
   }
 
-  const handlePhoneSelection = (contact) => {
-    setSelectedPhones(prevSelected => 
-      prevSelected.includes(contact)
-        ? prevSelected.filter(id => id !== contact)
-        : [...prevSelected, contact]
-    );
-  };
+
 
   const handleBCGroupSelection = (bgId) => {
     console.log("Broadcast::::::::", bgId)
@@ -639,14 +601,13 @@ const BroadcastPage = () => {
             isSendingBroadcast={isSendingBroadcast}
             handleTemplateClick={handleTemplateClick}
             setShowTemplatePopup={setShowTemplatePopup}
-            handlePhoneSelection={handlePhoneSelection}
             handleBCGroupSelection={handleBCGroupSelection}
             handleSendBroadcast={handleSendBroadcast}
             handleCloseBroadcastPopup={handleCloseBroadcastPopup}
             showGroupPopup={showGroupPopup}
             groupName={groupName}
             setGroupName={setGroupName}
-            handleCreateGroup={handleCreateGroup}
+            setIsSendingBroadcast={setIsSendingBroadcast}
             handleCloseGroupPopup={handleCloseGroupPopup}
             BroadcastPopup={BroadcastPopup}
             GroupPopup={GroupPopup}

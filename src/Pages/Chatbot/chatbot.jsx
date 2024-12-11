@@ -847,7 +847,7 @@ const Chatbot = () => {
             value={newPhoneNumber}
             onChange={(e) => setNewPhoneNumber(e.target.value)}
             placeholder="Enter phone number"
-            className="w-full mb-2"
+             className="w-full mb-2 border-blue-500 ring-2 ring-blue-200 focus:ring-blue-500"
           />
           <Button onClick={handleNewChat} className="w-full">
             Start New Chat

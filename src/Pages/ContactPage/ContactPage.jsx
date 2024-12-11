@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import axiosInstance, { fastURL, djangoURL } from "../../api";
+import QuickAddContact from './quickaddcontact';
 import { 
   Upload, 
   Search, 
@@ -15,7 +16,11 @@ import {
   TrendingUp,
   Grid,
   Trash2,
-  XCircle 
+  XCircle,
+  ChevronsLeft,
+  ChevronsRight,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +60,10 @@ const ContactPage = () => {
   const [viewMode, setViewMode] = useState("tile");
   const [deleteContactId, setDeleteContactId] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState();
+
   const [filterConfig, setFilterConfig] = useState({
     sortBy: 'last_delivered',
     sortOrder: 'desc',
@@ -67,6 +76,14 @@ const ContactPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const tenantId = getTenantIdFromUrl();
   const navigate = useNavigate();
+  const handleNewContactAdded = (newContact) => {
+    setContacts(prev => [newContact, ...prev]);
+  };
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
   const handleDeleteContact = async () => {
     if (!deleteContactId) return;
 
@@ -130,19 +147,24 @@ const ContactPage = () => {
   );
   // Advanced Filtering and Sorting Function
   const applyFilters = useMemo(() => {
-    return (contacts) => {
+    return (contactsData) => {
+      // Check if contactsData has a contacts array
+      const contacts = Array.isArray(contactsData) 
+        ? contactsData 
+        : contactsData?.contacts || [];
+  
       let result = [...contacts];
-
-      // Text Search Filter
+  
+      // Rest of the filtering logic remains the same as in the previous example
       if (searchTerm) {
         const searchTermLower = searchTerm.toLowerCase();
-        result = result.filter(contact => 
-          Object.values(contact).some(value => 
+        result = result.filter(contact =>
+          Object.values(contact).some(value =>
             String(value).toLowerCase().includes(searchTermLower)
           )
         );
       }
-
+  
       // Message Status Filtering
       if (filterConfig.messageStatus !== 'all') {
         result = result.filter(contact => {
@@ -158,36 +180,35 @@ const ContactPage = () => {
           }
         });
       }
-
+  
       // Sorting Logic
       result.sort((a, b) => {
         let compareValue = 0;
         switch(filterConfig.sortBy) {
           case 'last_delivered':
-            compareValue = new Date(b.last_delivered || 0).getTime() - 
+            compareValue = new Date(b.last_delivered || 0).getTime() -
                            new Date(a.last_delivered || 0).getTime();
             break;
           case 'last_seen':
-            compareValue = new Date(b.last_seen || 0).getTime() - 
+            compareValue = new Date(b.last_seen || 0).getTime() -
                            new Date(a.last_seen || 0).getTime();
             break;
           case 'last_replied':
-            compareValue = new Date(b.last_replied || 0).getTime() - 
+            compareValue = new Date(b.last_replied || 0).getTime() -
                            new Date(a.last_replied || 0).getTime();
             break;
           case 'created_on':
-            compareValue = new Date(b.createdOn || 0).getTime() - 
+            compareValue = new Date(b.createdOn || 0).getTime() -
                            new Date(a.createdOn || 0).getTime();
             break;
         }
-
+  
         return filterConfig.sortOrder === 'asc' ? compareValue : -compareValue;
       });
-
+  
       return result;
     };
   }, [searchTerm, filterConfig]);
-
   useEffect(() => {
     fetchContacts();
   }, []);
@@ -200,8 +221,9 @@ const ContactPage = () => {
   const fetchContacts = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get(`${fastURL}/contacts/`);
+      const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}/`);
       setContacts(response.data);
+      setTotalPages(response.data.total_pages);
     } catch (error) {
       console.error("Error fetching contacts:", error);
       toast.error("Failed to fetch contacts. Please try again later.");
@@ -209,6 +231,11 @@ const ContactPage = () => {
       setIsLoading(false);
     }
   };
+
+  // Fetch contacts whenever page changes
+  useEffect(() => {
+    fetchContacts();
+  }, [currentPage]);
 
   // Advanced Filter Popover Component
   const AdvancedFilterPopover = () => (
@@ -410,6 +437,47 @@ const ContactPage = () => {
       setIsUploading(false);
     }
   };
+  const PaginationControls = () => (
+    <div className="flex justify-center items-center space-x-2 mt-6">
+      <Button 
+        variant="outline" 
+        size="icon" 
+        onClick={() => handlePageChange(1)} 
+        disabled={currentPage === 1}
+      >
+        <ChevronsLeft className="w-4 h-4" />
+      </Button>
+      <Button 
+        variant="outline" 
+        size="icon" 
+        onClick={() => handlePageChange(currentPage - 1)} 
+        disabled={currentPage === 1}
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </Button>
+      
+      <span className="px-4 text-sm text-gray-700">
+        Page {currentPage} of {totalPages}
+      </span>
+      
+      <Button 
+        variant="outline" 
+        size="icon" 
+        onClick={() => handlePageChange(currentPage + 1)} 
+        disabled={currentPage === totalPages}
+      >
+        <ChevronRight className="w-4 h-4" />
+      </Button>
+      <Button 
+        variant="outline" 
+        size="icon" 
+        onClick={() => handlePageChange(totalPages)} 
+        disabled={currentPage === totalPages}
+      >
+        <ChevronsRight className="w-4 h-4" />
+      </Button>
+    </div>
+  );
 
   // Update the existing render method to include file upload
   return (
@@ -422,6 +490,10 @@ const ContactPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
           
           <div className="flex items-center gap-4">
+          <QuickAddContact 
+          tenantId={tenantId} 
+          onContactAdded={handleNewContactAdded} 
+        />
             {/* File Upload Section */}
             <input
             type="file"
@@ -574,6 +646,8 @@ const ContactPage = () => {
             </div>
           </Card>
         )}
+<PaginationControls />
+      
       </div>
     </div>
   );

@@ -21,12 +21,14 @@ const BroadcastHistory = ({
   handleSendBroadcast,
   handleCloseBroadcastPopup,
   showGroupPopup,
+setIsSendingBroadcast,
   groupName,
   setGroupName,
   handleCreateGroup,
   handleCloseGroupPopup,
   BroadcastPopup,
-  GroupPopup
+  GroupPopup,
+  businessPhoneNumberId
 }) => {
   return (
     <div className="space-y-6">
@@ -63,6 +65,7 @@ const BroadcastHistory = ({
         onBCGroupSelection={handleBCGroupSelection}
         onSendBroadcast={handleSendBroadcast}
         onClose={handleCloseBroadcastPopup}
+        setIsSendingBroadcast={setIsSendingBroadcast}
       />
 
       <GroupPopup

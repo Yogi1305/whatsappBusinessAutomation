@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import logo from "../../assets/logo.png"
 import axios from 'axios';
-import axiosInstance from '../../api';
 import { whatsappURL } from '../../Navbar';
 
 const Chatbotredirect = () => {
@@ -13,6 +12,7 @@ const Chatbotredirect = () => {
       try {
         // Get authorization code from URL params
         const urlParams = new URLSearchParams(window.location.search);
+        const tenantID = JSON.parse(localStorage.getItem('tenant_id')); // Replace with your actual local storage key
         const code = urlParams.get('code');
         console.log("Here is the code",code);
         if (code) {
@@ -27,15 +27,15 @@ const Chatbotredirect = () => {
           console.log('Backend response:', response.data);
 
           // Get tenantID from local storage and redirect
-          const tenantID = JSON.parse(localStorage.getItem('tenant_id')); // Replace with your actual local storage key
+          
 
           const timer = setInterval(() => {
             setProgress((prevProgress) => {
               if (prevProgress >= 100) {
                 clearInterval(timer);
                 if (tenantID) {
-                  window.location.href = `${tenantID}/chatbot`; // Redirect to tenantID/chatbot
-                } else {
+                  window.location.href = `https://nuren.ai/${tenantID}/chatbot`; // Redirect to nuren.ai/tenantID/chatbot
+              } else {
                   console.error('Tenant ID not found');
                 }
                 return 100;
