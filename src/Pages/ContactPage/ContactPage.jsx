@@ -20,7 +20,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ChevronLeft,
-  ChevronRight
+  ChevronRightIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -504,47 +504,80 @@ const ContactPage = () => {
       setIsUploading(false);
     }
   };
-  const PaginationControls = () => (
-    <div className="flex justify-center items-center space-x-2 mt-6">
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => handlePageChange(1)} 
-        disabled={currentPage === 1}
-      >
-        <ChevronsLeft className="w-4 h-4" />
-      </Button>
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => handlePageChange(currentPage - 1)} 
-        disabled={currentPage === 1}
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </Button>
-      
-      <span className="px-4 text-sm text-gray-700">
-        Page {currentPage} of {totalPages}
-      </span>
-      
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => handlePageChange(currentPage + 1)} 
-        disabled={currentPage === totalPages}
-      >
-        <ChevronRight className="w-4 h-4" />
-      </Button>
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => handlePageChange(totalPages)} 
-        disabled={currentPage === totalPages}
-      >
-        <ChevronsRight className="w-4 h-4" />
-      </Button>
-    </div>
-  );
+  const PaginationControls = () => {
+    const [pageInputVisible, setPageInputVisible] = useState(false);
+    const [pageInput, setPageInput] = useState(currentPage);
+  
+    const handlePageInputChange = (e) => {
+      const value = e.target.value;
+      setPageInput(value === '' ? '' : Number(value));
+    };
+  
+    const handlePageInputBlur = () => {
+      setPageInputVisible(false);
+      if (pageInput !== '' && pageInput >= 1 && pageInput <= totalPages) {
+        handlePageChange(pageInput);
+      } else {
+        setPageInput(currentPage);
+      }
+    };
+  
+    const handlePageInputSubmit = () => {
+      if (pageInput !== '' && pageInput >= 1 && pageInput <= totalPages) {
+        handlePageChange(pageInput);
+        setPageInputVisible(false);
+      }
+    };
+  
+    return (
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">Page</span>
+          {pageInputVisible ? (
+            <Input
+              type="number"
+              value={pageInput}
+              onChange={handlePageInputChange}
+              onBlur={handlePageInputBlur}
+              onKeyDown={(e) => e.key === 'Enter' && handlePageInputSubmit()}
+              min="1"
+              max={totalPages}
+              className="w-16 h-8"
+              autoFocus
+            />
+          ) : (
+            <span 
+              className="cursor-pointer hover:bg-gray-100 px-2 rounded"
+              onDoubleClick={() => setPageInputVisible(true)}
+            >
+              {currentPage}
+            </span>
+          )}
+          <span className="text-sm text-gray-500">of {totalPages}</span>
+        </div>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handlePageChange(currentPage - 1)} 
+            disabled={currentPage === 1}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handlePageChange(currentPage + 1)} 
+            disabled={currentPage === totalPages}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronRightIcon className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
 
   // Update the existing render method to include file upload
   return (

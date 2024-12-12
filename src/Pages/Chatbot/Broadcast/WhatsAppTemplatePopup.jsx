@@ -466,7 +466,7 @@ const WhatsAppTemplatePopup = ({
             </div>
           </form>
 
-          <div className="w-[400px] flex-shrink-0">
+          <div className="w-[400px] flex-shrink-0 hidden md:block">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Preview</CardTitle>
