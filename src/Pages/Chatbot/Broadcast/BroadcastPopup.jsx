@@ -20,6 +20,22 @@ const getTenantIdFromUrl = () => {
   }
   return null;
 };
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+}
+
 const BroadcastPopup = ({
   showBroadcastPopup = false,
   templates = [],
@@ -360,11 +376,14 @@ const BroadcastPopup = ({
     }
   };
 
-
+  const isMobile = useIsMobile();
 
   return (
     <>
-    <Dialog open={showBroadcastPopup} onOpenChange={onClose}className="hidden md:block">
+    {!isMobile && (
+ 
+
+    <Dialog open={showBroadcastPopup} onOpenChange={onClose} className="hidden md:block">
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center justify-between">
@@ -653,6 +672,8 @@ const BroadcastPopup = ({
         </div>
       </DialogContent>
     </Dialog>
+    )}
+    {isMobile && (
     <Dialog 
         open={showBroadcastPopup} 
         onOpenChange={onClose}
@@ -933,6 +954,7 @@ const BroadcastPopup = ({
           </div>
         </DialogContent>
       </Dialog>
+      )}
     </>
   );
 };
