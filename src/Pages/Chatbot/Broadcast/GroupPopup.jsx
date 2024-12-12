@@ -87,7 +87,7 @@ const GroupPopup = ({
         setBroadcastGroup(formattedGroups);
       }
       
-      const response = await axiosInstance.get(`${fastURL}/contacts/${page}/`);
+      const response = await axiosInstance.get(`${fastURL}/contacts/${page}`);
       setTotalPages(response.data.total_pages);
       const processedContacts = response.data.contacts.map(contact => ({
         ...contact,

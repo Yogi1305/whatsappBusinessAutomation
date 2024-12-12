@@ -20,7 +20,7 @@ const AssignContact = () => {
     try {
       const [usersResponse, leadsResponse] = await Promise.all([
         axiosInstance.get(`${djangoURL}/get-all-user/`),
-        axiosInstance.get(`${fastURL}/contacts/`)
+        axiosInstance.get(`${fastURL}/contacts`)
       ]);
 
       setUsers(usersResponse.data);

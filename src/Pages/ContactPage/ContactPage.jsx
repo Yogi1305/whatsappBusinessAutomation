@@ -288,7 +288,7 @@ const ContactPage = () => {
   const fetchContacts = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}/`);
+      const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}`);
       setContacts(response.data.contacts);
       setTotalPages(response.data.total_pages);
     } catch (error) {

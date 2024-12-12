@@ -117,7 +117,7 @@ const BroadcastPopup = ({
       }
       
       // Fetch contacts for the specific page
-      const response = await axiosInstance.get(`${fastURL}/contacts/${page}/`);
+      const response = await axiosInstance.get(`${fastURL}/contacts/${page}`);
       setTotalPages(response.data.total_pages);
       
       // Process contacts for the current page
@@ -377,6 +377,19 @@ const BroadcastPopup = ({
   };
 
   const isMobile = useIsMobile();
+  const [inputPage, setInputPage] = useState(currentPage);
+
+// New handler function
+const handleGoToPage = (pageNumber) => {
+  // Validate page number
+  if (pageNumber < 1 || pageNumber > totalPages) {
+    toast.error(`Please enter a page number between 1 and ${totalPages}`);
+    return;
+  }
+
+  // Set current page and trigger contacts fetch
+  fetchContacts(pageNumber);
+};
 
   return (
     <>
@@ -539,26 +552,48 @@ const BroadcastPopup = ({
                   <span>
                     {selectedPhones.length} contacts selected
                   </span>
-                  {/* Pagination Controls */}
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handlePreviousPage}
-                      disabled={currentPage === 1 || isLoading}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span>Page {currentPage} of {totalPages}</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages || isLoading}
-                    >
-                      <ChevronRightIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {/* Pagination Controls   const [pageInputVisible, setPageInputVisible] = useState(false);
+    const [pageInput, setPageInput] = useState(currentPage);
+  
+    const handlePageInputChange = (e) => {
+      const value = e.target.value;
+      setPageInput(value === '' ? '' : Number(value));
+    };*/}
+<div className="flex items-center gap-2">
+  <Button 
+    variant="outline" 
+    size="sm"
+    onClick={handlePreviousPage}
+    disabled={currentPage === 1 || isLoading}
+  >
+    <ChevronLeft className="w-4 h-4" />
+  </Button>
+  <Input 
+    type="number" 
+    min={1} 
+    max={totalPages} 
+    value={inputPage} 
+    onChange={(e) => {
+      const value = e.target.value === '' ? '' : Number(e.target.value);
+      setInputPage(value);
+    }}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' && inputPage !== '' && inputPage >= 1 && inputPage <= totalPages) {
+        handleGoToPage(inputPage);
+      }
+    }}
+    className="w-16 h-8 text-center"
+  />
+  <span>of {totalPages}</span>
+  <Button 
+    variant="outline" 
+    size="sm"
+    onClick={handleNextPage}
+    disabled={currentPage === totalPages || isLoading}
+  >
+    <ChevronRightIcon className="w-4 h-4" />
+  </Button>
+</div>
                 </div>
                 {isLoading ? (
                   <div className="text-center text-gray-500">Loading contacts...</div>
