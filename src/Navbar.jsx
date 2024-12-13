@@ -21,7 +21,8 @@ import {
   SheetContent, 
   SheetHeader, 
   SheetTitle, 
-  SheetTrigger 
+  SheetTrigger,
+  SheetClose 
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -35,7 +36,8 @@ import {
   LogOut, 
   MenuIcon,
   Loader2,
-  Calendar // Added Calendar icon for Scheduled Messages
+  Calendar,
+  X // Added Calendar icon for Scheduled Messages
 } from "lucide-react";
 import { useAuth } from './authContext';
 import logo from "./assets/logo.png";
@@ -60,6 +62,7 @@ const Navbar = () => {
   const [accessToken, setAccessToken] = useState('');
   const [businessPhoneNumberId,setBusinessPhoneNumberId]=useState('');
   const navigate = useNavigate();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   useEffect(() => {
@@ -165,7 +168,7 @@ const Navbar = () => {
       : "text-gray-300 group-hover:text-white";
   
     const navigationItems = (
-      <NavigationMenuList className="flex flex-col md:flex-row md:items-center md:space-x-2 gap-y-2">
+      <NavigationMenuList className="flex flex-col mt-20 md:mt-0 md:flex-row md:items-center md:space-x-2 gap-y-2">
         {authenticated && (
           <>
             <NavigationMenuItem>
@@ -220,6 +223,7 @@ const Navbar = () => {
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
+        
       </NavigationMenuList>
     );
   
@@ -285,31 +289,33 @@ const Navbar = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-72">
-                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {notifications.length > 0 ? (
-                      notifications.map(notification => (
-                        <DropdownMenuItem 
-                          key={notification.id} 
-                          onSelect={() => removeNotification(notification.id)}
-                          className="flex justify-between items-center hover:bg-primary/10 transition-colors"
-                        >
-                          <span className="truncate max-w-[250px]">{notification.text}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive hover:bg-destructive/10"
-                          >
-                            &times;
-                          </Button>
-                        </DropdownMenuItem>
-                      ))
-                    ) : (
-                      <div className="text-muted-foreground text-center py-4">
-                        No new notifications
-                      </div>
-                    )}
-                  </DropdownMenuContent>
+  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+  <DropdownMenuSeparator />
+  <div className={`${notifications.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
+    {notifications.length > 0 ? (
+      notifications.map(notification => (
+        <DropdownMenuItem 
+          key={notification.id} 
+          onSelect={() => removeNotification(notification.id)}
+          className="flex justify-between items-center hover:bg-primary/10 transition-colors"
+        >
+          <span className="truncate max-w-[250px]">{notification.text}</span>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-destructive hover:bg-destructive/10"
+          >
+            &times;
+          </Button>
+        </DropdownMenuItem>
+      ))
+    ) : (
+      <div className="text-muted-foreground text-center py-4">
+        No new notifications
+      </div>
+    )}
+  </div>
+</DropdownMenuContent>
                 </DropdownMenu>
 
                 {/* User Profile Dropdown */}
@@ -392,51 +398,66 @@ const Navbar = () => {
             )}
 
             {/* Mobile Menu */}
-            <Sheet>
-              <SheetTrigger asChild className="md:hidden">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`${
-                    authenticated 
-                      ? "hover:bg-primary/10" 
-                      : "text-gray-300 hover:bg-gray-800 bg-transparent"
-                  } transition-all duration-300`}
-                >
-                  <MenuIcon className={
-                    authenticated 
-                      ? "w-6 h-6 text-primary group-hover:scale-110 transition-transform"
-                      : "w-6 h-6 text-gray-300 group-hover:text-white group-hover:scale-110 transition-transform"
-                  } />
-                </Button>
-              </SheetTrigger>
-              <SheetContent 
-                side="left" 
-                className={`w-[300px] ${
-                  authenticated ? "" : "bg-black border-r border-gray-900"
-                }`}
-                style={{ zIndex: 205 }}
-              >
-                <SheetHeader>
-                  <SheetTitle className={`flex items-center space-x-2 ${
-                    authenticated ? "" : "text-white"
-                  }`}>
-                    <img src={logo} alt="Nuren AI Logo" className="h-8 w-8" />
-                    <span>Nuren AI</span>
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="grid gap-4 py-4">
-                  <NavLinks />
-                  {!authenticated && (
-                    <Link to="/login">
-                      <Button className="w-full bg-gray-900 text-gray-300 hover:bg-gray-800 hover:text-white">
-                        Login
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Sheet 
+  open={isSheetOpen} 
+  onOpenChange={setIsSheetOpen}
+  // This prop ensures the sheet can be closed by swiping
+  modal={false}
+>
+  <SheetTrigger asChild className="md:hidden">
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      className={`${
+        authenticated 
+          ? "hover:bg-primary/10" 
+          : "text-gray-300 hover:bg-gray-800 bg-transparent"
+      } transition-all duration-300`}
+    >
+      <MenuIcon className={
+        authenticated 
+          ? "w-6 h-6 text-primary group-hover:scale-110 transition-transform"
+          : "w-6 h-6 text-gray-300 group-hover:text-white group-hover:scale-110 transition-transform"
+      } />
+    </Button>
+  </SheetTrigger>
+  <SheetContent 
+    side="left" 
+    className={`w-[300px] ${
+      authenticated ? "" : "bg-black border-r border-gray-900"
+    }`}
+    style={{ zIndex: 205 }}
+  >
+    <SheetHeader>
+      <SheetTitle className={`flex items-center space-x-2 ${
+        authenticated ? "" : "text-white"
+      }`}>
+        <img src={logo} alt="Nuren AI Logo" className="h-8 w-8" />
+        <span>Nuren AI</span>
+      </SheetTitle>
+    </SheetHeader>
+    <div className="grid gap-4 py-4">
+      <NavLinks />
+      {!authenticated && (
+        <Link to="/login">
+          <Button className="w-full bg-gray-900 text-gray-300 hover:bg-gray-800 hover:text-white">
+            Login
+          </Button>
+        </Link>
+      )}
+      
+      {/* Close Button at the bottom */}
+      <SheetClose asChild >
+        <Button 
+          variant="destructive" 
+          className="w-full mt-4 flex items-center justify-center"
+        >
+          <X className="mr-2 h-5 w-5" />Close
+        </Button>
+      </SheetClose>
+    </div>
+  </SheetContent>
+</Sheet>
           </div>
         </div>
       </div>

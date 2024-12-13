@@ -586,64 +586,139 @@ const ContactPage = () => {
       <DeleteConfirmationDialog />
 
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
-          
-          <div className="flex items-center gap-4">
-          <QuickAddContact 
-          tenantId={tenantId} 
-          onContactAdded={handleNewContactAdded} 
-        />
-            {/* File Upload Section */}
-            <input
-            type="file"
-            ref={fileInputRef}
-            accept=".xlsx"
-            onChange={handleFileSelect}
-            className="hidden"
-            id="excel-upload"
-          />
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={triggerFileInput}
-            disabled={isUploading}
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            {selectedFile ? selectedFile.name : "Upload Excel"}
-          </Button>
+      <div className="hidden md:flex md:justify-between items-center mb-8">
+  <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
 
-          {selectedFile && (
-            <Button 
-              onClick={handleUploadClick} 
-              disabled={isUploading}
-            >
-              {isUploading ? "Uploading..." : "Confirm Upload"}
-            </Button>
-          )}
+  <div className="flex items-center gap-4">
+    <QuickAddContact 
+      tenantId={tenantId} 
+      onContactAdded={handleNewContactAdded} 
+    />
+    {/* File Upload Section */}
+    <input
+      type="file"
+      ref={fileInputRef}
+      accept=".xlsx"
+      onChange={handleFileSelect}
+      className="hidden"
+      id="excel-upload"
+    />
+    <Button 
+      variant="outline" 
+      className="gap-2"
+      onClick={triggerFileInput}
+      disabled={isUploading}
+    >
+      <FileSpreadsheet className="w-4 h-4" />
+      {selectedFile ? selectedFile.name : "Upload Excel"}
+    </Button>
 
-            <AdvancedFilterPopover />
-            <Select value={viewMode} onValueChange={setViewMode}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="View" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="tile">
-                  <div className="flex items-center gap-2">
-                    <Grid className="w-4 h-4" />
-                    Tile View
-                  </div>
-                </SelectItem>
-                <SelectItem value="table">
-                  <div className="flex items-center gap-2">
-                    <List className="w-4 h-4" />
-                    Table View
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+    {selectedFile && (
+      <Button 
+        onClick={handleUploadClick} 
+        disabled={isUploading}
+      >
+        {isUploading ? "Uploading..." : "Confirm Upload"}
+      </Button>
+    )}
+
+    <AdvancedFilterPopover />
+    <Select value={viewMode} onValueChange={setViewMode}>
+      <SelectTrigger className="w-32">
+        <SelectValue placeholder="View" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="tile">
+          <div className="flex items-center gap-2">
+            <Grid className="w-4 h-4" />
+            Tile View
           </div>
-        </div>
+        </SelectItem>
+        <SelectItem value="table">
+          <div className="flex items-center gap-2">
+            <List className="w-4 h-4" />
+            Table View
+          </div>
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+</div>
+
+        <div className="md:hidden flex flex-col space-y-4">
+  {/* First Row: Title */}
+  <div className="flex justify-between items-center">
+    <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
+    <QuickAddContact 
+      tenantId={tenantId} 
+      onContactAdded={handleNewContactAdded} 
+    />
+  </div>
+
+  {/* Second Row: Phone Number Upload & View Mode */}
+  <div className="flex flex-col sm:flex-row gap-4">
+    {/* Phone Number & Excel Upload Section */}
+    <div className="flex-grow flex items-center gap-2 sm:gap-4">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".xlsx"
+        onChange={handleFileSelect}
+        className="hidden"
+        id="excel-upload"
+      />
+      <Button 
+        variant="outline" 
+        className="flex-1 gap-2"
+        onClick={triggerFileInput}
+        disabled={isUploading}
+      >
+        <FileSpreadsheet className="w-4 h-4" />
+        {selectedFile ? (
+          <span className="truncate max-w-[150px]">
+            {selectedFile.name}
+          </span>
+        ) : (
+          "Upload Excel"
+        )}
+      </Button>
+
+      {selectedFile && (
+        <Button 
+          onClick={handleUploadClick} 
+          disabled={isUploading}
+          className="flex-shrink-0"
+        >
+          {isUploading ? "Uploading..." : "Confirm"}
+        </Button>
+      )}
+    </div>
+
+    {/* View Mode & Advanced Filter Section */}
+    <div className="flex items-center gap-2 sm:gap-4">
+      <AdvancedFilterPopover />
+      <Select value={viewMode} onValueChange={setViewMode}>
+        <SelectTrigger className="w-32">
+          <SelectValue placeholder="View" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="tile">
+            <div className="flex items-center gap-2">
+              <Grid className="w-4 h-4" />
+              Tile View
+            </div>
+          </SelectItem>
+          <SelectItem value="table">
+            <div className="flex items-center gap-2">
+              <List className="w-4 h-4" />
+              Table View
+            </div>
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  </div>
+</div>
 
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

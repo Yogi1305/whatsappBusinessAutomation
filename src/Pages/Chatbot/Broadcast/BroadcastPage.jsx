@@ -619,7 +619,7 @@ const BroadcastPage = () => {
       </button>
     </div>
   </div>
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6" style={{marginBottom:'30px'}}>
         {activeTab === 'history' && (
           <BroadcastHistory
             broadcastHistory={broadcastHistory}
