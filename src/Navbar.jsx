@@ -126,8 +126,10 @@ const Navbar = () => {
     try {
       await axiosInstance.post('logout/');
       logout();
-      // Replace navigate with window.location.href for a full page reload
-      window.location.href = '/';
+      // Check if the user is on a mobile device
+      const isMobile = window.innerWidth <= 768; // Typical mobile breakpoint
+      // Redirect based on device type
+      window.location.href = isMobile ? '/login' : '/';
     } catch (error) {
       console.error('Logout failed', error);
       setIsLogouting(false);
