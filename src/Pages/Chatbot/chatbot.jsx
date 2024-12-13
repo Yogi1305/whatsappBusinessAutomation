@@ -42,7 +42,7 @@ import { parse, v4 as uuidv4 } from 'uuid';
 import {whatsappURL}  from '../../Navbar';
 
 import io from 'socket.io-client';
-import { PhoneIcon, PlusCircle, PlusIcon, Upload, X,Search, ChevronRight} from 'lucide-react';
+import { PhoneIcon, PlusCircle, PlusIcon, Upload, X,Search, ChevronRight,ChevronLeft} from 'lucide-react';
 import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { base, div } from 'framer-motion/client';
@@ -60,6 +60,7 @@ const socket = io(whatsappURL);
 const Chatbot = () => {
   const tenantId=getTenantIdFromUrl();
   // const navigate = useNavigate();
+  const [totalPages, setTotalPages] = useState(1);
   const [contacts, setContacts] = useState([]);
   const [selectedContact, setSelectedContact] = useState(null);
   const [searchText, setSearchText] = useState('');
@@ -156,7 +157,7 @@ const Chatbot = () => {
 
 
 ``
-  const fetchContacts = async () => {
+  /*const fetchContacts = async () => {
     try {
       const response = await axiosInstance.get(`${fastURL}/contacts`, {
         headers: {
@@ -169,8 +170,29 @@ const Chatbot = () => {
     } catch (error) {
       console.error("Error fetching contacts data:", error);
     }
-  };
-
+  };*/
+  const fetchContacts = async (page = 1) => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch contacts for the specific page
+      const response = await axiosInstance.get(`${fastURL}/contacts/${page}`);
+      setTotalPages(response.data.total_pages);
+      
+      // Process contacts for the current page
+     
+      
+      // Set contacts to only the current page's contacts
+      setContacts(response.data.contacts);
+      
+      // Update current page
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Error fetching contacts data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };  
 
   const getInitials = (firstName, lastName) => {
       const firstInitial = firstName && firstName.charAt(0) ? firstName.charAt(0).toUpperCase() : '';
@@ -828,7 +850,7 @@ const loadMoreMessages = useCallback(() => {
 // Effect to load initial messages or reload when contact changes
 useEffect(() => {
   if (selectedContact) {
-    setCurrentPage(1);
+  
     setVisibleMessages([]);
     setHasMoreMessages(true);
     loadMessages();
@@ -839,7 +861,25 @@ useEffect(() => {
 useEffect(() => {
   loadMessages();
 }, [currentPage, loadMessages]);
+const [inputPage, setInputPage] = useState(currentPage);
 
+const handleNextPage = () => {
+  if (currentPage < totalPages) {
+    fetchContacts(currentPage + 1);
+  }
+};
+
+const handlePreviousPage = () => {
+  if (currentPage > 1) {
+    fetchContacts(currentPage - 1);
+  }
+};
+
+const handleGoToPage = (pageNumber) => {
+  if (pageNumber >= 1 && pageNumber <= totalPages) {
+    fetchContacts(pageNumber);
+  }
+};
   return (
   <div>
    <div className="md:hidden">
@@ -871,11 +911,50 @@ useEffect(() => {
         />
       </div>
     </div>
-
+{/* Pagination Div */}
+{/* Pagination Div */}
+<div className="flex justify-center items-center space-x-2 p-4 border-t">
+  <button 
+    onClick={handlePreviousPage}
+    disabled={currentPage === 1}
+    className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50"
+  >
+    <ChevronLeft size={20} className="text-gray-600" />
+  </button>
+  
+  <div className="flex items-center space-x-2">
+    <input 
+      type="number" 
+      value={currentPage}
+      onClick={(e) => e.target.select()}
+      onChange={(e) => {
+        const page = parseInt(e.target.value);
+        if (!isNaN(page)) {
+          setCurrentPage(page);
+          handleGoToPage(page);
+        }
+      }}
+      min="1"
+      max={totalPages}
+      className="w-16 text-center border rounded py-1 px-2"
+    />
+    <span className="text-gray-500">of {totalPages}</span>
+  </div>
+  
+  <button 
+    onClick={handleNextPage}
+    disabled={currentPage === totalPages}
+    className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50"
+  >
+    <ChevronRight size={20} className="text-gray-600" />
+  </button>
+</div>
     {/* Contact List */}
     <div className="contacts-list overflow-y-auto max-h-[calc(100vh-150px)]">
       {filteredContacts.length > 0 ? (
+        
         <div className="divide-y">
+          
           {filteredContacts
             .sort((a, b) => {
               // Previous sorting logic remains the same
@@ -1082,7 +1161,42 @@ useEffect(() => {
           </Button>
         </div>
       )}
-      
+      <div className="flex justify-center items-center space-x-2 p-4 border-t">
+  <button 
+    onClick={handlePreviousPage}
+    disabled={currentPage === 1}
+    className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50"
+  >
+    <ChevronLeft size={20} className="text-gray-600" />
+  </button>
+  
+  <div className="flex items-center space-x-2">
+    <input 
+      type="number" 
+      value={currentPage}
+      onClick={(e) => e.target.select()}
+      onChange={(e) => {
+        const page = parseInt(e.target.value);
+        if (!isNaN(page)) {
+          setCurrentPage(page);
+          handleGoToPage(page);
+        }
+      }}
+      min="1"
+      max={totalPages}
+      className="w-16 text-center border rounded py-1 px-2"
+    />
+    <span className="text-gray-500">of {totalPages}</span>
+  </div>
+  
+  <button 
+    onClick={handleNextPage}
+    disabled={currentPage === totalPages}
+    className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50"
+  >
+    <ChevronRight size={20} className="text-gray-600" />
+  </button>
+</div>
       {/* Contact List */}
       <CardContent className="custom-scrollbar p-0 overflow-y-auto max-h-[calc(100vh-250px)]">
   <div className="divide-y">

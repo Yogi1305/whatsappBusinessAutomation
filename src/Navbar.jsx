@@ -84,6 +84,21 @@ const Navbar = () => {
 
     fetchBusinessPhoneId();
   }, [tenantId]);
+  const fetchNotifications = async () => {
+    try {
+      const response = await axiosInstance.get(`${fastURL}/notifications`, {
+        headers: {
+          'X-Tenant-ID': tenantId
+        }
+      });
+      
+      const fetchedNotifications = response.data.notifications || [];
+      setNotifications(fetchedNotifications);
+      setUnreadCount(fetchedNotifications.length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
 
   const handleNewMessage = (message) => {
     const newNotification = {
@@ -99,7 +114,7 @@ const Navbar = () => {
       console.log("notification aaya", message); 
       if (message&&message.phone_number_id==businessPhoneNumberId) {
        // Log the received message
-        handleNewMessage(message); // Process the new message
+       fetchNotifications();// Process the new message
       }
     };
   
@@ -108,12 +123,29 @@ const Navbar = () => {
     return () => {
       socket.off('new-message', handleNewSocketMessage); // Use the same reference for cleanup
     };
-  }, [handleNewMessage]); // Include handleNewMessage in the dependency array if it comes from props or context
+  }, [businessPhoneNumberId, fetchNotifications]); // Include handleNewMessage in the dependency array if it comes from props or context
+  useEffect(() => {
+    // Fetch notifications when the component mounts
+    fetchNotifications();
+  }, [tenantId]); // Depend on tenantId to refetch if tenant changes
   
 
-  const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    setUnreadCount(prev => Math.max(0, prev - 1));
+  const removeNotification = async (id) => {
+    try {
+      // Send delete request to the endpoint
+     axiosInstance.delete(`${fastURL}/notifications/${id}`, {
+        headers: {
+          'X-Tenant-ID': tenantId
+        }
+      });
+  
+      // Update local state
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error removing notification:', error);
+      // Optional: Add error handling, like showing a toast message
+    }
   };
 
   const getPath = (path) => {
@@ -292,29 +324,53 @@ const Navbar = () => {
   <DropdownMenuLabel>Notifications</DropdownMenuLabel>
   <DropdownMenuSeparator />
   <div className={`${notifications.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
-    {notifications.length > 0 ? (
-      notifications.map(notification => (
+  {notifications.length > 0 ? (
+    notifications.map(notification => {
+      // Parse the content to extract sender and message
+      const [sender, message] = notification.content.replace('New meessage from ', '').split(': ');
+      
+      return (
         <DropdownMenuItem 
           key={notification.id} 
           onSelect={() => removeNotification(notification.id)}
-          className="flex justify-between items-center hover:bg-primary/10 transition-colors"
+          className="flex justify-between items-center hover:bg-primary/10 transition-colors space-x-2"
         >
-          <span className="truncate max-w-[250px]">{notification.text}</span>
+          <div className="flex flex-col overflow-hidden">
+            <span className="font-semibold text-sm text-primary truncate max-w-[200px]">
+              {sender}
+            </span>
+            <span className="text-xs text-muted-foreground truncate max-w-[250px]">
+              {message}
+            </span>
+            <span className="text-xs text-muted-foreground opacity-70">
+              {new Date(notification.created_on).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          </div>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-destructive hover:bg-destructive/10"
+            className="text-destructive hover:bg-destructive/10 flex-shrink-0"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent dropdown from closing
+              removeNotification(notification.id);
+            }}
           >
             &times;
           </Button>
         </DropdownMenuItem>
-      ))
-    ) : (
-      <div className="text-muted-foreground text-center py-4">
-        No new notifications
-      </div>
-    )}
-  </div>
+      );
+    })
+  ) : (
+    <div className="text-muted-foreground text-center py-4">
+      No new notifications
+    </div>
+  )}
+</div>
 </DropdownMenuContent>
                 </DropdownMenu>
 
