@@ -10,8 +10,8 @@ const TemplateMessages = ({
   handleDeleteTemplate
 }) => {
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4 p-4 ">
+      <div className="flex flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold">Template Messages</h1>
         <button
           onClick={() => {

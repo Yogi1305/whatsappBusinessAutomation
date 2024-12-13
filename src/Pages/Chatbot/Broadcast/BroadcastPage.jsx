@@ -10,6 +10,7 @@ import BroadcastPopup from './BroadcastPopup';
 import GroupPopup from './GroupPopup';
 import WhatsAppTemplatePopup from './WhatsAppTemplatePopup';
 import { toast } from "sonner"; 
+import { Clock, MessageSquare } from 'lucide-react';
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
@@ -562,10 +563,22 @@ const BroadcastPage = () => {
       }
     }
   };
+  const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
+  useEffect(() => {
+    let lastScrollTop = 0;
+    const handleScroll = () => {
+      const st = window.pageYOffset || document.documentElement.scrollTop;
+      setIsBottomNavVisible(st < lastScrollTop);
+      lastScrollTop = st <= 0 ? 0 : st;
+    };
+  
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="flex min-h-screen">
-      <div className="w-64 border-r bg-gray-50">
+      <div className="hidden md:block w-64 border-r bg-gray-50">
         <div
           className={`p-4 cursor-pointer hover:bg-gray-100 ${
             activeTab === 'history' ? 'bg-gray-200' : ''
@@ -583,7 +596,29 @@ const BroadcastPage = () => {
           Template Messages
         </div>
       </div>
-
+      {/*Mobile Sidebar to TopBar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-2xl border-t z-50">
+    <div className="grid grid-cols-2">
+      <button 
+        onClick={() => handleTabChange('history')}
+        className={`flex flex-col items-center justify-center py-3 transition-all duration-200 ease-in-out
+          ${activeTab === 'history' ? 'text-primary bg-primary/10' : 'text-gray-600 hover:bg-gray-100'}
+        `}
+      >
+        <Clock className="w-5 h-5 mb-1" />
+        <span className="text-xs font-medium">History</span>
+      </button>
+      <button 
+        onClick={() => handleTabChange('templates')}
+        className={`flex flex-col items-center justify-center py-3 transition-all duration-200 ease-in-out
+          ${activeTab === 'templates' ? 'text-primary bg-primary/10' : 'text-gray-600 hover:bg-gray-100'}
+        `}
+      >
+        <MessageSquare className="w-5 h-5 mb-1" />
+        <span className="text-xs font-medium">Templates</span>
+      </button>
+    </div>
+  </div>
       <div className="flex-1 p-6">
         {activeTab === 'history' && (
           <BroadcastHistory
