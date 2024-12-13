@@ -258,19 +258,22 @@ const ScheduledEventsPage = () => {
   return (
       <div className="p-6 bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 flex items-center">
-              <Calendar className="mr-3 text-primary" /> 
-              Scheduled Messages
-            </h1>
-            <Button 
-              onClick={() => setIsCreateEventOpen(true)}
-              className="group hover:bg-primary hover:text-white transition-colors"
-            >
-              <Plus className="mr-2 group-hover:rotate-90 transition-transform" /> 
-              Schedule New Message
-            </Button>
-          </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
+  <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center">
+    <Calendar className="mr-3 text-primary" />
+    Scheduled Messages
+  </h1>
+  <Button 
+    onClick={() => setIsCreateEventOpen(true)}
+    className="group hover:bg-primary hover:text-white transition-colors 
+               px-4 py-3 sm:px-6 sm:py-3 text-sm sm:text-base 
+               w-full sm:w-auto rounded-md"
+  >
+    <Plus className="mr-2 group-hover:rotate-90 transition-transform" /> 
+    Schedule New Message
+  </Button>
+</div>
+
   
           {/* Events Grid */}
           {/* Events Grid */}
