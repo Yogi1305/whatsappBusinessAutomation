@@ -154,7 +154,27 @@ const Chatbot = () => {
     fetchBusinessPhoneId();
   }, [tenantId]);
     
-
+  const handlePhoneSearch = async () => {
+    if (searchTerm.length !== 12 || !/^\d{12}$/.test(searchTerm)) {
+      toast.warning('Invalid Phone Number', {
+        description: 'Search term must be exactly 12 digits.',
+        duration: 3000
+      });
+      return; // Exit the function if validation fails
+    }
+  
+    try {
+      const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}?phone=${searchTerm}`);
+      
+      if (response.data.page_no) {
+        setCurrentPage(response.data.page_no);
+        fetchContacts();
+      }
+    } catch (error) {
+      console.error('Error fetching contact page:', error);
+      // Optionally handle error (show toast, etc.)
+    }
+  };
 
 ``
   /*const fetchContacts = async () => {
@@ -902,13 +922,18 @@ const handleGoToPage = (pageNumber) => {
     {/* Search Input */}
     <div className="p-4 border-b">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+      <Search 
+  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+  size={20} 
+  onClick={handlePhoneSearch}
+/>
         <Input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search contacts"
           className="w-full pl-10"
         />
+        
       </div>
     </div>
 {/* Pagination Div */}
@@ -1138,7 +1163,11 @@ const handleGoToPage = (pageNumber) => {
             
             <div className="p-4 border-b">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+        <Search 
+  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+  size={20} 
+  onClick={handlePhoneSearch}
+/>
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

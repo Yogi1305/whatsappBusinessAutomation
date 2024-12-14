@@ -20,7 +20,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ChevronLeft,
-  ChevronRightIcon
+  ChevronRightIcon,
+  Phone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -269,7 +270,6 @@ const ContactPage = () => {
                            new Date(a.createdOn || 0).getTime();
             break;
         }
-  
         return filterConfig.sortOrder === 'asc' ? compareValue : -compareValue;
       });
   
@@ -278,7 +278,7 @@ const ContactPage = () => {
   }, [searchTerm, filterConfig]);
   useEffect(() => {
     fetchContacts();
-  }, []);
+  }, []); 
 
   useEffect(() => {
     const filteredAndSortedContacts = applyFilters(contacts);
@@ -471,6 +471,26 @@ const ContactPage = () => {
     }
   };
 
+  const handlePhoneSearch = async () => {
+    if (searchTerm.length !== 12 || !/^\d{12}$/.test(searchTerm)) {
+      toast.warning('Invalid Phone Number', {
+        description: 'Search term must be exactly 12 digits.',
+        duration: 3000
+      });
+      return; // Exit the function if validation fails
+    }
+  
+    try {
+      const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}?phone=${searchTerm}`);
+      
+      if (response.data.page_no) {
+        setCurrentPage(response.data.page_no);
+      }
+    } catch (error) {
+      console.error('Error fetching contact page:', error);
+      // Optionally handle error (show toast, etc.)
+    }
+  };
   const handleUploadClick = async () => {
     if (!selectedFile) {
       toast.error("Please select a file first.");
@@ -480,64 +500,65 @@ const ContactPage = () => {
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', selectedFile);
-    formData.append('model_name', "Contact");
+      formData.append('model_name', "Contact");
 
-    try {
-      const response = await axiosInstance.post(`${djangoURL}/upload/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      toast.success("Contacts uploaded successfully!");
-      fetchContacts(); // Refresh contact list
-      
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      setSelectedFile(null);
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload contacts. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-  const PaginationControls = () => {
-    const [pageInputVisible, setPageInputVisible] = useState(false);
-    const [pageInput, setPageInput] = useState(currentPage);
-  
-    const handlePageInputChange = (e) => {
-      const value = e.target.value;
-      setPageInput(value === '' ? '' : Number(value));
-    };
-  
-    const handlePageInputBlur = () => {
-      setPageInputVisible(false);
-      if (pageInput !== '' && pageInput >= 1 && pageInput <= totalPages) {
-        handlePageChange(pageInput);
-      } else {
-        setPageInput(currentPage);
+      try {
+        const response = await axiosInstance.post(`${djangoURL}/upload/`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        toast.success("Contacts uploaded successfully!");
+        fetchContacts(); // Refresh contact list
+        
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        setSelectedFile(null);
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast.error("Failed to upload contacts. Please try again.");
+      } finally {
+        setIsUploading(false);
       }
     };
-  
-    const handlePageInputSubmit = () => {
-      if (pageInput !== '' && pageInput >= 1 && pageInput <= totalPages) {
-        handlePageChange(pageInput);
+    const PaginationControls = () => {
+      const [pageInputVisible, setPageInputVisible] = useState(false);
+      const [pageInput, setPageInput] = useState(currentPage);
+    
+      const handlePageInputChange = (e) => {
+        const value = e.target.value;
+        setPageInput(value === '' ? '' : Number(value));
+      };
+    
+      const handlePageInputBlur = () => {
         setPageInputVisible(false);
-      }
-    };
-  
-    return (
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">Page</span>
-          {pageInputVisible ? (
-            <Input
-              type="number"
-              value={pageInput}
-              onChange={handlePageInputChange}
+        if (pageInput !== '' && pageInput >= 1 && pageInput <= totalPages) {
+          handlePageChange(pageInput);
+        } else {
+          setPageInput(currentPage);
+        }
+      };
+    
+      const handlePageInputSubmit = () => {
+        if (pageInput !== '' && pageInput >= 1 && pageInput <= totalPages) {
+          handlePageChange(pageInput);
+          setPageInputVisible(false);
+        }
+      };
+    
+     
+      return (
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">Page</span>
+            {pageInputVisible ? (
+              <Input
+                type="number"
+                value={pageInput}
+                onChange={handlePageInputChange}
               onBlur={handlePageInputBlur}
               onKeyDown={(e) => e.key === 'Enter' && handlePageInputSubmit()}
               min="1"
@@ -726,9 +747,21 @@ const ContactPage = () => {
             type="text"
             placeholder="Search contacts..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+            }}
             className="pl-10 w-full"
           />
+          <Button 
+       onClick={handlePhoneSearch}
+      className="absolute right-2 top-1/2 -translate-y-1/2"
+      variant="default"
+      size="sm"
+    >
+    
+      <span className="text-xs">Search All</span>
+    </Button>
+
         </div>
 
         {isLoading ? (
