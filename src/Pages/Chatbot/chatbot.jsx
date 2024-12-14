@@ -167,8 +167,9 @@ const Chatbot = () => {
       const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}?phone=${searchTerm}`);
       
       if (response.data.page_no) {
-        setCurrentPage(response.data.page_no);
-        fetchContacts();
+        const updatedPage = response.data.page_no;
+        setCurrentPage(updatedPage); // Update the state
+        fetchContacts(updatedPage); // Use the updated value directly
       }
     } catch (error) {
       console.error('Error fetching contact page:', error);
