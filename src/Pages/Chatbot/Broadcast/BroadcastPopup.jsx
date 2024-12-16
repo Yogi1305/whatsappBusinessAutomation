@@ -390,6 +390,29 @@ const handleGoToPage = (pageNumber) => {
   // Set current page and trigger contacts fetch
   fetchContacts(pageNumber);
 };
+const handlePhoneSearch = async () => {
+  if (searchQuery.length !== 12 || !/^\d{12}$/.test(searchQuery)) {
+    toast.warning('Invalid Phone Number', {
+      description: 'Search term must be exactly 12 digits.',
+      duration: 3000
+    });
+    return; // Exit the function if validation fails
+  }
+
+  try {
+    const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}?phone=${searchQuery}`);
+    
+    if (response.data.page_no) {
+      const updatedPage = response.data.page_no;
+      setInputPage(updatedPage);
+      setCurrentPage(updatedPage); // Update the state
+      fetchContacts(updatedPage); // Use the updated value directly
+    }
+  } catch (error) {
+    console.error('Error fetching contact page:', error);
+    // Optionally handle error (show toast, etc.)
+  }
+};
 
   return (
     <>
@@ -528,7 +551,11 @@ const handleGoToPage = (pageNumber) => {
 
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
+          <Search 
+  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+  size={20} 
+  onClick={handlePhoneSearch}
+/>
             <Input
               placeholder="Search contacts or groups..."
               value={searchQuery}
@@ -584,7 +611,7 @@ const handleGoToPage = (pageNumber) => {
     }}
     className="w-16 h-8 text-center"
   />
-  <span>of {totalPages}</span>
+  <span> of {totalPages}</span>
   <Button 
     variant="outline" 
     size="sm"
@@ -768,7 +795,11 @@ const handleGoToPage = (pageNumber) => {
             {/* Search and Filters */}
             <div className="space-y-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
+              <Search 
+  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+  size={20} 
+  onClick={handlePhoneSearch}
+/>
                 <Input
                   placeholder="Search contacts or groups..."
                   value={searchQuery}

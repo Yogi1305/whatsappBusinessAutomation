@@ -493,7 +493,7 @@ const Chatbot = () => {
         if (phoneNumber.startsWith("91")) {
           phoneNumber = phoneNumber.slice(2);
         }
-        await axiosInstance.post(
+       axiosInstance.post(
           `${whatsappURL}/send-message`,
           {
             phoneNumbers: [phoneNumber],
@@ -1323,26 +1323,7 @@ const handleGoToPage = (pageNumber) => {
   </div>
   </div>
   )}
-  <div className="fab-wrapper">
-    <input
-      id="fabCheckbox"
-      type="checkbox"
-      className="fab-checkbox"
-      checked={isOpen}
-      onChange={toggleFab}
-    />
-    <label className="fab" htmlFor="fabCheckbox">
-      <span className="fab-dots fab-dots-1"></span>
-      <span className="fab-dots fab-dots-2"></span>
-      <span className="fab-dots fab-dots-3"></span>
-    </label>
-    <div className={`fab-wheel ${isOpen ? 'open' : ''}`}>
-      <a className="fab-action fab-action-1">Question</a>
-      <a className="fab-action fab-action-2">Documentation</a>
-      <a className="fab-action fab-action-3">Contacts</a>
-      <a className="fab-action fab-action-4">Info</a>
-    </div>
-  </div>
+
   </div>
   )}
     <div className="cb-message-container">
@@ -1380,32 +1361,39 @@ const handleGoToPage = (pageNumber) => {
   <div ref={messageEndRef} />
   </div>
   <div className="cb-input-container">
-        <div className="cb-input-actions">
-          <EmojiEmotionsIcon className="cb-action-icon" onClick={handleToggleSmileys} />
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handleFileSelect}
-            ref={fileInputRef}
-          />
-          <AttachFileIcon className="cb-action-icon" onClick={() => fileInputRef.current.click()} />
-        </div>
-        <textarea
-          value={selectedContact && messageTemplates[selectedContact.id] || ''}
-          onChange={(e) => {
-            if (selectedContact) {
-              setMessageTemplates(prevTemplates => ({
-                ...prevTemplates,
-                [selectedContact.id]: e.target.value
-              }));
-            }
-          }}
-          placeholder="Type a message"
-          className="cb-input-field"
-        />
-        <SendIcon className="cb-send-icon" onClick={handleSend} />
-      </div>
+  <div className="cb-input-actions">
+    <EmojiEmotionsIcon className="cb-action-icon" onClick={handleToggleSmileys} />
+    <input
+      type="file"
+      accept="image/*"
+      style={{ display: 'none' }}
+      onChange={handleFileSelect}
+      ref={fileInputRef}
+    />
+    <AttachFileIcon className="cb-action-icon" onClick={() => fileInputRef.current.click()} />
+  </div>
+  <textarea
+    value={selectedContact && messageTemplates[selectedContact.id] || ''}
+    onChange={(e) => {
+      if (selectedContact) {
+        setMessageTemplates(prevTemplates => ({
+          ...prevTemplates,
+          [selectedContact.id]: e.target.value
+        }));
+      }
+    }}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { // Send on Enter, ignore if Shift+Enter
+        e.preventDefault(); // Prevent new line from being added
+        handleSend();
+      }
+    }}
+    placeholder="Type a message"
+    className="cb-input-field"
+  />
+  <SendIcon className="cb-send-icon" onClick={handleSend} />
+</div>
+
       {showSmileys && (
         <div className="cb-emoji-picker">
           <Picker onEmojiClick={handleSelectSmiley} />
