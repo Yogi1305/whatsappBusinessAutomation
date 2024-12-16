@@ -440,13 +440,14 @@ const WhatsAppTemplatePopup = ({
                   </div>
                 ))}
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addButton}
-                  className="w-full"
-                >
-                  Add Button
-                </Button>
+                type="button"
+                variant="outline"
+                onClick={addButton}
+                className="w-full"
+                disabled={buttons.length >= 3}
+              >
+                Add Button
+              </Button>
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-4 border-t">
@@ -467,45 +468,57 @@ const WhatsAppTemplatePopup = ({
           </form>
 
           <div className="w-[400px] flex-shrink-0 hidden md:block">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Preview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-100 p-4 rounded-lg space-y-2">
-                  {headerType === 'text' && headerContent && (
-                    <div className="font-medium">{headerContent}</div>
-                  )}
-                  {headerType === 'image' && headerContent && (
-                    <img
-                      src={headerContent}
-                      alt="Header"
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                  )}
-                  <div className="text-gray-800">
-                    {convertMentionsForFrontend(bodyText)}
-                  </div>
-                  {footerText && (
-                    <div className="text-sm text-gray-600">{footerText}</div>
-                  )}
-                  {buttons.length > 0 && (
-                    <div className="space-y-2 pt-2">
-                      {buttons.map((button, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          {button.text}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                  <div className="text-xs text-gray-500">1:10 PM</div>
-                </div>
-              </CardContent>
-            </Card>
+        <Card className="w-full max-w-md mx-auto shadow-lg sticky top-0 z-10">
+      <CardHeader className="p-3 bg-[#128C7E] text-white">
+        <CardTitle className="text-base">Preview</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="max-w-md mx-auto bg-[#DCF8C6] p-3 rounded-lg relative">
+          {/* Header Content */}
+          {headerType === 'text' && headerContent && (
+            <div className="font-semibold text-gray-800 mb-2">{headerContent}</div>
+          )}
+          
+          {headerType === 'image' && headerContent && (
+            <img
+              src={headerContent}
+              alt="Header"
+              className="w-full h-48 object-cover rounded-lg mb-2"
+            />
+          )}
+          
+          {/* Body Text */}
+          <div className="text-gray-900 mb-2">
+            {convertMentionsForFrontend(bodyText)}
+          </div>
+          
+          {/* Footer Text */}
+          {footerText && (
+            <div className="text-sm text-gray-700 mb-2">{footerText}</div>
+          )}
+          
+          {/* Buttons */}
+          {buttons.length > 0 && (
+            <div className="space-y-2 pt-2">
+              {buttons.map((button, index) => (
+                <button
+                  key={index}
+                  className="w-full bg-white border border-[#25D366] text-[#25D366] py-2 rounded-lg hover:bg-[#25D366] hover:text-white transition-colors"
+                >
+                  {button.text}
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* Timestamp and Read Status */}
+          <div className="text-xs text-gray-500 text-right mt-2 flex justify-end items-center">
+            <span className="mr-1">1:10 PM</span>
+            <span className="text-blue-500">✓✓</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
           </div>
         </CardContent>
       </Card>
