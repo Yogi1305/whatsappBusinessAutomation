@@ -901,6 +901,20 @@ const handleGoToPage = (pageNumber) => {
     fetchContacts(pageNumber);
   }
 };
+function renderMessageWithNewLines(text) {
+  // Decode Unicode escape sequences
+  const decodedText = JSON.parse(`"${text}"`);
+
+  // Split by \n and render with line breaks
+  return decodedText.split('\n').map((line, index) => (
+    <React.Fragment key={index}>
+      {line}
+      <br />
+    </React.Fragment>
+  ));
+}
+
+
   return (
   <div>
    <div className="md:hidden">
@@ -1089,7 +1103,7 @@ const handleGoToPage = (pageNumber) => {
           }
           return message.text || <div className="error">Message content is undefined</div>;
         }
-        return <div className="error">Please Select a contact</div>;
+        return <div className="error">null</div>;
       })()}
     </div>
   ))}
@@ -1349,7 +1363,7 @@ const handleGoToPage = (pageNumber) => {
             return <div className="error">Failed to parse message</div>;
           }
         }
-        return message.text || <div className="error">Message content is undefined</div>;
+        return renderMessageWithNewLines(message.text) || <div className="error">Message content is undefined</div>;
       }else if (typeof message.text === 'object' && message.text !== null) {
         // Handle non-string message formats
         return renderMessageContent(message);
