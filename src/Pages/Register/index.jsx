@@ -28,9 +28,10 @@ const Register = () => {
     const [formData, setFormData] = useState({
         username: '',
         email: '',
-        password: '',
+        password:'',
         role: '',
         organisation: '',
+        passwordo: '',
         phone: ''
     });
     const [organisations, setOrganisations] = useState([]);
@@ -139,19 +140,22 @@ const Register = () => {
     }
 
     const handleNext = async () => {
-        const { organisation, password } = formData;
+        const { organisation, passwordo } = formData;
     
-        if (!organisation || !password) {
+        if (!organisation || !passwordo) {
             console.error("Both organisation and password are required");
             setErrors({ organisation: "Organisation is required", password: "Password is required" });
             return false;
         }
         setVerifyingTenant(true)
         try {
-            const response = await axiosInstance.post('/verifyTenant/', {
+            // Create a local variable specifically for the backend request
+            const backendPayload = {
                 organisation,
-                password,
-            });
+                password: passwordo  // Use the value of passwordo for 'password'
+            };
+    
+            const response = await axiosInstance.post('/verifyTenant/', backendPayload);
     
             if (response.status !== 200) {
                 console.error("Error:", response.data);
@@ -165,11 +169,10 @@ const Register = () => {
             console.error("Request Failed:", error);
             setErrors({ password: "Password is incorrect. Please provide correct password" });
             return false;
-        } finally{
+        } finally {
             setVerifyingTenant(false)
         }
     };
-
     const handleCreateNewOrg = async () => {
         setCreatingOrg(true)
         try {
@@ -254,18 +257,18 @@ const Register = () => {
                                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                     <input
                                         type="password"
-                                        name="password"
+                                        name="passwordo"
                                         placeholder="Organization Password"
                                         className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.password}
+                                        value={formData.passwordo}
                                         onChange={handleInputChange}
                                         autoComplete="new-password"
                                         autoCorrect="off"
                                         autoCapitalize="off"
                                         spellCheck="false"
                                     />
-                                    {errors.password && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.password}</p>
+                                    {errors.passwordo && 
+                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.passwordo}</p>
                                     }
                                 </div>
 
@@ -352,6 +355,24 @@ const Register = () => {
                                         inputMode="numeric"
                                     />
                                 </div>
+                                <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Create Password"
+                            className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            autoComplete="new-password"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                        />
+                        {errors.password && 
+                            <p className="mt-1 text-sm text-red-500 animate-shake">{errors.password}</p>
+                        }
+                    </div>
 
                                 <div className="flex space-x-3">
                                     <button

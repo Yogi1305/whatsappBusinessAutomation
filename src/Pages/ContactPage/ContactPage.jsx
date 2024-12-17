@@ -20,7 +20,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ChevronLeft,
-  ChevronRight
+  ChevronRightIcon,
+  Phone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -269,7 +270,6 @@ const ContactPage = () => {
                            new Date(a.createdOn || 0).getTime();
             break;
         }
-  
         return filterConfig.sortOrder === 'asc' ? compareValue : -compareValue;
       });
   
@@ -278,7 +278,7 @@ const ContactPage = () => {
   }, [searchTerm, filterConfig]);
   useEffect(() => {
     fetchContacts();
-  }, []);
+  }, []); 
 
   useEffect(() => {
     const filteredAndSortedContacts = applyFilters(contacts);
@@ -288,7 +288,7 @@ const ContactPage = () => {
   const fetchContacts = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}/`);
+      const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}`);
       setContacts(response.data.contacts);
       setTotalPages(response.data.total_pages);
     } catch (error) {
@@ -471,6 +471,26 @@ const ContactPage = () => {
     }
   };
 
+  const handlePhoneSearch = async () => {
+    if (searchTerm.length !== 12 || !/^\d{12}$/.test(searchTerm)) {
+      toast.warning('Invalid Phone Number', {
+        description: 'Search term must be exactly 12 digits.',
+        duration: 3000
+      });
+      return; // Exit the function if validation fails
+    }
+  
+    try {
+      const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}?phone=${searchTerm}`);
+      
+      if (response.data.page_no) {
+        setCurrentPage(response.data.page_no);
+      }
+    } catch (error) {
+      console.error('Error fetching contact page:', error);
+      // Optionally handle error (show toast, etc.)
+    }
+  };
   const handleUploadClick = async () => {
     if (!selectedFile) {
       toast.error("Please select a file first.");
@@ -480,71 +500,105 @@ const ContactPage = () => {
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', selectedFile);
-    formData.append('model_name', "Contact");
+      formData.append('model_name', "Contact");
 
-    try {
-      const response = await axiosInstance.post(`${djangoURL}/upload/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      toast.success("Contacts uploaded successfully!");
-      fetchContacts(); // Refresh contact list
-      
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      try {
+        const response = await axiosInstance.post(`${djangoURL}/upload/`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        toast.success("Contacts uploaded successfully!");
+        fetchContacts(); // Refresh contact list
+        
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        setSelectedFile(null);
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast.error("Failed to upload contacts. Please try again.");
+      } finally {
+        setIsUploading(false);
       }
-      setSelectedFile(null);
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload contacts. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
+    };
+    const PaginationControls = () => {
+      const [pageInputVisible, setPageInputVisible] = useState(false);
+      const [pageInput, setPageInput] = useState(currentPage);
+    
+      const handlePageInputChange = (e) => {
+        const value = e.target.value;
+        setPageInput(value === '' ? '' : Number(value));
+      };
+    
+      const handlePageInputBlur = () => {
+        setPageInputVisible(false);
+        if (pageInput !== '' && pageInput >= 1 && pageInput <= totalPages) {
+          handlePageChange(pageInput);
+        } else {
+          setPageInput(currentPage);
+        }
+      };
+    
+      const handlePageInputSubmit = () => {
+        if (pageInput !== '' && pageInput >= 1 && pageInput <= totalPages) {
+          handlePageChange(pageInput);
+          setPageInputVisible(false);
+        }
+      };
+    
+     
+      return (
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">Page</span>
+            {pageInputVisible ? (
+              <Input
+                type="number"
+                value={pageInput}
+                onChange={handlePageInputChange}
+              onBlur={handlePageInputBlur}
+              onKeyDown={(e) => e.key === 'Enter' && handlePageInputSubmit()}
+              min="1"
+              max={totalPages}
+              className="w-16 h-8"
+              autoFocus
+            />
+          ) : (
+            <span 
+              className="cursor-pointer hover:bg-gray-100 px-2 rounded"
+              onDoubleClick={() => setPageInputVisible(true)}
+            >
+              {currentPage}
+            </span>
+          )}
+          <span className="text-sm text-gray-500">of {totalPages}</span>
+        </div>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handlePageChange(currentPage - 1)} 
+            disabled={currentPage === 1}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handlePageChange(currentPage + 1)} 
+            disabled={currentPage === totalPages}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronRightIcon className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    );
   };
-  const PaginationControls = () => (
-    <div className="flex justify-center items-center space-x-2 mt-6">
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => handlePageChange(1)} 
-        disabled={currentPage === 1}
-      >
-        <ChevronsLeft className="w-4 h-4" />
-      </Button>
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => handlePageChange(currentPage - 1)} 
-        disabled={currentPage === 1}
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </Button>
-      
-      <span className="px-4 text-sm text-gray-700">
-        Page {currentPage} of {totalPages}
-      </span>
-      
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => handlePageChange(currentPage + 1)} 
-        disabled={currentPage === totalPages}
-      >
-        <ChevronRight className="w-4 h-4" />
-      </Button>
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={() => handlePageChange(totalPages)} 
-        disabled={currentPage === totalPages}
-      >
-        <ChevronsRight className="w-4 h-4" />
-      </Button>
-    </div>
-  );
 
   // Update the existing render method to include file upload
   return (
@@ -553,64 +607,139 @@ const ContactPage = () => {
       <DeleteConfirmationDialog />
 
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
-          
-          <div className="flex items-center gap-4">
-          <QuickAddContact 
-          tenantId={tenantId} 
-          onContactAdded={handleNewContactAdded} 
-        />
-            {/* File Upload Section */}
-            <input
-            type="file"
-            ref={fileInputRef}
-            accept=".xlsx"
-            onChange={handleFileSelect}
-            className="hidden"
-            id="excel-upload"
-          />
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={triggerFileInput}
-            disabled={isUploading}
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            {selectedFile ? selectedFile.name : "Upload Excel"}
-          </Button>
+      <div className="hidden md:flex md:justify-between items-center mb-8">
+  <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
 
-          {selectedFile && (
-            <Button 
-              onClick={handleUploadClick} 
-              disabled={isUploading}
-            >
-              {isUploading ? "Uploading..." : "Confirm Upload"}
-            </Button>
-          )}
+  <div className="flex items-center gap-4">
+    <QuickAddContact 
+      tenantId={tenantId} 
+      onContactAdded={handleNewContactAdded} 
+    />
+    {/* File Upload Section */}
+    <input
+      type="file"
+      ref={fileInputRef}
+      accept=".xlsx"
+      onChange={handleFileSelect}
+      className="hidden"
+      id="excel-upload"
+    />
+    <Button 
+      variant="outline" 
+      className="gap-2"
+      onClick={triggerFileInput}
+      disabled={isUploading}
+    >
+      <FileSpreadsheet className="w-4 h-4" />
+      {selectedFile ? selectedFile.name : "Upload Excel"}
+    </Button>
 
-            <AdvancedFilterPopover />
-            <Select value={viewMode} onValueChange={setViewMode}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="View" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="tile">
-                  <div className="flex items-center gap-2">
-                    <Grid className="w-4 h-4" />
-                    Tile View
-                  </div>
-                </SelectItem>
-                <SelectItem value="table">
-                  <div className="flex items-center gap-2">
-                    <List className="w-4 h-4" />
-                    Table View
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+    {selectedFile && (
+      <Button 
+        onClick={handleUploadClick} 
+        disabled={isUploading}
+      >
+        {isUploading ? "Uploading..." : "Confirm Upload"}
+      </Button>
+    )}
+
+    <AdvancedFilterPopover />
+    <Select value={viewMode} onValueChange={setViewMode}>
+      <SelectTrigger className="w-32">
+        <SelectValue placeholder="View" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="tile">
+          <div className="flex items-center gap-2">
+            <Grid className="w-4 h-4" />
+            Tile View
           </div>
-        </div>
+        </SelectItem>
+        <SelectItem value="table">
+          <div className="flex items-center gap-2">
+            <List className="w-4 h-4" />
+            Table View
+          </div>
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+</div>
+
+        <div className="md:hidden flex flex-col space-y-4">
+  {/* First Row: Title */}
+  <div className="flex justify-between items-center">
+    <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
+    <QuickAddContact 
+      tenantId={tenantId} 
+      onContactAdded={handleNewContactAdded} 
+    />
+  </div>
+
+  {/* Second Row: Phone Number Upload & View Mode */}
+  <div className="flex flex-col sm:flex-row gap-4">
+    {/* Phone Number & Excel Upload Section */}
+    <div className="flex-grow flex items-center gap-2 sm:gap-4">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".xlsx"
+        onChange={handleFileSelect}
+        className="hidden"
+        id="excel-upload"
+      />
+      <Button 
+        variant="outline" 
+        className="flex-1 gap-2"
+        onClick={triggerFileInput}
+        disabled={isUploading}
+      >
+        <FileSpreadsheet className="w-4 h-4" />
+        {selectedFile ? (
+          <span className="truncate max-w-[150px]">
+            {selectedFile.name}
+          </span>
+        ) : (
+          "Upload Excel"
+        )}
+      </Button>
+
+      {selectedFile && (
+        <Button 
+          onClick={handleUploadClick} 
+          disabled={isUploading}
+          className="flex-shrink-0"
+        >
+          {isUploading ? "Uploading..." : "Confirm"}
+        </Button>
+      )}
+    </div>
+
+    {/* View Mode & Advanced Filter Section */}
+    <div className="flex items-center gap-2 sm:gap-4">
+      <AdvancedFilterPopover />
+      <Select value={viewMode} onValueChange={setViewMode}>
+        <SelectTrigger className="w-32">
+          <SelectValue placeholder="View" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="tile">
+            <div className="flex items-center gap-2">
+              <Grid className="w-4 h-4" />
+              Tile View
+            </div>
+          </SelectItem>
+          <SelectItem value="table">
+            <div className="flex items-center gap-2">
+              <List className="w-4 h-4" />
+              Table View
+            </div>
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  </div>
+</div>
 
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -618,9 +747,21 @@ const ContactPage = () => {
             type="text"
             placeholder="Search contacts..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+            }}
             className="pl-10 w-full"
           />
+          <Button 
+       onClick={handlePhoneSearch}
+      className="absolute right-2 top-1/2 -translate-y-1/2"
+      variant="default"
+      size="sm"
+    >
+    
+      <span className="text-xs">Search All</span>
+    </Button>
+
         </div>
 
         {isLoading ? (

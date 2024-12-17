@@ -3,12 +3,17 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 const AuthContext = createContext();
 
 const getTenantIdFromUrl = () => {
-  // Example: Extract tenant_id from "/3/home"
-  const pathArray = window.location.pathname.split('/');
-  if (pathArray.length >= 2) {
-    return pathArray[1]; // Assumes tenant_id is the first part of the path
+  const pathArray = window.location.pathname.split('/').filter(segment => segment.trim() !== '');
+  
+  // Exclude common non-tenant paths
+  const excludedPaths = ['login', 'signup', 'forgot-password', 'reset-password', ''];
+  
+  // Check if the first segment is not in excluded paths
+  if (pathArray.length > 0 && !excludedPaths.includes(pathArray[0])) {
+    return pathArray[0];
   }
-  return null; // Return null if tenant ID is not found or not in the expected place
+  
+  return null;
 };
 
 export const AuthProvider = ({ children }) => {
@@ -20,7 +25,7 @@ export const AuthProvider = ({ children }) => {
 
   const [authenticated, setAuthenticated] = useState(() => {
     const tenant_id = getTenantIdFromUrl()
-    if (tenant_id == tenantId){
+    if (tenant_id == tenantId||tenant_id == null){
       const storedAuth = localStorage.getItem("authenticated");
       return storedAuth ? JSON.parse(storedAuth) : false;
     }

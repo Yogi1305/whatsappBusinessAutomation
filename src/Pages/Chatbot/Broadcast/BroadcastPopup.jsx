@@ -20,6 +20,22 @@ const getTenantIdFromUrl = () => {
   }
   return null;
 };
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+}
+
 const BroadcastPopup = ({
   showBroadcastPopup = false,
   templates = [],
@@ -101,7 +117,7 @@ const BroadcastPopup = ({
       }
       
       // Fetch contacts for the specific page
-      const response = await axiosInstance.get(`${fastURL}/contacts/${page}/`);
+      const response = await axiosInstance.get(`${fastURL}/contacts/${page}`);
       setTotalPages(response.data.total_pages);
       
       // Process contacts for the current page
@@ -360,10 +376,50 @@ const BroadcastPopup = ({
     }
   };
 
+  const isMobile = useIsMobile();
+  const [inputPage, setInputPage] = useState(currentPage);
 
+// New handler function
+const handleGoToPage = (pageNumber) => {
+  // Validate page number
+  if (pageNumber < 1 || pageNumber > totalPages) {
+    toast.error(`Please enter a page number between 1 and ${totalPages}`);
+    return;
+  }
+
+  // Set current page and trigger contacts fetch
+  fetchContacts(pageNumber);
+};
+const handlePhoneSearch = async () => {
+  if (searchQuery.length !== 12 || !/^\d{12}$/.test(searchQuery)) {
+    toast.warning('Invalid Phone Number', {
+      description: 'Search term must be exactly 12 digits.',
+      duration: 3000
+    });
+    return; // Exit the function if validation fails
+  }
+
+  try {
+    const response = await axiosInstance.get(`${fastURL}/contacts/${currentPage}?phone=${searchQuery}`);
+    
+    if (response.data.page_no) {
+      const updatedPage = response.data.page_no;
+      setInputPage(updatedPage);
+      setCurrentPage(updatedPage); // Update the state
+      fetchContacts(updatedPage); // Use the updated value directly
+    }
+  } catch (error) {
+    console.error('Error fetching contact page:', error);
+    // Optionally handle error (show toast, etc.)
+  }
+};
 
   return (
-    <Dialog open={showBroadcastPopup} onOpenChange={onClose}>
+    <>
+    {!isMobile && (
+ 
+
+    <Dialog open={showBroadcastPopup} onOpenChange={onClose} className="hidden md:block">
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center justify-between">
@@ -495,7 +551,11 @@ const BroadcastPopup = ({
 
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
+          <Search 
+  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+  size={20} 
+  onClick={handlePhoneSearch}
+/>
             <Input
               placeholder="Search contacts or groups..."
               value={searchQuery}
@@ -519,26 +579,48 @@ const BroadcastPopup = ({
                   <span>
                     {selectedPhones.length} contacts selected
                   </span>
-                  {/* Pagination Controls */}
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handlePreviousPage}
-                      disabled={currentPage === 1 || isLoading}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span>Page {currentPage} of {totalPages}</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages || isLoading}
-                    >
-                      <ChevronRightIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {/* Pagination Controls   const [pageInputVisible, setPageInputVisible] = useState(false);
+    const [pageInput, setPageInput] = useState(currentPage);
+  
+    const handlePageInputChange = (e) => {
+      const value = e.target.value;
+      setPageInput(value === '' ? '' : Number(value));
+    };*/}
+<div className="flex items-center gap-2">
+  <Button 
+    variant="outline" 
+    size="sm"
+    onClick={handlePreviousPage}
+    disabled={currentPage === 1 || isLoading}
+  >
+    <ChevronLeft className="w-4 h-4" />
+  </Button>
+  <Input 
+    type="number" 
+    min={1} 
+    max={totalPages} 
+    value={inputPage} 
+    onChange={(e) => {
+      const value = e.target.value === '' ? '' : Number(e.target.value);
+      setInputPage(value);
+    }}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' && inputPage !== '' && inputPage >= 1 && inputPage <= totalPages) {
+        handleGoToPage(inputPage);
+      }
+    }}
+    className="w-16 h-8 text-center"
+  />
+  <span> of {totalPages}</span>
+  <Button 
+    variant="outline" 
+    size="sm"
+    onClick={handleNextPage}
+    disabled={currentPage === totalPages || isLoading}
+  >
+    <ChevronRightIcon className="w-4 h-4" />
+  </Button>
+</div>
                 </div>
                 {isLoading ? (
                   <div className="text-center text-gray-500">Loading contacts...</div>
@@ -652,6 +734,298 @@ const BroadcastPopup = ({
         </div>
       </DialogContent>
     </Dialog>
+    )}
+    {isMobile && (
+      <Dialog 
+      open={showBroadcastPopup} 
+      onOpenChange={onClose}
+      className="block md:hidden"
+    >
+      <DialogContent 
+        className="w-full h-full max-w-full max-h-full rounded-none flex flex-col"
+        style={{ maxHeight: '100vh', height: '100vh' }}
+      >
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Dialog Header */}
+          <DialogHeader className="border-b pb-4 shrink-0">
+            <DialogTitle className="text-xl font-bold flex items-center justify-between">
+              Broadcast Message
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onClose}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Scrollable Content */}
+          <div className="flex-grow overflow-auto space-y-4 p-4">
+            {/* Template Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Template</label>
+              <Select
+                value={selectedTemplate?.id || undefined}
+                onValueChange={(value) => 
+                  onTemplateSelect(templates.find(t => t.id === value))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates?.map(template => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                onClick={onCreateTemplate}
+                variant="outline"
+                className="w-full flex items-center gap-2 mt-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create Template
+              </Button>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="space-y-2">
+              <div className="relative">
+              <Search 
+  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+  size={20} 
+  onClick={handlePhoneSearch}
+/>
+                <Input
+                  placeholder="Search contacts or groups..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={selectAllContacts}
+                  className="flex-1 flex items-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Select All
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={deselectAllContacts}
+                  className="flex-1 flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Deselect All
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 flex items-center gap-2"
+                    >
+                      <Filter className="w-4 h-4" />
+                      Filters
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-80">
+                    {filterStrategies.map((strategy, strategyIndex) => (
+                      <div key={strategyIndex} className="p-2">
+                        <div className="text-sm font-semibold text-gray-600 mb-2">
+                          {strategy.category}
+                        </div>
+                        {strategy.filters.map((filter, filterIndex) => (
+                          <DropdownMenuItem 
+                            key={filterIndex}
+                            onSelect={() => toggleFilter(filter.label)}
+                            className="flex justify-between items-center"
+                          >
+                            <div>
+                              <span className={`${activeFilters.includes(filter.label) ? 'font-bold' : ''}`}>
+                                {filter.label}
+                              </span>
+                              <p className="text-xs text-gray-500">{filter.description}</p>
+                            </div>
+                            {activeFilters.includes(filter.label) && (
+                              <CheckCircle2 className="w-4 h-4 text-green-500" />
+                            )}
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
+                    ))}
+                    {activeFilters.length > 0 && (
+                      <div className="p-2 border-t">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={clearAllFilters}
+                          className="w-full"
+                        >
+                          Clear All Filters
+                        </Button>
+                      </div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Active Filters */}
+              {activeFilters.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {activeFilters.map(filter => (
+                    <div 
+                      key={filter} 
+                      className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm"
+                    >
+                      {filter}
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="ml-2 h-4 w-4"
+                        onClick={() => toggleFilter(filter)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Tabs for Contact/Group Selection */}
+            <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="contacts">Contacts</TabsTrigger>
+                <TabsTrigger value="groups">Groups</TabsTrigger>
+              </TabsList>
+
+              {/* Contacts Tab - Mobile Version */}
+              <TabsContent value="contacts" className="mt-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
+                    <span>{selectedPhones.length} contacts selected</span>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1 || isLoading}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <span>Page {currentPage} of {totalPages}</span>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages || isLoading}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {isLoading ? (
+                    <div className="text-center text-gray-500">Loading contacts...</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredContacts.map(contact => (
+                        <label
+                          key={contact.id}
+                          className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={selectedPhones.some(selected => selected.id === contact.id)}
+                            onCheckedChange={() => onPhoneSelection(contact)}
+                            id={`contact-${contact.id}`}
+                          />
+                          <div className="grid gap-1 flex-grow">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{contact.name}</span>
+                              <span className="text-sm text-gray-500">{contact.phone}</span>
+                              <div className="text-xs text-gray-500 space-x-2 mt-1">
+                                {contact.last_replied && (
+                                  <span>Last Reply: {new Date(contact.last_replied).toLocaleDateString()}</span>
+                                )}
+                                {contact.last_seen && (
+                                  <span>Last Seen: {new Date(contact.last_seen).toLocaleDateString()}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Groups Tab - Mobile Version */}
+              <TabsContent value="groups" className="mt-4">
+                <div className="space-y-2">
+                  {filteredGroups.map(bg => (
+                    <div key={bg.id} className="space-y-2">
+                      <label
+                        className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={selectedBCGroups.includes(bg.id)}
+                          onCheckedChange={() => onBCGroupSelection(bg.id)}
+                          id={`broadcast-group-${bg.id}`}
+                        />
+                        <div className="flex items-center gap-2 w-full">
+                          <div className="grid gap-1 flex-grow">
+                            <span className="font-medium">{bg.name}</span>
+                            <span className="text-sm text-gray-500">
+                              {bg.members?.length > 5 
+                                ? `${bg.members.length} contacts` 
+                                : bg.members?.map(contact => contact.name).join(', ')
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Actions - Sticky Bottom */}
+          <div className="border-t p-4 bg-white shrink-0">
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleSendBroadcast}
+                disabled={isSendingBroadcast || (selectedPhones.length === 0 && selectedBCGroups.length === 0) || !selectedTemplate}
+              >
+                {isSendingBroadcast ? "Sending..." : "Send Broadcast"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+      )}
+    </>
   );
 };
 
