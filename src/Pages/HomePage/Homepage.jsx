@@ -283,7 +283,7 @@ const Homepage = () => {
 
   <div className="container mx-auto relative z-10 px-4">
     <ScrollAnimatedSection>
-      <h2 className="text-5xl font-gliker text-center mb-16 text-white">FEATURES</h2>
+      <h2 className="text-5xl text-center mb-16 text-white">FEATURES</h2>
     </ScrollAnimatedSection>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
       {[

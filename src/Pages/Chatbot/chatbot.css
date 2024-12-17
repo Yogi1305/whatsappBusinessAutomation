@@ -125,7 +125,14 @@
   font-size: 12px;
   color: var(--secondary-color);
 }
-
+.cb-message {
+  word-wrap: break-word; /* Ensures long words or URLs break into the next line */
+  overflow-wrap: anywhere; /* Allows breaking words at arbitrary points if necessary */
+  max-width: 100%; /* Ensures the message does not exceed the container's width */
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 8px;
+}
 .cb-unread-count {
   display: inline-block;
   background-color: var(--accent-color);

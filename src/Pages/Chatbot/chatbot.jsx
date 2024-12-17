@@ -197,7 +197,7 @@ const Chatbot = () => {
       setIsLoading(true);
       
       // Fetch contacts for the specific page
-      const response = await axiosInstance.get(`${fastURL}/contacts/${page}`);
+      const response = await axiosInstance.get(`${fastURL}/contacts/${page}?order_by=last_replied&sort_by=desc`);
       setTotalPages(response.data.total_pages);
       
       // Process contacts for the current page
