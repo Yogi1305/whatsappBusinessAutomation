@@ -200,7 +200,7 @@ const Homepage = () => {
       />
           <ChatbotDemoSection />
           <div>
-      {/* Other content above the slider */}
+      {/* Other content above the slider 
       { <HeroSlider/>}
       {/* Other content below the slider */}
     </div>
