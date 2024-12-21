@@ -161,7 +161,7 @@ const useTransliteration = (text, language) => {
 };
 
 // Transliterating Input Component
-const TransliteratingInput = ({ value, onChange, language, placeholder, className, ...props }) => {
+const TransliteratingInput = ({ value, onChange, language,placeholder,maxLength,className, ...props }) => {
   const [inputValue, setInputValue] = useState(value || '');
   const transliterated = useTransliteration(inputValue, language);
 
@@ -172,6 +172,7 @@ const TransliteratingInput = ({ value, onChange, language, placeholder, classNam
   }, [transliterated, onChange, value]);
 
   return (
+    <>
     <Input
       type="text"
       value={inputValue}
@@ -180,6 +181,10 @@ const TransliteratingInput = ({ value, onChange, language, placeholder, classNam
       className={className}
       {...props}
     />
+    <p className="text-[10px] text-muted-foreground text-right mt-0.5">
+    {value.length} of {maxLength}
+  </p>
+  </>
   );
 };
 
@@ -195,6 +200,7 @@ const TransliteratingTextArea = ({ value, onChange, language, placeholder, class
   }, [transliterated, onChange, value]);
 
   return (
+    <>
     <textarea
       value={inputValue}
       onChange={(e) => setInputValue(e.target.value)}
@@ -202,6 +208,10 @@ const TransliteratingTextArea = ({ value, onChange, language, placeholder, class
       className={`min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       {...props}
     />
+    <p className="text-[10px] text-muted-foreground text-right mt-0.5">
+        {value.length} of 1024
+      </p>
+    </>
   );
 };
 
@@ -333,6 +343,7 @@ const WhatsAppTemplatePopup = ({
                     onChange={(e) => setHeaderContent(e.target.value)}
                     language={language}
                     placeholder={`Header text in ${languageConfigs[language]?.name}`}
+                    maxLength={60}
                   />
                 )}
                 
@@ -373,6 +384,7 @@ const WhatsAppTemplatePopup = ({
                   language={language}
                   placeholder={languageConfigs[language]?.placeholder}
                   className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  maxLength={1024}
                 />
               </div>
 
@@ -383,6 +395,7 @@ const WhatsAppTemplatePopup = ({
                   onChange={(e) => setFooterText(e.target.value)}
                   language={language}
                   placeholder={`Footer text in ${languageConfigs[language]?.name}`}
+                  maxLength={60}
                 />
               </div>
 
@@ -409,6 +422,7 @@ const WhatsAppTemplatePopup = ({
                       value={button.text}
                       onChange={(e) => updateButton(index, 'text', e.target.value)}
                       language={language}
+                      maxLength={25}
                     />
 
                     {button.type === 'PHONE_NUMBER' && (
@@ -476,8 +490,10 @@ const WhatsAppTemplatePopup = ({
         <div className="max-w-md mx-auto bg-[#DCF8C6] p-3 rounded-lg relative">
           {/* Header Content */}
           {headerType === 'text' && headerContent && (
-            <div className="font-semibold text-gray-800 mb-2">{headerContent}</div>
-          )}
+        <div className="font-semibold text-gray-800 mb-2 break-words whitespace-normal overflow-hidden w-full">
+          {headerContent}
+        </div>
+      )}
           
           {headerType === 'image' && headerContent && (
             <img
@@ -488,13 +504,13 @@ const WhatsAppTemplatePopup = ({
           )}
           
           {/* Body Text */}
-          <div className="text-gray-900 mb-2">
+          <div className="text-gray-900 mb-2 break-words">
             {convertMentionsForFrontend(bodyText)}
           </div>
           
           {/* Footer Text */}
           {footerText && (
-            <div className="text-sm text-gray-700 mb-2">{footerText}</div>
+            <div className="text-sm text-gray-700 break-words mb-2">{footerText}</div>
           )}
           
           {/* Buttons */}

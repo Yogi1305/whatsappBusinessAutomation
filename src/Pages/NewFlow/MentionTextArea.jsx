@@ -57,8 +57,20 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
     };
     fetchContactFields();
   }, []);
+  useEffect(() => {
+    const textarea = textAreaRef.current.querySelector('textarea');
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [value]); // Recalculate whenever value changes
+  
+  // Handle text area change
 
   const handleTextAreaChange = (e) => {
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
     const { value, selectionStart } = e.target;
     onChange(e);
     const lastAtSymbolIndex = value.lastIndexOf('@', selectionStart - 1);
@@ -97,27 +109,55 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
   }, []);
 
   return (
-    <div style={{ position: 'relative' }} ref={textAreaRef}>
-      <textarea
-        value={value}
-        onChange={handleTextAreaChange}
-        placeholder={placeholder}
-        style={textAreaStyles}
-      />
-      {showMentionList && (
-        <div style={{ ...mentionListStyles, top: mentionListPosition.top, left: mentionListPosition.left }}>
-          {mentionOptions.map((option) => (
-            <div
-              key={option.id}
-              style={mentionItemStyles}
-              onClick={() => handleMentionSelect(option)}
-            >
-              {option.label}
-            </div>
-          ))}
+<div style={{ position: 'relative' }} ref={textAreaRef}>
+  <textarea
+    value={value}
+    onChange={handleTextAreaChange}
+    placeholder={placeholder}
+    style={{
+      width: '100%',
+      minHeight: '40px',
+      height: 'auto',
+      resize: 'none',
+      padding: '8px',
+      boxSizing: 'border-box',
+      border: '1px solid #ccc',
+      backgroundColor: 'F9F9F9',
+      borderRadius: '4px',
+      outline: 'none',
+      overflow: 'hidden'
+    }}
+  />
+  {showMentionList && (
+    <div style={{ 
+      position: 'absolute',
+      backgroundColor: '#f0f0f0',
+      border: '1px solid #ccc',
+      borderRadius: '4px',
+      maxHeight: '200px',
+      overflowY: 'auto',
+      zIndex: 1000,
+      top: mentionListPosition.top, 
+      left: mentionListPosition.left 
+    }}>
+      {mentionOptions.map((option) => (
+        <div
+          key={option.id}
+          style={{
+            padding: '8px',
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: '#f0f0f0'
+            }
+          }}
+          onClick={() => handleMentionSelect(option)}
+        >
+          {option.label}
         </div>
-      )}
+      ))}
     </div>
+  )}
+</div>
   );
 };
 

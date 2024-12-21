@@ -333,6 +333,17 @@ const BroadcastPage = () => {
       setActiveTab('templates');
     } catch (error) {
       console.error('Error creating/updating template:', error);
+      const errorMessage = error.response?.data?.error?.message || 
+                           error.message || 
+                           'An error occurred while creating the template';
+        
+        // Show error toast
+        toast({
+            title: "Error",
+            description: errorMessage,
+            variant: "destructive",
+            duration: 5000
+        });
     }
   };
 
