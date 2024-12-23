@@ -122,12 +122,21 @@ const Chatbot = () => {
 
 
   useEffect(() => {
-    const contactID = getContactIDfromURL()
-    const contact = contacts.find(c => c.id === parseInt(contactID))
-    setSelectedContact(contact)
-    console.log("Selected Contact 1: ", selectedContact)
-
-  }, [])
+    const fetchContact = async () => {
+      const contactID = getContactIDfromURL();
+      if (contactID) {
+        // Delay to ensure contacts are loaded
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const contact = contacts.find(c => c.id === parseInt(contactID));
+        setSelectedContact(contact);
+        console.log("Selected Contact 1: ", parseInt(contactID));
+      } else {
+        console.log("No contact ID found in URL.");
+      }
+    };
+  
+    fetchContact();
+  }, [contacts]); // Add contacts as a dependency
   
 
   useEffect(() => {
@@ -805,11 +814,11 @@ const Chatbot = () => {
       setIsSending(false);
     }
   };
-  
-  useEffect(() => { 
-    navigate(window.location.pathname, { replace: true });
-    console.log("selected contact 2 : ", selectedContact)
-  }, [])
+    
+    useEffect(() => { 
+      navigate(window.location.pathname, { replace: true });
+      console.log("selected contact 2 : ", selectedContact)
+    }, [])
 
   const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;

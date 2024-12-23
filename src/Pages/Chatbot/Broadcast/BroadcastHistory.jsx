@@ -1,7 +1,10 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner"; 
-
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import axiosInstance from '../../../api';
+import { fastURL } from '../../../api';
 const BroadcastHistory = ({
   broadcastHistory,
   filteredBroadcastHistory,
@@ -31,28 +34,48 @@ const BroadcastHistory = ({
   GroupPopup,
   businessPhoneNumberId
 }) => {
+  const handleRefresh = async () => {
+    try {
+      const response = await axiosInstance.get(`${fastURL}/refresh-status/`);
+      if (response.data) {
+        window.location.reload(); // This will refresh the page
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error refreshing status:', error);
+      return false;
+    }
+  };
   return (
     <div className="space-y-6 p-4 sm:p-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl sm:text-4xl font-semibold text-center sm:text-left w-full">
-          Broadcast History
-        </h1>
-        <div className="flex space-x-4 w-full sm:w-auto justify-center sm:justify-end">
-          <button 
-            onClick={handleBroadcastMessage}
-            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 w-full sm:w-auto"
-          >
-            New Broadcast
-          </button>
-          <button 
-            onClick={handleGroup}
-            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 w-full sm:w-auto"
-          >
-            New Group
-          </button>
-        </div>
-      </div>
+  <h1 className="text-2xl sm:text-4xl font-semibold text-center sm:text-left w-full">
+    Broadcast History
+  </h1>
+  <div className="flex space-x-4 w-full sm:w-auto justify-center sm:justify-end items-center">
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={handleRefresh}
+      className="h-10 w-10"
+    >
+      <RefreshCw className="h-4 w-4" />
+    </Button>
+    <Button 
+      onClick={handleBroadcastMessage}
+      className="bg-primary text-white hover:bg-primary/90 w-full sm:w-auto"
+    >
+      New Broadcast
+    </Button>
+    <Button 
+      onClick={handleGroup}
+      className="bg-primary text-white hover:bg-primary/90 w-full sm:w-auto"
+    >
+      New Group
+    </Button>
+  </div>
+</div>
 
       {/* Popups */}
       <BroadcastPopup
