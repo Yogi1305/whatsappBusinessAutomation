@@ -14,8 +14,8 @@ import ReactFlow, {
   Position
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { AskQuestionNode, SendMessageNode, SetConditionNode, AINode, product } from './NodeTypes';
-import { DelayNode } from './DelayNode';
+import { AskQuestionNode, SendMessageNode, SetConditionNode, AINode, product,APINode,DelayNode } from './NodeTypes';
+//import { DelayNode } from './DelayNode';
 import Sidebar from "./Sidebar";
 import "./FlowBuilder.css";
 import SaveFlowPopup from "./SaveFlowPopup";
@@ -26,6 +26,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import defaultFlow from "./DefaultFlow";
 import {AIFlowGenerator,AIFlowGeneratorTrigger} from './flowGenerator';
+import { LanguageSelector, LanguageSelectorTrigger } from './language';
 let id = 0;
 const getId = () => `${id++}`;
 
@@ -36,6 +37,7 @@ const nodeTypes = {
   delay: DelayNode,
   ai: AINode,
   product: product,
+  api:APINode,
   start: ({ data }) => (
     <div style={{ padding: '10px', border: '2px solid #4CAF50', borderRadius: '5px', background: '#E8F5E9' }}>
       <strong>{data.label}</strong>
@@ -608,9 +610,13 @@ const FlowBuilderContent = () => {
       resetFlow();
     }
   };
+  
+  
+
 
   return (
     <div className="flow-builder">
+       
     <AIFlowGeneratorTrigger 
       onClick={() => setIsAIGeneratorOpen(true)} 
     />
@@ -621,6 +627,7 @@ const FlowBuilderContent = () => {
       isOpen={isAIGeneratorOpen}
       onClose={() => setIsAIGeneratorOpen(false)}
     />
+    
       <ToastContainer position="top-right" autoClose={2000} />
       <Sidebar />
       <ReactFlowProvider>
@@ -654,11 +661,14 @@ const FlowBuilderContent = () => {
         </div>
       </ReactFlowProvider>
       <div className="sidebar">
-      <button onClick={handleSaveClick}>
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+      <button className="sidebar_button"onClick={handleSaveClick}>
           {authenticated ? "Save Flow" : "Save Flow"}
         </button>
+        <LanguageSelectorTrigger/>
+        </div>
         {authenticated && (
-          <>
+          <>  
             <select style={{marginBottom:'3rem'}} value={selectedFlow} onChange={handleFlowSelect}>
               <option value="">Select a flow</option>
               <option value="create_new">Create New Flow</option>
@@ -693,23 +703,28 @@ const FlowBuilderContent = () => {
                 placeholder="Enter fallback message"
               />
             </div>
-            <div>
-              <label htmlFor="fallbackCount">Fallback Count:</label>
-              <select
-                id="fallbackCount"
-                value={fallbackCount}
-                onChange={(e) => setFallbackCount(Number(e.target.value))}
-              >
-                {[1, 2, 3, 4, 5,6,7,8,9,10].map((num) => (
-                  <option key={num} value={num}>
-                    {num}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
+              <div>
+                <label htmlFor="fallbackCount">Fallback Count:</label>
+                <select
+                  id="fallbackCount"
+                  value={fallbackCount}
+                  onChange={(e) => setFallbackCount(Number(e.target.value))}
+                >
+                  {[1, 2, 3, 4, 5,6,7,8,9,10].map((num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+            
+            </>
+          
+        )}  
       </div>
+      
+      
       {showSavePopup && authenticated && (
         <SaveFlowPopup
           onSave={handleSaveConfirm}
@@ -725,6 +740,7 @@ const FlowBuilderContent = () => {
           <button onClick={cancelDelete}>Cancel</button>
         </div>
       )}
+       
     </div>
   );
 };

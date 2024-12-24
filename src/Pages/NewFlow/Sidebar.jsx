@@ -1,8 +1,9 @@
-import { Height } from '@mui/icons-material';
-import { ShoppingBag, Bot } from 'lucide-react';
-import React from 'react';
+import { ShoppingBag, Bot, Network, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState } from 'react';
 
 const Sidebar = () => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const onDragStart = (event, nodeType) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
@@ -12,13 +13,13 @@ const Sidebar = () => {
     width: '240px',
     padding: '15px',
     backgroundColor: 'white',
-   
   };
 
   const headerStyle = {
     fontSize: '20px',
     fontWeight: 'bold',
     marginBottom: '15px',
+    color: '#333',
   };
 
   const nodeStyle = {
@@ -26,95 +27,156 @@ const Sidebar = () => {
     borderRadius: '5px',
     marginBottom: '10px',
     cursor: 'move',
-    color: 'white',
+    color: '#333',
     fontWeight: 'bold',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+    transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
   };
 
   const smallNodeStyle = {
     ...nodeStyle,
     fontSize: '15px',
     marginBottom: '5px',
-    width:'8rem',
-    height:'3rem',
-    display:'flex',
-    alignItems:'center',
-    justifyContent:'center'
+    width: '8rem',
+    height: '3rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   };
 
-  const iconStyle = {
-    marginRight: '10px',
-    fontSize: '20px',
-  };
-
-  const smallIconStyle = {
-    ...iconStyle,
-    fontSize: '16px',
+  const dropdownHeaderStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '8px',
+    cursor: 'pointer',
+    borderRadius: '4px',
+    backgroundColor: '#f3f4f6',
+    marginTop: '16px',
+    marginBottom: '8px',
+    border: '1px solid #e2e8f0',
   };
 
   return (
     <aside style={sidebarStyle}>
       <div style={headerStyle}>Add Nodes</div>
       <div 
-        style={{...nodeStyle, backgroundColor: '#FF7F50'}}
+        style={{
+          ...nodeStyle, 
+          backgroundColor: '#FFEFD5',
+          border: '2px solid #FFD700'
+        }}
         onDragStart={(event) => onDragStart(event, 'sendMessage')} 
         draggable
       >
-        <span style={iconStyle}>&gt;</span>
+        <span style={{marginRight: '10px', color: '#333'}}>&gt;</span>
         Send a Message
-        <div style={{fontSize: '12px', fontWeight: 'normal'}}>With no response required from visitor</div>
+        <div style={{fontSize: '12px', fontWeight: 'normal', color: '#666'}}>With no response required from visitor</div>
       </div>
       
       <div 
-        style={{...nodeStyle, backgroundColor: '#FFA500'}}
+        style={{
+          ...nodeStyle, 
+          backgroundColor: '#FFE4E1',
+          border: '2px solid #FFB4A8'
+        }}
         onDragStart={(event) => onDragStart(event, 'askQuestion')} 
         draggable
       >
-        <span style={iconStyle}>?</span>
+        <span style={{marginRight: '10px', color: '#333'}}>?</span>
         Ask a Question
-        <div style={{fontSize: '12px', fontWeight: 'normal'}}>Ask question and store user input in variable</div>
+        <div style={{fontSize: '12px', fontWeight: 'normal', color: '#666'}}>Ask question and store user input in variable</div>
       </div>
-
-      <div 
-        style={{...nodeStyle, backgroundColor: '#4169E1'}}
-        onDragStart={(event) => onDragStart(event, 'setCondition')} 
-        draggable
-      >
-        <span style={iconStyle}>&#9781;</span>
-        Set a Condition
-        <div style={{fontSize: '12px', fontWeight: 'normal'}}>Send message(s) based on logical condition(s)</div>
-      </div>
-      
-      <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
 
       <div 
         style={{
-          ...smallNodeStyle, 
-          backgroundColor: 'blueviolet', 
-          padding: '12px',      // Add padding inside the div
-          display: 'flex',      // Align items horizontally
-          alignItems: 'center', // Center-aligns the Bot icon vertically
-          gap: '8px'            // Adds spacing between <Bot /> and "AI" text
-        }} 
-        onDragStart={(event) => onDragStart(event, 'ai')} 
+          ...nodeStyle, 
+          backgroundColor: '#E6E6FA',
+          border: '2px solid #B8A8FF'
+        }}
+        onDragStart={(event) => onDragStart(event, 'setCondition')} 
         draggable
       >
-        <Bot />
-        <span>AI</span>
+        <span style={{marginRight: '10px', color: '#333'}}>&#9781;</span>
+        Set a Condition
+        <div style={{fontSize: '12px', fontWeight: 'normal', color: '#666'}}>Send message(s) based on logical condition(s)</div>
       </div>
 
-      
       <div 
-        style={{...smallNodeStyle, backgroundColor: 'yellowgreen',           padding: '12px',      // Add padding inside the div
-          display: 'flex',      // Align items horizontally
-          alignItems: 'center', // Center-aligns the Bot icon vertically
-          gap: '8px'    }}
-        onDragStart={(event) => onDragStart(event, 'product')} 
-        draggable
-        >
-          <ShoppingBag />    
-        <span>Product</span>
+        style={dropdownHeaderStyle}
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+      >
+        <h3 className="font-semibold">Additional Nodes</h3>
+        {isDropdownOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
       </div>
-    </div>
+      
+      {isDropdownOpen && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div 
+              style={{
+                ...smallNodeStyle, 
+                backgroundColor: '#F0F0F0',
+                border: '2px solid #D3D3D3',
+                padding: '12px',
+                gap: '8px'
+              }} 
+              onDragStart={(event) => onDragStart(event, 'ai')} 
+              draggable
+            >
+              <Bot size={18} color="#333" />
+              <span>AI</span>
+            </div>
+
+            <div 
+              style={{
+                ...smallNodeStyle, 
+                backgroundColor: '#FFF8DC',
+                border: '2px solid #EEE8AA',
+                padding: '12px',
+                gap: '8px'
+              }}
+              onDragStart={(event) => onDragStart(event, 'product')} 
+              draggable
+            >
+              <ShoppingBag size={18} color="#333" />    
+              <span>Product</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div 
+              style={{
+                ...smallNodeStyle, 
+                backgroundColor: '#E0FFFF',
+                border: '2px solid #AFEEEE',
+                padding: '12px',
+                gap: '8px'
+              }}
+              onDragStart={(event) => onDragStart(event, 'api')} 
+              draggable
+            >
+              <Network size={18} color="#333" />
+              <span>API</span>
+            </div>
+            
+            <div 
+              style={{
+                ...smallNodeStyle, 
+                backgroundColor: '#FAFAD2',
+                border: '2px solid #EEE8AA',
+                padding: '12px',
+                gap: '8px'
+              }}
+              onDragStart={(event) => onDragStart(event, 'delay')} 
+              draggable
+            >
+              <Clock size={18} color="#333" />
+              <span>Delay</span>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 };

@@ -554,9 +554,9 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         );
     }
   };
-
+  
   return (
-    <NodeWrapper style={{ background: '#e6fffb', borderColor: '#87e8de' }} type="sendMessage">
+    <NodeWrapper style={{ background: '#FFEFD5', borderColor: '#FFD700' }} type="sendMessage">
       <Handle type="target" style={{
         top: '50%',
         left: '-5px',
@@ -714,5 +714,150 @@ export const product = ({ id, data, isConnectable }) => {
       <CardContent className="space-y-2"></CardContent>
       <Handle type="source" position="right" isConnectable={isConnectable} />
     </Card>
+  );
+};
+export const APINode = ({ id, data, isConnectable }) => {
+  const [endpoint, setEndpoint] = useState(data.endpoint || '');
+  const [method, setMethod] = useState(data.method || 'GET');
+  const [variable, setVariable] = useState(data.variable || '');
+  const { updateNodeData } = useFlow();
+
+  const handleEndpointChange = (e) => {
+    const newEndpoint = e.target.value;
+    setEndpoint(newEndpoint);
+    updateNodeData(id, { endpoint: newEndpoint, method, variable });
+  };
+
+  const handleMethodChange = (e) => {
+    const newMethod = e.target.value;
+    setMethod(newMethod);
+    updateNodeData(id, { endpoint, method: newMethod, variable });
+  };
+
+  const handleVariableChange = (e) => {
+    const newVariable = e.target.value;
+    setVariable(newVariable);
+    updateNodeData(id, { endpoint, method, variable: newVariable });
+  };
+
+  return (
+    <NodeWrapper style={{ background: '#e6fffb', borderColor: '#87e8de' }} type="api">
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        style={{
+          top: '50%',
+          left: '-5px',
+          background: '#784212',
+          width: '12px',
+          height: '12px',
+        }}
+        isConnectable={isConnectable} 
+      />
+      
+      <h3 style={{ marginBottom: '15px', color: '#1d39c4' }}>API Request</h3>
+      
+      <select
+        value={method}
+        onChange={handleMethodChange}
+        style={selectStyles}
+      >
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+
+      <input
+        style={{ ...inputStyles, marginTop: '10px' }}
+        value={endpoint}
+        onChange={handleEndpointChange}
+        placeholder="Enter API endpoint"
+      />
+
+      <input
+        style={{ ...inputStyles, marginTop: '10px' }}
+        value={variable}
+        onChange={handleVariableChange}
+        placeholder="Store response in variable (optional)"
+      />
+
+      <Handle 
+        type="source" 
+        position={Position.Right}
+        style={{
+          top: '50%',
+          right: '-5px',
+          background: '#784212',
+          width: '12px',
+          height: '12px',
+        }}
+        isConnectable={isConnectable} 
+      />
+    </NodeWrapper>
+  );
+};
+
+export const DelayNode = ({ id, data, isConnectable }) => {
+  return (
+    <NodeWrapper style={{ background: '#fff3e6', borderColor: '#ffb347',width:'200px' }} type="delay">
+      <Handle 
+        type="target" 
+        position={Position.Left}
+        style={{
+          top: '50%',
+          left: '-5px',
+          background: '#784212',
+          width: '12px',
+          height: '12px',
+        }}
+        isConnectable={isConnectable} 
+      />
+      
+      <h3 style={{ marginBottom: '15px', color: '#d46b08', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Clock size={18} />
+        Delay Timer
+      </h3>
+
+      <div style={{ 
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '12px',
+        backgroundColor: '#fff8f0',
+        borderRadius: '8px',
+        border: '1px solid #ffd8a8'
+      }}>
+        <input 
+          type="number"
+          value={data.delay}
+          onChange={(e) => data.onDelayChange(parseInt(e.target.value))}
+          min="0"
+          style={{
+            width: '80px',
+            padding: '8px',
+            border: '1px solid #ffb347',
+            borderRadius: '4px',
+            backgroundColor: 'white',
+            color: '#d46b08',
+            fontSize: '14px'
+          }}
+        />
+        <span style={{ color: '#d46b08', fontSize: '14px' }}>seconds</span>
+      </div>
+
+      <Handle 
+        type="source" 
+        position={Position.Right}
+        style={{
+          top: '50%',
+          right: '-5px',
+          background: '#784212',
+          width: '12px',
+          height: '12px',
+        }}
+        isConnectable={isConnectable} 
+      />
+    </NodeWrapper>
   );
 };
