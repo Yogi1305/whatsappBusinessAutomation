@@ -209,7 +209,7 @@ export const LanguageSelector = () => {
         message: template
       };
 
-      const response = await axiosInstance.post(`${djangoURL/translate-flow/}`, payload);
+      const response = await axiosInstance.post(`${djangoURL}/translate-flow/`, payload);
 
       if (!response.data) throw new Error('Conversion failed');
       toast.success('Template configured successfully!');
