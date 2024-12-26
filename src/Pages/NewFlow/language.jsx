@@ -7,7 +7,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
+import axios from 'axios';
+import { Copy, CheckCircle2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 // Constants
 const DISPLAY_STYLES = {
   NUMBERED: 'numbered',
@@ -62,38 +64,73 @@ const TRANSLATIONS = {
 const LanguageOption = ({ language, isSelected, onToggle }) => (
     <button
       onClick={() => onToggle(language.value)}
-      className={`
-        flex items-center justify-between p-3 rounded-lg
+      className={`flex items-center justify-between p-2 rounded-lg
         transition-all duration-200 ease-in-out w-full
         ${isSelected
           ? 'bg-orange-50 text-orange-800 border-2 border-orange-200 shadow-sm'
           : 'bg-white hover:bg-gray-50 border border-gray-200 hover:border-orange-200'
-        }
-      `}
+        }`}
     >
-      <span className="font-medium">{language.label}</span>
-      {isSelected && <Check className="h-4 w-4 text-orange-600" />}
+      <span className="font-medium text-sm">{language.label}</span>
+      {isSelected && <Check className="h-3 w-3 text-orange-600" />}
     </button>
   );
-
-  const MessagePreview = ({ message }) => (
-    <div className="space-y-2">
-      <Label className="text-gray-700">Preview:</Label>
-      <div className="p-4 bg-orange-50/30 rounded-lg border border-orange-100">
-        <pre className="mt-2 whitespace-pre-wrap max-h-48 overflow-y-auto
-          scrollbar-thin scrollbar-thumb-orange-200 scrollbar-track-transparent
-          text-gray-700 font-sans">
-          {message}
-        </pre>
+  
+  const MessagePreview = ({ message }) => {
+    const [showCopy, setShowCopy] = useState(false);
+    const [copied, setCopied] = useState(false);
+  
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(message);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy text:', err);
+      }
+    };
+  
+    return (
+      <div className="space-y-1">
+        <Label className="text-xs text-gray-700">Preview:</Label>
+        <div 
+          className="relative"
+          onMouseEnter={() => setShowCopy(true)}
+          onMouseLeave={() => setShowCopy(false)}
+        >
+          <div className="p-2 bg-orange-50/30 rounded-lg border border-orange-100">
+            <pre className="text-sm whitespace-pre-wrap max-h-32 overflow-y-auto
+              scrollbar-thin scrollbar-thumb-orange-200 scrollbar-track-transparent
+              text-gray-700 font-sans">
+              {message}
+            </pre>
+          </div>
+          
+          <button
+            onClick={handleCopy}
+            className={`absolute top-2 right-2 p-1.5 rounded-md transition-all duration-200
+              ${showCopy ? 'opacity-100' : 'opacity-0'} 
+              ${copied ? 'bg-green-100 text-green-600' : 'bg-orange-100 hover:bg-orange-200 text-orange-600'}`}
+          >
+            {copied ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+  
 
 export const LanguageSelector = () => {
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [displayStyle, setDisplayStyle] = useState(DISPLAY_STYLES.NUMBERED);
   const [messageTemplate, setMessageTemplate] = useState('');
+  const [customKeys, setCustomKeys] = useState({});
+  const [useCustomKeys, setUseCustomKeys] = useState(false);
 
   const toggleLanguage = (value) => {
     setSelectedLanguages(prev => 
@@ -101,6 +138,13 @@ export const LanguageSelector = () => {
         ? prev.filter(lang => lang !== value)
         : [...prev, value]
     );
+  };
+
+  const generateKey = (index) => {
+    if (displayStyle === DISPLAY_STYLES.NUMBERED && useCustomKeys) {
+      return customKeys[index] || (index + 1).toString();
+    }
+    return (index + 1).toString();
   };
 
   const generateTemplate = () => {
@@ -115,7 +159,8 @@ export const LanguageSelector = () => {
       const label = INDIAN_LANGUAGES.find(l => l.value === lang)?.label;
       switch (displayStyle) {
         case DISPLAY_STYLES.NUMBERED:
-          return `${index + 1}. ${label}`;
+          const key = generateKey(index);
+          return `${key}. ${label}`;
         case DISPLAY_STYLES.BULLETS:
           return `• ${label}`;
         case DISPLAY_STYLES.BUTTONS:
@@ -144,24 +189,27 @@ export const LanguageSelector = () => {
     setIsLoading(true);
     try {
       const template = generateTemplate();
-      const response = await fetch('/api/convert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          languages: selectedLanguages,
-          displayStyle,
-          messageTemplate: template,
-          selectionHandling: {
-            type: displayStyle,
-            options: selectedLanguages.map((lang, idx) => ({
-              value: displayStyle === DISPLAY_STYLES.NUMBERED ? (idx + 1).toString() : lang,
-              language: lang
-            }))
-          }
-        })
-      });
+      
+      // Create the languages object with appropriate keys
+      const languagesObj = selectedLanguages.reduce((acc, lang, index) => {
+        let key;
+        if (displayStyle === DISPLAY_STYLES.NUMBERED) {
+          key = useCustomKeys ? (customKeys[index] || (index + 1).toString()) : (index + 1).toString();
+        } else {
+          key = (index + 1).toString(); // Default to numeric keys for other display styles
+        }
+        acc[key] = INDIAN_LANGUAGES.find(l => l.value === lang)?.label || lang;
+        return acc;
+      }, {});
 
-      if (!response.ok) throw new Error('Conversion failed');
+      const payload = {
+        languages: languagesObj,
+        message: template
+      };
+
+      const response = await axios.post('https://mocki.io/v1/4442cf44-e9f7-4d81-9903-a66f64301fdf', payload);
+
+      if (!response.data) throw new Error('Conversion failed');
       toast.success('Template configured successfully!');
     } catch (error) {
       toast.error('Failed to configure template');
@@ -171,135 +219,148 @@ export const LanguageSelector = () => {
     }
   };
 
+  // Custom Key Input Component
+  const CustomKeyInputs = () => (
+    <div className="space-y-2 mt-2">
+      <div className="grid grid-cols-2 gap-2">
+        {selectedLanguages.map((lang, index) => (
+          <div key={lang} className="flex items-center gap-2">
+            <Input
+              type="text"
+              className="w-16 text-sm"
+              value={customKeys[index] || ''}
+              onChange={(e) => setCustomKeys(prev => ({
+                ...prev,
+                [index]: e.target.value
+              }))}
+              placeholder={`Key ${index + 1}`}
+            />
+            <span className="text-sm">
+              {INDIAN_LANGUAGES.find(l => l.value === lang)?.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
   const previewMessage = () => {
     if (!selectedLanguages.length) return 'Select languages and customize message...';
     return generateTemplate();
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <Tabs defaultValue="languages" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 p-1 bg-orange-50/50">
-          <TabsTrigger 
-            value="languages"
-            className="data-[state=active]:bg-white data-[state=active]:text-orange-700 data-[state=active]:shadow-sm"
-          >
-            Select Languages
-          </TabsTrigger>
-          <TabsTrigger 
-            value="template"
-            className="data-[state=active]:bg-white data-[state=active]:text-orange-700 data-[state=active]:shadow-sm"
-          >
-            Edit Template
-          </TabsTrigger>
-        </TabsList>
+    <div className="flex flex-col gap-4">
+    <Tabs defaultValue="languages" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="languages">Select Languages</TabsTrigger>
+        <TabsTrigger value="template">Edit Template</TabsTrigger>
+      </TabsList>
 
-        <TabsContent value="languages" className="mt-4">
-          <div className="grid grid-cols-2 gap-3">
-            {INDIAN_LANGUAGES.map(lang => (
-              <LanguageOption
-                key={lang.value}
-                language={lang}
-                isSelected={selectedLanguages.includes(lang.value)}
-                onToggle={toggleLanguage}
-              />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="template" className="mt-4 space-y-6">
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-gray-700">Display Style</Label>
-            <RadioGroup
-              defaultValue={DISPLAY_STYLES.NUMBERED}
-              onValueChange={setDisplayStyle}
-              className="flex flex-wrap gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem 
-                  value={DISPLAY_STYLES.NUMBERED} 
-                  id="numbered"
-                  className="text-orange-600 border-orange-400 focus:ring-orange-400" 
-                />
-                <Label htmlFor="numbered" className="text-gray-700">Numbered List</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem 
-                  value={DISPLAY_STYLES.BULLETS} 
-                  id="bullets"
-                  className="text-orange-600 border-orange-400 focus:ring-orange-400"
-                />
-                <Label htmlFor="bullets" className="text-gray-700">Whatsapp List (max 10)</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem 
-                  value={DISPLAY_STYLES.BUTTONS} 
-                  id="buttons"
-                  className="text-orange-600 border-orange-400 focus:ring-orange-400"
-                />
-                <Label htmlFor="buttons" className="text-gray-700">Whatsapp Button (max 3)</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
-              Custom Message Template (Optional)
-            </Label>
-            <Textarea
-              placeholder="Enter custom message template..."
-              value={messageTemplate}
-              onChange={(e) => setMessageTemplate(e.target.value)}
-              className="h-32 resize-none border-gray-200 focus:border-orange-300 focus:ring-orange-200"
+      <TabsContent value="languages" className="mt-2">
+        <div className="grid grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto p-1">
+          {INDIAN_LANGUAGES.map(lang => (
+            <LanguageOption
+              key={lang.value}
+              language={lang}
+              isSelected={selectedLanguages.includes(lang.value)}
+              onToggle={toggleLanguage}
             />
-          </div>
-
-          <MessagePreview message={previewMessage()} />
-        </TabsContent>
-      </Tabs>
-
-      <Button
-        onClick={handleConvert}
-        disabled={selectedLanguages.length === 0 || isLoading}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white shadow-sm
-          disabled:bg-gray-300 disabled:cursor-not-allowed"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Configuring...
-          </>
-        ) : (
-          'Save Language Configuration'
-        )}
-      </Button>
-    </div>
-  );
-};
-
-export const LanguageSelectorTrigger = () => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="ml-2 relative h-12 w-12 text-lg border-orange-200 hover:bg-orange-50 
-            hover:border-orange-300 text-orange-700"
-        >
-          <Languages className="h-4 w-4" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px]">
-        <SheetHeader>
-          <SheetTitle className="text-orange-700">Configure Language Selection</SheetTitle>
-        </SheetHeader>
-        <div className="mt-6">
-          <LanguageSelector />
+          ))}
         </div>
-      </SheetContent>
-    </Sheet>
+      </TabsContent>
+
+      <TabsContent value="template" className="mt-2 space-y-4">
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Display Style</Label>
+          <RadioGroup
+            value={displayStyle}
+            onValueChange={(value) => {
+              setDisplayStyle(value);
+              if (value !== DISPLAY_STYLES.NUMBERED) {
+                setUseCustomKeys(false);
+              }
+            }}
+            className="grid grid-cols-3 gap-2"
+          >
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value={DISPLAY_STYLES.NUMBERED} id="numbered" />
+              <Label htmlFor="numbered" className="text-xs">Numbered</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value={DISPLAY_STYLES.BULLETS} id="bullets" />
+              <Label htmlFor="bullets" className="text-xs">Bullets</Label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <RadioGroupItem value={DISPLAY_STYLES.BUTTONS} id="buttons" />
+              <Label htmlFor="buttons" className="text-xs">Buttons</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        {displayStyle === DISPLAY_STYLES.NUMBERED && (
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="useCustomKeys"
+                checked={useCustomKeys}
+                onChange={(e) => setUseCustomKeys(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="useCustomKeys" className="text-xs">Use Custom Keys</Label>
+            </div>
+            {useCustomKeys && <CustomKeyInputs />}
+          </div>
+        )}
+
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">
+            Custom Message Template (Optional)
+          </Label>
+          <Textarea
+            placeholder="Enter custom message template..."
+            value={messageTemplate}
+            onChange={(e) => setMessageTemplate(e.target.value)}
+            className="h-24 text-sm resize-none"
+          />
+        </div>
+
+        <MessagePreview message={previewMessage()} />
+      </TabsContent>
+    </Tabs>
+
+    <Button
+      onClick={handleConvert}
+      disabled={selectedLanguages.length === 0 || isLoading}
+      className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+    >
+      {isLoading ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Configuring...
+        </>
+      ) : (
+        'Save Configuration'
+      )}
+    </Button>
+  </div>
   );
 };
+
+export const LanguageSelectorTrigger = () => (
+  <Sheet>
+    <SheetTrigger asChild>
+      <Button variant="outline" size="icon" className="ml-2 h-12 w-12 border-orange-200 hover:bg-orange-50">
+        <Languages className="h-4 w-4" />
+      </Button>
+    </SheetTrigger>
+    <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetHeader>
+        <SheetTitle className="text-orange-700">Configure Language Selection</SheetTitle>
+      </SheetHeader>
+      <div className="mt-4">
+        <LanguageSelector />
+      </div>
+    </SheetContent>
+  </Sheet>
+);

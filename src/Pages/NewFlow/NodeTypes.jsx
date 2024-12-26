@@ -720,24 +720,31 @@ export const APINode = ({ id, data, isConnectable }) => {
   const [endpoint, setEndpoint] = useState(data.endpoint || '');
   const [method, setMethod] = useState(data.method || 'GET');
   const [variable, setVariable] = useState(data.variable || '');
+  const [headers, setHeaders] = useState(data.headers || '');
   const { updateNodeData } = useFlow();
 
   const handleEndpointChange = (e) => {
     const newEndpoint = e.target.value;
     setEndpoint(newEndpoint);
-    updateNodeData(id, { endpoint: newEndpoint, method, variable });
+    updateNodeData(id, { endpoint: newEndpoint, method, variable, headers });
   };
 
   const handleMethodChange = (e) => {
     const newMethod = e.target.value;
     setMethod(newMethod);
-    updateNodeData(id, { endpoint, method: newMethod, variable });
+    updateNodeData(id, { endpoint, method: newMethod, variable, headers });
   };
 
   const handleVariableChange = (e) => {
     const newVariable = e.target.value;
     setVariable(newVariable);
-    updateNodeData(id, { endpoint, method, variable: newVariable });
+    updateNodeData(id, { endpoint, method, variable: newVariable, headers });
+  };
+
+  const handleHeadersChange = (e) => {
+    const newHeaders = e.target.value;
+    setHeaders(newHeaders);
+    updateNodeData(id, { endpoint, method, variable, headers: newHeaders });
   };
 
   return (
@@ -777,6 +784,13 @@ export const APINode = ({ id, data, isConnectable }) => {
 
       <input
         style={{ ...inputStyles, marginTop: '10px' }}
+        value={headers}
+        onChange={handleHeadersChange}
+        placeholder="Headers (JSON format)"
+      />
+
+      <input
+        style={{ ...inputStyles, marginTop: '10px' }}
         value={variable}
         onChange={handleVariableChange}
         placeholder="Store response in variable (optional)"
@@ -799,8 +813,17 @@ export const APINode = ({ id, data, isConnectable }) => {
 };
 
 export const DelayNode = ({ id, data, isConnectable }) => {
+  const [delay, setDelay] = useState(data.delay || 0);
+  const { updateNodeData } = useFlow();
+
+  const handleDelayChange = (e) => {
+    const newDelay = parseInt(e.target.value);
+    setDelay(newDelay);
+    updateNodeData(id, { delay: newDelay });
+  };
+
   return (
-    <NodeWrapper style={{ background: '#fff3e6', borderColor: '#ffb347',width:'200px' }} type="delay">
+    <NodeWrapper style={{ background: '#fff3e6', borderColor: '#ffb347', width: '200px' }} type="delay">
       <Handle 
         type="target" 
         position={Position.Left}
@@ -830,8 +853,8 @@ export const DelayNode = ({ id, data, isConnectable }) => {
       }}>
         <input 
           type="number"
-          value={data.delay}
-          onChange={(e) => data.onDelayChange(parseInt(e.target.value))}
+          value={delay}
+          onChange={handleDelayChange}
           min="0"
           style={{
             width: '80px',
