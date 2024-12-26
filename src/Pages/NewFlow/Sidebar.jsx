@@ -160,7 +160,7 @@ const Sidebar = () => {
               <span>API</span>
             </div>
             
-            <div 
+           {/* <div 
               style={{
                 ...smallNodeStyle, 
                 backgroundColor: '#FAFAD2',
@@ -173,7 +173,7 @@ const Sidebar = () => {
             >
               <Clock size={18} color="#333" />
               <span>Delay</span>
-            </div>
+            </div>*/}
           </div>
         </div>
       )}
