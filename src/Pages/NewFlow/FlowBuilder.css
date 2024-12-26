@@ -35,7 +35,7 @@
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar button {
+.sidebar_button {
   width: 100%;
   padding: 12px;
   background-color: var(--primary-color);
@@ -47,7 +47,7 @@
   transition: background-color 0.3s ease;
 }
 
-.sidebar button:hover {
+.sidebar_button:hover {
   background-color: var(--secondary-color);
 }
 
