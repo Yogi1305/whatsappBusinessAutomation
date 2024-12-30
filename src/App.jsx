@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './authContext';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useSpring, animated } from 'react-spring';
+import { MessageCircle, Users, Zap, BarChart2, Send, Star, Shield, Rocket, Check, ChevronDown } from 'lucide-react';
 import Navbar from './Navbar';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
@@ -35,13 +38,56 @@ const ProtectedRoute = ({ children }) => {
   return authenticated ? children : <Navigate to="/login" replace />;
 };
 
+const MarketingBanner = () => (
+  <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 h-7 overflow-hidden relative border-b border-emerald-500/30 backdrop-blur-sm">
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.05)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+    
+    <motion.div
+      className="flex items-center absolute whitespace-nowrap h-full"
+      animate={{
+        x: ["100%", "-100%"],
+      }}
+      transition={{
+        x: {
+          duration: 25,
+          repeat: Infinity,
+          ease: "linear"
+        }
+      }}
+    >
+      <div className="flex items-center space-x-12 px-4">
+        <span className="text-emerald-50 text-sm font-medium flex items-center bg-gradient-to-r from-emerald-500/10 to-transparent px-3 py-0.5 rounded-full">
+          <Zap className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+          FLASH SALE: Flat 20% OFF on all Annual Plans
+        </span>
+        
+        <span className="text-emerald-50 text-sm font-medium flex items-center">
+          <span className="text-base mr-1.5">🎁</span>
+          Limited Time: Get 3 Months FREE with Enterprise Plan
+        </span>
+        
+        <span className="text-emerald-50 text-sm font-medium flex items-center bg-gradient-to-r from-emerald-500/10 to-transparent px-3 py-0.5 rounded-full">
+          <Zap className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+          Early Bird Offer: First 100 Signups Get Premium Features FREE
+        </span>
+      </div>
+    </motion.div>
+    
+    {/* Gradient overlays for smooth edges */}
+    <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-emerald-950 to-transparent" />
+    <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-emerald-950 to-transparent" />
+  </div>
+);
 const App = () => {
   const { authenticated, logout, tenantId } = useAuth();
-
+  const shouldShowBanner = () => {
+    return !authenticated && location.pathname === '/';
+  };
   return (
     <Router>
       <Toaster position="top-center" duration={3000} style={{border:'none'}}/>
       <div className="flex flex-col min-h-screen">
+      {shouldShowBanner() && <MarketingBanner />}
         <Navbar isAuthenticated={authenticated} onLogout={logout} />
         <main className="flex-grow container">
           <Routes>

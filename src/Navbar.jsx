@@ -283,13 +283,13 @@ const Navbar = () => {
               alt="Nuren AI Logo" 
               className="h-10 w-10 group-hover:rotate-6 transition-transform"
             />
-            <span className={`text-2xl font-bold ${
-              authenticated 
-                ? 'text-primary group-hover:text-primary/80' 
-                : 'text-white group-hover:text-gray-300'
-            }`}>
-              Nuren AI
-            </span>
+         <span className={`text-2xl font-bold ${
+  authenticated 
+    ? 'text-primary group-hover:text-primary/80' 
+    : 'bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-300 bg-clip-text text-transparent group-hover:opacity-80 [text-shadow:0_2px_8px_rgba(0,255,128,0.1)]'
+}`}>
+  Nuren AI
+</span>
           </Link>
 
           {/* Desktop Navigation */}

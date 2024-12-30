@@ -1,0 +1,24 @@
+.highlight {
+  position: relative;
+  display: inline-block;
+  color: inherit;
+  z-index: 1;
+}
+
+.highlight::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0.4em;
+  background: linear-gradient(90deg, #00ff8c, #00e676);
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s ease-in-out;
+}
+
+.highlight:hover::before {
+  transform: scaleX(1);
+}

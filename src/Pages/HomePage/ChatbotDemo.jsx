@@ -154,9 +154,13 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
                   </motion.button>
                 ) : (
                   <div className="bg-white p-6 rounded-xl shadow-2xl">
-                    {/* Add your QR code component here */}
-                    <div className="w-full h-64 bg-gray-100 rounded-lg" />
+                    <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <div className="w-112 h-112">
+                        <WhatsAppQRCode />
+                      </div>
+                    </div>
                   </div>
+
                 )}
                 <p className="mt-6 text-gray-300 text-center text-lg">
                   Experience the future of business communication

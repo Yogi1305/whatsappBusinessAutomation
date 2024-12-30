@@ -18,8 +18,7 @@ import LeadCapturePopup from './LeadCapture';
 import ad from '../../assets/slider/ad.mp4';
 import { Link } from 'react-router-dom';
 import Footer from '../footer';
-import { fastURL } from '../../api';
-import axiosInstance from '../../api';
+
 const FeatureCard = ({ icon: Icon, title, description }) => {
   const [isHovered, setIsHovered] = useState(false);
   const springProps = useSpring({
@@ -148,18 +147,10 @@ const Homepage = () => {
     };
   }, []);
   
-  const handleEmailSubmit = async (email) => {
-    try {
-      const response = await axiosInstance.post(`${fastURL}/add_email`, { email });
-      
-      console.log("Submitted email:", email);
-      console.log("Server response:", response.data);
-      
-      setIsPopupVisible(false); // Close popup after successful submission
-    } catch (error) {
-      console.error("Error submitting email:", error);
-      // Optionally handle error (e.g., show error message to user)
-    }
+
+  const handleEmailSubmit = (email) => {
+    console.log("Submitted email:", email);
+    setIsPopupVisible(false); // Close popup after submission
   };
   const handlePopupClose = () => {
     setIsPopupVisible(false); 
@@ -177,7 +168,7 @@ const Homepage = () => {
   };
 
   return (
-    <div className="bg-black min-h-screen overflow-x-hidden w-full main-homepage" style={{width:'98.9vw',paddingTop:'20px'}}>
+    <div className="bg-black min-h-screen overflow-x-hidden w-full main-homepage" style={{width:'98.9vw',paddingTop:'0px'}}>
       {/* Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-2 bg-green-400 z-50"
@@ -190,6 +181,7 @@ const Homepage = () => {
           onSubmit={handleEmailSubmit}
         />
       )}
+     
       {/* Hero Section */}
       <VideoSection 
         videoSrc={ad}
@@ -200,7 +192,7 @@ const Homepage = () => {
       />
           <ChatbotDemoSection />
           <div>
-      {/* Other content above the slider 
+      {/* Other content above the slider */}
       { <HeroSlider/>}
       {/* Other content below the slider */}
     </div>
@@ -283,7 +275,7 @@ const Homepage = () => {
 
   <div className="container mx-auto relative z-10 px-4">
     <ScrollAnimatedSection>
-      <h2 className="text-5xl text-center mb-16 text-white">FEATURES</h2>
+      <h2 className="text-5xl font-gliker text-center mb-16 text-white">FEATURES</h2>
     </ScrollAnimatedSection>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
       {[

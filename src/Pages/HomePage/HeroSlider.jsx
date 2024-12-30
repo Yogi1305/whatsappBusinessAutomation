@@ -1,159 +1,141 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-// Import your images and videos here
-import broadcast from '../../assets/slider/broadcast.mp4';
+// Import your images and videos
+import broadcast from '../../assets/4574.png';
 import whatsapp from '../../assets/slider/whatsapp.png';
 import flow from '../../assets/slider/flow.mp4';
 
 const slides = [
   {
-    title: "ONE CLICK, BROADCAST THOUSANDS!",
-    description: "Reach your audience with targeted messages at scale. Our advanced broadcasting features ensure your message lands with impact.",
-    buttonText: "Start Broadcasting Now",
-    buttonColor: "#4a90e2",
-    video: broadcast,
-    link: "/register", // Add link for the first slide
+    title: "Transform Your Reach",
+    description: "Imagine reaching thousands of eager customers with a single message. Our smart broadcasting turns every campaign into a conversation starter, delivering 5x higher engagement than traditional channels.",
+    buttonText: "Amplify Your Message",
+    accentColor: "from-blue-400 to-blue-600",
+    image: broadcast,
+    link: "/register",
   },
   {
-    title: "ADS THAT CLICK TO WHATSAPP",
-    description: "Engage customers on their favorite messaging platform. Leverage WhatsApp's popularity to boost your business communication.",
+    title: "Ads That Click To Whatsapp",
+    description: "Turn ads into instant conversations on WhatsApp, driving engagement and boosting conversions",
     buttonText: "Connect with Customers",
-    buttonColor: "#facc15",
+    accentColor: "from-yellow-400 to-yellow-600",
     image: whatsapp,
-    link: "/register", // Add link for the second slide
+    link: "/register",
   },
   {
-    title: "24/7 CHATBOT SUPPORT",
-    description: "Send personalized messages to thousands in minutes. Our powerful bulk messaging tool saves time without sacrificing personalization.",
-    buttonText: "Send Your First Message",
-    buttonColor: "#f87171",
+    title: "Your Tireless Digital Team",
+    description: "Sleep well while your business grows. Our AI chatbots handle customer queries 24/7, cutting response time by 75% and turning midnight inquiries into morning sales. Experience the future of customer service.",
+    buttonText: "Launch Your AI Assistant",
+    accentColor: "from-red-400 to-red-600",
     video: flow,
-    link: "/demo/chatbot", // Optional third link
+    link: "/demo/chatbot",
   },
 ];
 
-const HeroSlider2 = () => {
-  const navigate = useNavigate(); // Initialize useNavigate
+const HeroSlider = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [direction, setDirection] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => paginate(1), 7000);
+    return () => clearTimeout(timer);
+  }, [page]);
 
   const paginate = (newDirection) => {
     setDirection(newDirection);
     setPage((prevPage) => (prevPage + newDirection + slides.length) % slides.length);
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      paginate(1);
-    }, 7000);
-
-    return () => clearTimeout(timer);
-  }, [page]);
-
-  const variants = {
-    enter: (direction) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction) => ({
-      zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
-    }),
-  };
-
-  const swipeConfidenceThreshold = 10000;
-  const swipePower = (offset, velocity) => {
-    return Math.abs(offset) * velocity;
-  };
-
   return (
-    <div className="relative h-screen overflow-hidden bg-black mx-auto px-12 lg:px-24">
+    <div className="relative h-screen overflow-hidden bg-gradient-to-br from-gray-900 to-black">
+      {/* Dynamic background elements */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,black_70%,transparent_110%)]" />
+      
+      <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent z-10" />
+        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent z-10" />
+      </div>
+
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={page}
           custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
+          initial={{ opacity: 0, x: direction > 0 ? 1000 : -1000 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: direction < 0 ? 1000 : -1000 }}
           transition={{
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={1}
-          onDragEnd={(e, { offset, velocity }) => {
-            const swipe = swipePower(offset.x, velocity.x);
-            if (swipe < -swipeConfidenceThreshold) {
-              paginate(1);
-            } else if (swipe > swipeConfidenceThreshold) {
-              paginate(-1);
-            }
-          }}
-          className="absolute w-full h-full flex items-center justify-center"
+          className="absolute w-full h-full flex items-center justify-center px-4 lg:px-24"
         >
-          <div className="container mx-auto px-4 flex flex-col md:flex-row items-center" style={{ marginLeft: '5%' }}>
-            <div className="md:w-1/3 mb-2 md:mb-0 md:pr-4">
+          <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16">
+            <div className="lg:w-1/2 space-y-6 relative z-20">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className={`inline-block px-4 py-1 rounded-full bg-gradient-to-r ${slides[page].accentColor} bg-opacity-10 backdrop-blur-sm`}
+              >
+                <p className="text-sm font-medium text-white">Featured</p>
+              </motion.div>
+
               <motion.h2
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-                className="text-4xl md:text-5xl font-bold mb-4 font-gliker"
-                style={{ color: slides[page].buttonColor }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className={`text-5xl lg:text-6xl font-bold bg-gradient-to-r ${slides[page].accentColor} bg-clip-text text-transparent`}
               >
                 {slides[page].title}
               </motion.h2>
+
               <motion.p
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.8 }}
-                className="text-xl mb-4 text-white"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-xl text-gray-300 max-w-xl"
               >
                 {slides[page].description}
               </motion.p>
+
               <motion.button
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.8 }}
-                whileHover={{ scale: 1.05, boxShadow: "0px 0px 8px rgba(0,230,118,0.4)" }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate(slides[page].link)} // Navigate to link on button click
-                className={`bg-blue-400 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-600 transition duration-300`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                onClick={() => navigate(slides[page].link)}
+                className={`group flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r ${slides[page].accentColor} text-white font-semibold text-lg transition-all duration-300 hover:gap-4`}
               >
                 {slides[page].buttonText}
+                <ArrowRight className="w-5 h-5 transition-all duration-300" />
               </motion.button>
             </div>
 
-            <div className="md:w-4/6 relative" style={{ marginLeft: '10%' }}>
+            <div className="lg:w-1/2 relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-transparent via-white/5 to-transparent rounded-lg blur-lg" />
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-                className="relative z-10"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="relative rounded-lg overflow-hidden bg-gray-900/50 backdrop-blur-sm border border-white/10"
               >
                 {slides[page].video ? (
                   <video
                     src={slides[page].video}
-                    className="w-full max-w-lg h-auto rounded-lg"
+                    className="w-full max-w-2xl mx-auto rounded-lg"
                     autoPlay
                     loop
                     muted
+                    style={{ clipPath: 'inset(1px 1px)' }}
                   />
                 ) : (
                   <img
                     src={slides[page].image}
                     alt={slides[page].title}
-                    className="w-full max-w-lg h-auto rounded-lg"
+                    className="w-full max-w-2xl mx-auto rounded-lg"
                   />
                 )}
               </motion.div>
@@ -163,42 +145,47 @@ const HeroSlider2 = () => {
       </AnimatePresence>
 
       {/* Navigation arrows */}
-      <motion.button
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800 p-2 rounded-full shadow-lg z-10"
-        onClick={() => paginate(-1)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <ChevronLeft className="w-6 h-6 text-white" />
-      </motion.button>
-      <motion.button
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800 p-2 rounded-full shadow-lg z-10"
-        onClick={() => paginate(1)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <ChevronRight className="w-6 h-6 text-white" />
-      </motion.button>
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => paginate(-1)}
+          className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors duration-200"
+        >
+          <ChevronLeft className="w-6 h-6 text-white" />
+        </motion.button>
+        
+        {/* Slide indicators */}
+        <div className="flex gap-3">
+          {slides.map((_, index) => (
+            <motion.button
+              key={index}
+              onClick={() => {
+                setDirection(index > page ? 1 : -1);
+                setPage(index);
+              }}
+              className={`w-12 h-1 rounded-full transition-all duration-300 ${
+                index === page 
+                  ? `bg-gradient-to-r ${slides[index].accentColor}`
+                  : 'bg-white/20'
+              }`}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            />
+          ))}
+        </div>
 
-      {/* Slide indicators */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
-        {slides.map((_, index) => (
-          <motion.button
-            key={index}
-            onClick={() => {
-              setDirection(index > page ? 1 : -1);
-              setPage(index);
-            }}
-            className={`w-3 h-3 rounded-full ${
-              index === page ? 'bg-green-500' : 'bg-gray-600'
-            }`}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.8 }}
-          />
-        ))}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => paginate(1)}
+          className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors duration-200"
+        >
+          <ChevronRight className="w-6 h-6 text-white" />
+        </motion.button>
       </div>
     </div>
   );
 };
 
-export default HeroSlider2;
+export default HeroSlider;
