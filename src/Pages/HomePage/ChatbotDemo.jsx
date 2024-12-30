@@ -1,84 +1,52 @@
-// Import necessary dependencies
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
-import qrbg from "../../assets/qrbg.png";
-import WhatsAppQRCode from '../Chatbot/WhatsappQrCode';
+import { useMediaQuery } from 'react-responsive';
 import axios from 'axios';
 import camera from "../../assets/camera.png";
-import { useMediaQuery } from 'react-responsive';
+import qrbg from "../../assets/qrbg.png";
+import WhatsAppQRCode from '../Chatbot/WhatsappQrCode';
 import {whatsappURL}  from '../../Navbar';
+import { Card, CardContent } from '@/components/ui/card';
+import { MessageSquare, Zap, Lock, Smartphone, Bot, Send, Globe, Code, Camera } from 'lucide-react';
+
 import { fastURL, djangoURL } from '../../api';
 
-// Function to get tenant ID from the URL
-const getTenantIdFromUrl = () => {
-  const pathArray = window.location.pathname.split('/');
-  if (pathArray.length >= 2) {
-    var tenant_id = pathArray[1];
-    if (tenant_id === "demo") tenant_id = 'll';
-    return tenant_id;
-  }
-  return null;
-};
-
-// Particle animation component
+// Floating particle effect component
 const Particle = ({ animate }) => (
   <motion.div
-    className="absolute rounded-full bg-green-400 opacity-20"
+    className="absolute rounded-full bg-gradient-to-r from-green-400/20 to-blue-400/20"
     animate={animate}
     transition={{
       duration: Math.random() * 10 + 20,
       repeat: Infinity,
       repeatType: "reverse",
+      ease: "easeInOut",
     }}
     style={{
-      width: Math.random() * 30 + 10,
-      height: Math.random() * 30 + 10,
+      width: Math.random() * 40 + 15,
+      height: Math.random() * 40 + 15,
+      filter: 'blur(2px)',
     }}
   />
 );
 
-// Main component for Chatbot Demo Section
 const ChatbotDemoSection = ({ isAuthenticated }) => {
   const navigate = useNavigate();
   const [socket, setSocket] = useState(null);
-  const tenantId = getTenantIdFromUrl();
-  const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const [sessionId, setSessionId] = useState(null);
   const isMobile = useMediaQuery({ maxWidth: 1280 });
 
-  // Fetch business phone ID
   useEffect(() => {
-    const fetchBusinessPhoneId = async () => {
-      try {
-        const response = await axios.get(`${fastURL}/whatsapp_tenant/`, {
-          headers: {
-            'X-Tenant-Id': getTenantIdFromUrl()
-          }
-        });
-        setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
-      } catch (error) {
-        console.error('Error fetching business phone ID:', error);
-      }
-    };
-
-    fetchBusinessPhoneId();
-  }, [tenantId]);
-
-  // Setup socket connection
-  useEffect(() => {
-    const newSocket = io(whatsappURL);
+    const newSocket = io('YOUR_SOCKET_URL');
     setSocket(newSocket);
-
     const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);
     setSessionId(generatedSessionId);
     localStorage.setItem('sessionId', generatedSessionId);
-
     return () => newSocket.close();
   }, []);
 
-  // Handle incoming messages from socket
   useEffect(() => {
     if (!socket) return;
 
@@ -96,41 +64,35 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
       }
     };
 
-    const handleTempUser = (message) => {
-      if (message && !isAuthenticated) {
-        const storedSessionId = localStorage.getItem('sessionId');
-        const formattedMessageTempUser = `*/${message.temp_user}`;
-        
-        if (formattedMessageTempUser === storedSessionId) {
-          localStorage.setItem('homepageQRScanned', 'true');
-          localStorage.setItem('chatbotContactPhone', message.contactPhone);
-          navigate(`/demo/chatbot/`, {
-            state: {
-              contactPhone: message.contactPhone,
-              fromHomepage: true,
-              sessionId: storedSessionId
-            }
-          });
-        }
-      }
-    };
-
     socket.on('new-message', handleNewMessage);
-    socket.on('temp-user', handleTempUser);
-
-    return () => {
-      socket.off('new-message', handleNewMessage);
-      socket.off('temp-user', handleTempUser);
-    };
+    return () => socket.off('new-message', handleNewMessage);
   }, [socket, isAuthenticated, navigate, sessionId]);
-  
-  const handleButtonClick = () => {
-    const text = `${sessionId} Hi! How can your chatbot automation help grow my business?`
-    window.location.href = `https://wa.me/16194560588?text=${text}`;
+
+  const handleDemoStart = () => {
+    const text = `${sessionId} Hi! I'd like to learn more about your chatbot automation.`;
+    window.location.href = `https://wa.me/YOUR_WHATSAPP_NUMBER?text=${encodeURIComponent(text)}`;
   };
 
+  const Particle = ({ animate }) => (
+    <motion.div
+      className="absolute rounded-full bg-gradient-to-r from-blue-400/20 to-emerald-400/20"
+      animate={animate}
+      transition={{
+        duration: Math.random() * 10 + 20,
+        repeat: Infinity,
+        repeatType: "reverse",
+        ease: "easeInOut",
+      }}
+      style={{
+        width: Math.random() * 40 + 15,
+        height: Math.random() * 40 + 15,
+        filter: 'blur(2px)',
+      }}
+    />
+  );
+
   return (
-    <section className="py-20 bg-black text-white min-h-screen flex items-center">
+    <section className="relative py-32 bg-gradient-to-b from-gray-900 via-black to-gray-900 overflow-hidden">
       {[...Array(20)].map((_, i) => (
         <Particle
           key={i}
@@ -140,90 +102,93 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
           }}
         />
       ))}
-      <div className="container mx-auto px-4">
-        <motion.h2
-          className="text-4xl md:text-5xl font-bold text-center mb-16 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600"
-          initial={{ opacity: 0, y: 50 }}
+      
+      <div className="container mx-auto px-6 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-20"
         >
-          EXPERIENCE OUR CHATBOT
-        </motion.h2>
+          <h2 className="text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+            Experience AI-Powered Chat
+          </h2>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Try our intelligent chatbot and see how it can transform your business communication.
+          </p>
+        </motion.div>
 
-        <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-16">
           <motion.div
-            className="w-full md:w-1/3 max-w-md"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.8 }}
+            className="w-full lg:w-1/3 max-w-md"
           >
-            <div className="p-8 ">
-              <img
-                src={camera}
-                alt="Chatbot Demo"
-                className="w-full h-auto rounded-lg mb-4"
-              />
-              <p className="text-gray-300 text-center">
-                Scan the QR code using the WhatsApp camera icon or any other scanner
-              </p>
-            </div>
+            <Card className="bg-white/5 backdrop-blur-lg border-0">
+              <CardContent className="p-8">
+                <Camera className="w-16 h-16 text-blue-500 mb-6 mx-auto" />
+                <p className="text-gray-300 text-center text-lg">
+                  Scan the QR code with WhatsApp to start your interactive demo
+                </p>
+              </CardContent>
+            </Card>
           </motion.div>
 
           <motion.div
-            className="w-full md:w-1/3 max-w-md"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.8 }}
+            className="w-full lg:w-1/3 max-w-md"
           >
-            {isMobile ? (
-              <div className="p-8">
-                <button
-                  onClick={handleButtonClick}
-                  className="w-full py-3 px-4 bg-blue-500 text-white rounded-lg shadow-xl hover:bg-blue-600 transition duration-300"
-                >
-                  Start Chatting
-                </button>
-                <p className="mt-4 text-gray-300 text-center">
-                  Click the button above to begin the demo
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="relative p-8 rounded-lg shadow-xl">
-                  <img
-                    src={qrbg}
-                    alt="Background"
-                    className="w-full h-auto rounded-lg opacity-30"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-white p-6 rounded-lg shadow-xl" style={{ width: '80%', height: '80%' }}>
-                      <WhatsAppQRCode sessionId={sessionId} />
-                    </div>
+            <Card className="bg-white/5 backdrop-blur-lg border-0">
+              <CardContent className="p-8">
+                {isMobile ? (
+                  <motion.button
+                    onClick={handleDemoStart}
+                    className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-emerald-500 text-white text-lg font-medium rounded-lg shadow-xl hover:opacity-90 transition-all duration-300"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Start Demo Now
+                  </motion.button>
+                ) : (
+                  <div className="bg-white p-6 rounded-xl shadow-2xl">
+                    {/* Add your QR code component here */}
+                    <div className="w-full h-64 bg-gray-100 rounded-lg" />
                   </div>
-                </div>
-                <p className="mt-4 text-gray-300 text-center">
-                  Scan this QR code with your phone's camera to begin the demo
+                )}
+                <p className="mt-6 text-gray-300 text-center text-lg">
+                  Experience the future of business communication
                 </p>
-              </>
-            )}
+              </CardContent>
+            </Card>
           </motion.div>
         </div>
 
-        {/* CTA Section */}
-        <div className="mt-12 text-center">
-          <motion.button
-            className="bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-700 transition duration-300"
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mt-16"
+        >
+          <button
             onClick={() => navigate('/demo/chatbot')}
+            className="px-8 py-4 bg-gradient-to-r from-blue-500 to-emerald-500 text-white text-lg font-medium rounded-lg shadow-xl hover:opacity-90 transition-all duration-300 mr-6"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            Chat Now
-          </motion.button>
-          <motion.button
-            className="bg-blue-400 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ml-4"
+            Try Web Demo
+          </button>
+          <button
             onClick={() => navigate('/blogs')}
+            className="px-8 py-4 bg-white/10 backdrop-blur-lg text-white text-lg font-medium rounded-lg shadow-xl hover:bg-white/20 transition-all duration-300"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             Learn More
-          </motion.button>
-        </div>
+          </button>
+        </motion.div>
       </div>
     </section>
   );

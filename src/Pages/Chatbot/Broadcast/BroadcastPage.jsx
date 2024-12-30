@@ -4,6 +4,8 @@ import axios from 'axios';
 import { whatsappURL } from '../../../Navbar';
 import { v4 as uuidv4 } from 'uuid';
 import BroadcastHistory from './BroadcastHistory';
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import TemplateMessages from './TemplateMessages';
 import { MentionTextArea, convertMentionsForFrontend } from '../../NewFlow/MentionTextArea';
 import BroadcastPopup from './BroadcastPopup';
@@ -11,6 +13,7 @@ import GroupPopup from './GroupPopup';
 import WhatsAppTemplatePopup from './WhatsAppTemplatePopup';
 import { toast } from "sonner"; 
 import { Clock, MessageSquare } from 'lucide-react';
+import CarouselEditor from './Carousel';
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
@@ -25,6 +28,7 @@ const initial_bg = [
 
 const BroadcastPage = () => {
   const [accessToken, setAccessToken] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const [accountId, setAccountId] = useState('');
   const [activeTab, setActiveTab] = useState('history');
@@ -586,7 +590,7 @@ const BroadcastPage = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
+  
   return (
     <div className="flex min-h-screen">
       <div className="hidden md:block w-64 border-r bg-gray-50">
@@ -667,9 +671,21 @@ const BroadcastPage = () => {
             setShowTemplatePopup={setShowTemplatePopup}
             handleEditTemplate={handleEditTemplate}
             handleDeleteTemplate={handleDeleteTemplate}
+            setShowPopup={setShowPopup}
           />
         )}
-
+ <div>
+      {showPopup && (
+        <CarouselEditor
+          showPopup={showPopup}
+          setShowPopup={setShowPopup}
+          accessToken={accessToken}
+          accountId={accountId}
+          uploadProgress={uploadProgress}
+          setActiveTab={setActiveTab}
+        />
+      )}
+    </div>
         <WhatsAppTemplatePopup
           showTemplatePopup={showTemplatePopup}
           isEditing={isEditing}
@@ -703,6 +719,8 @@ const BroadcastPage = () => {
           MentionTextArea={MentionTextArea}
         />
       </div>
+     
+      
     </div>
   );
 };
