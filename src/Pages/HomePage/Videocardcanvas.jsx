@@ -13,7 +13,7 @@ import {
   X
 } from 'lucide-react';
 import ad from '../../assets/slider/ad.mp4';
-import dale from '../../assets/dale.png';
+import dale from '../../assets/DALE.png';
 const VideoSection = () => {
   const [showModal, setShowModal] = useState(false);
   return (
@@ -50,7 +50,7 @@ const VideoSection = () => {
               {/* Video player */}
               <iframe
                 className="w-full h-full"
-                src={ad}
+                src={adg}
                 title="Demo Video"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
