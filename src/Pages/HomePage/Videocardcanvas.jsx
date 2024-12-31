@@ -50,7 +50,7 @@ const VideoSection = () => {
               {/* Video player */}
               <iframe
                 className="w-full h-full"
-                src={adg}
+                src={ad}
                 title="Demo Video"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
