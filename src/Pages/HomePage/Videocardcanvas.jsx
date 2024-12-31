@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, 
   Bot, 
@@ -8,12 +9,57 @@ import {
   ArrowRight, 
   Users, 
   Shield, 
-  Star 
+  Star,
+  X
 } from 'lucide-react';
-import dale from '../../assets/dale.png'
+import ad from '../../assets/slider/ad.mp4';
+import dale from '../../assets/dale.png';
 const VideoSection = () => {
+  const [showModal, setShowModal] = useState(false);
   return (
     <div className="relative bg-black overflow-hidden min-h-[calc(100vh-7rem)]">
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            {/* Blur overlay */}
+            <div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowModal(false)}
+            />
+            
+            {/* Modal content */}
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="relative w-full max-w-4xl mx-4 aspect-video bg-black rounded-lg overflow-hidden"
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowModal(false)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Video player */}
+              <iframe
+                className="w-full h-full"
+                src={ad}
+                title="Demo Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Gradient background that complements navbar and banner */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-green-950/40 to-emerald-950/40" />
       
@@ -73,6 +119,7 @@ const VideoSection = () => {
 
             {/* CTAs with adjusted styling */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <a href="/register" className="no-underline">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -81,15 +128,19 @@ const VideoSection = () => {
                 Start 14-Day Free Trial
                 <ArrowRight className="w-5 h-5" />
               </motion.button>
+              </a>
               
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-6 py-3 border border-emerald-500/30 text-emerald-400 rounded-lg font-semibold text-lg flex items-center justify-center gap-2"
-              >
-                Watch 2-Min Demo
-                <MessageSquare className="w-5 h-5" />
-              </motion.button>
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setShowModal(true)}
+        className="px-6 py-3 border border-emerald-500/30 text-emerald-400 rounded-lg font-semibold text-lg flex items-center justify-center gap-2"
+      >
+        Watch 2-Min Demo
+        <MessageSquare className="w-5 h-5" />
+      </motion.button>
+
+             
             </div>
 
             {/* Trust badge */}

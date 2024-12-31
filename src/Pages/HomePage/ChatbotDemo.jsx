@@ -111,7 +111,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
           className="text-center mb-20"
         >
           <h2 className="text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-            Experience Demo
+            Experience The Tech
           </h2>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Try our intelligent chatbot.
