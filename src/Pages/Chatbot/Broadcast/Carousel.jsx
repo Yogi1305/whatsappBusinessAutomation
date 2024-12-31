@@ -476,7 +476,7 @@ const CarouselEditor = ({
           <CardTitle>Create Carousel Message</CardTitle>
         </CardHeader>
         <CardContent className="flex h-[calc(100%-4rem)] gap-6 p-6">
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col max-w-[calc(100%-340px)]">
         <form onSubmit={handleSubmit} className="space-y-6 flex-1 overflow-y-auto pr-2">
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -507,10 +507,17 @@ const CarouselEditor = ({
                       <SelectValue placeholder="Select language..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="en_US">English (US)</SelectItem>
-                      <SelectItem value="hi">Hindi</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                    </SelectContent>
+  <SelectItem value="en_US">English (US)</SelectItem>
+  <SelectItem value="bn">Bengali</SelectItem>
+  <SelectItem value="gu">Gujarati</SelectItem>
+  <SelectItem value="hi">Hindi</SelectItem>
+  <SelectItem value="kn">Kannada</SelectItem>
+  <SelectItem value="ml">Malayalam</SelectItem>
+  <SelectItem value="mr">Marathi</SelectItem>
+  <SelectItem value="pa">Punjabi</SelectItem>
+  <SelectItem value="ta">Tamil</SelectItem>
+  <SelectItem value="te">Telugu</SelectItem>
+</SelectContent>
                   </Select>
                 </div>
               </div>
