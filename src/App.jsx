@@ -86,9 +86,20 @@ const App = () => {
   return (
     <Router>
       <Toaster position="top-center" duration={3000} style={{border:'none'}}/>
-      <div className="flex flex-col min-h-screen">
-      {shouldShowBanner() && <MarketingBanner />}
-        <Navbar isAuthenticated={authenticated} onLogout={logout} />
+        <div className="flex flex-col min-h-screen">
+      {shouldShowBanner() && (
+        <div className="w-full bg-primary text-primary-foreground">
+          <MarketingBanner />
+        </div>
+      )}
+      
+      <div className={`w-full z-40 ${!authenticated && 'sticky top-0'} ${
+      authenticated 
+        ? 'bg-background border-b border-border/40 shadow-sm' 
+        : 'bg-black backdrop-blur-sm border-b border-gray-900/50 shadow-lg'}`}>
+      <Navbar isAuthenticated={authenticated} onLogout={logout} />
+    </div>
+   
         <main className="flex-grow container">
           <Routes>
             <Route path="/" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <HomePage />} />
