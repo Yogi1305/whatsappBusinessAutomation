@@ -270,29 +270,27 @@ const Navbar = () => {
     <>
     {isLogouting && <LogoutLoader />}
     <div className={`w-full z-40 ${!authenticated && 'fixed'} ${
-      authenticated 
-        ? 'bg-background border-b border-border/40 shadow-sm' 
-        : 'bg-black/80 border-b border-gray-900 shadow-lg'}`}>
-
-      <div className="container mx-auto flex justify-between items-center py-3 px-4">
-        {/* Logo Section */}
-        <Link 
-          to="/" 
-          className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105"
-        >
-          <img 
-            src={logo} 
-            alt="Nuren AI Logo" 
-            className="h-10 w-10 group-hover:rotate-6 transition-transform"
-          />
-          <span className={`text-2xl font-bold ${
-            authenticated 
-              ? 'text-primary group-hover:text-primary/80' 
-              : 'bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-300 bg-clip-text text-transparent group-hover:opacity-80 [text-shadow:0_2px_8px_rgba(0,255,128,0.1)]'
-          }`}>
-            Nuren AI
-          </span>
-        </Link>
+  authenticated 
+    ? 'bg-background border-b border-border/40 shadow-sm' 
+    : 'bg-black/80 border-b border-gray-900 shadow-lg'}`}>
+  <div className="container mx-auto flex justify-between items-center py-3 px-4">
+    <Link 
+      to="/" 
+      className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105"
+    >
+      <img 
+        src={logo} 
+        alt="Nuren AI Logo" 
+        className="h-8 w-8 md:h-10 md:w-10 group-hover:rotate-6 transition-transform"
+      />
+      <span className={`hidden sm:inline text-xl md:text-2xl font-bold ${
+        authenticated 
+          ? 'text-primary group-hover:text-primary/80' 
+          : 'bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-300 bg-clip-text text-transparent group-hover:opacity-80 [text-shadow:0_2px_8px_rgba(0,255,128,0.1)]'
+      }`}>
+        Nuren AI
+      </span>
+    </Link>
   
         {/* Desktop Navigation */}
         <div className="hidden md:block">
