@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Images, Plus, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 
 const TemplateMessages = ({
@@ -7,21 +7,33 @@ const TemplateMessages = ({
   resetTemplateForm,
   setShowTemplatePopup,
   handleEditTemplate,
-  handleDeleteTemplate
+  handleDeleteTemplate,
+  setShowPopup
 }) => {
   return (
     <div className="space-y-4 p-4 ">
       <div className="flex flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold">Template Messages</h1>
-        <button
-          onClick={() => {
-            resetTemplateForm();
-            setShowTemplatePopup(true);
-          }}
-          className="w-full sm:w-auto bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90"
-        >
-          Create Template
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              resetTemplateForm();
+              setShowTemplatePopup(true);
+            }}
+            className="w-full sm:w-auto bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Create Template
+          </button>
+          <button
+            onClick={() => setShowPopup(true)}
+            className="group w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-md hover:from-blue-600 hover:to-purple-600 transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
+          >
+            <Images size={18} className="transition-transform group-hover:scale-110" />
+            Create Carousel
+            <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

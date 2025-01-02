@@ -482,60 +482,60 @@ const WhatsAppTemplatePopup = ({
           </form>
 
           <div className="w-[400px] flex-shrink-0 hidden md:block">
-        <Card className="w-full max-w-md mx-auto shadow-lg sticky top-0 z-10">
-      <CardHeader className="p-3 bg-[#128C7E] text-white">
-        <CardTitle className="text-base">Preview</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="max-w-md mx-auto bg-[#DCF8C6] p-3 rounded-lg relative">
-          {/* Header Content */}
-          {headerType === 'text' && headerContent && (
-        <div className="font-semibold text-gray-800 mb-2 break-words whitespace-normal overflow-hidden w-full">
-          {headerContent}
+  <Card className="w-full max-w-md mx-auto shadow-lg sticky top-0 z-10">
+    <CardHeader className="p-3 bg-[#128C7E] text-white">
+      <CardTitle className="text-base">Preview</CardTitle>
+    </CardHeader>
+    <CardContent className="p-4 bg-gray-50">
+      <div className="max-w-md mx-auto bg-[#DCF8C6] p-3 rounded-lg relative">
+        {/* Header Content */}
+        {headerType === 'text' && headerContent && (
+          <div className="font-semibold text-gray-800 mb-2 break-words whitespace-normal overflow-hidden w-full">
+            {headerContent}
+          </div>
+        )}
+        
+        {headerType === 'image' && headerContent && (
+          <img
+            src={headerContent}
+            alt="Header"
+            className="w-full h-48 object-cover rounded-lg mb-2"
+          />
+        )}
+        
+        {/* Body Text */}
+        <div className="text-gray-900 mb-2 break-words">
+          {convertMentionsForFrontend(bodyText)}
         </div>
-      )}
-          
-          {headerType === 'image' && headerContent && (
-            <img
-              src={headerContent}
-              alt="Header"
-              className="w-full h-48 object-cover rounded-lg mb-2"
-            />
-          )}
-          
-          {/* Body Text */}
-          <div className="text-gray-900 mb-2 break-words">
-            {convertMentionsForFrontend(bodyText)}
+        
+        {/* Footer Text */}
+        {footerText && (
+          <div className="text-sm text-gray-700 break-words mb-2">{footerText}</div>
+        )}
+        
+        {/* Buttons */}
+        {buttons.length > 0 && (
+          <div className="space-y-2 pt-2">
+            {buttons.map((button, index) => (
+              <button
+                key={index}
+                className="w-full bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#1ea855] transition-colors"
+              >
+                {button.text}
+              </button>
+            ))}
           </div>
-          
-          {/* Footer Text */}
-          {footerText && (
-            <div className="text-sm text-gray-700 break-words mb-2">{footerText}</div>
-          )}
-          
-          {/* Buttons */}
-          {buttons.length > 0 && (
-            <div className="space-y-2 pt-2">
-              {buttons.map((button, index) => (
-                <button
-                  key={index}
-                  className="w-full bg-white border border-[#25D366] text-[#25D366] py-2 rounded-lg hover:bg-[#25D366] hover:text-white transition-colors"
-                >
-                  {button.text}
-                </button>
-              ))}
-            </div>
-          )}
-          
-          {/* Timestamp and Read Status */}
-          <div className="text-xs text-gray-500 text-right mt-2 flex justify-end items-center">
-            <span className="mr-1">1:10 PM</span>
-            <span className="text-blue-500">✓✓</span>
-          </div>
+        )}
+        
+        {/* Timestamp and Read Status */}
+        <div className="text-xs text-gray-500 text-right mt-2 flex justify-end items-center">
+          <span className="mr-1">1:10 PM</span>
+          <span className="text-blue-500">✓✓</span>
         </div>
-      </CardContent>
-    </Card>
-          </div>
+      </div>
+    </CardContent>
+  </Card>
+</div>
         </CardContent>
       </Card>
     </div>

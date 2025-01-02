@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import axios from 'axios';
 import { Copy, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import axiosInstance from '../../api';
+import { djangoURL } from '../../api';
 // Constants
 const DISPLAY_STYLES = {
   NUMBERED: 'numbered',
@@ -207,7 +209,7 @@ export const LanguageSelector = () => {
         message: template
       };
 
-      const response = await axios.post('https://mocki.io/v1/4442cf44-e9f7-4d81-9903-a66f64301fdf', payload);
+      const response = await axiosInstance.post(`${djangoURL}/translate-flow/`, payload);
 
       if (!response.data) throw new Error('Conversion failed');
       toast.success('Template configured successfully!');

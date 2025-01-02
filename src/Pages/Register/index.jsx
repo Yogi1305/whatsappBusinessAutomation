@@ -226,75 +226,74 @@ const Register = () => {
                     
                     {renderStepIndicator()}
 
-                    <form 
-                        onSubmit={handleSubmit} 
-                        className="space-y-5"
-                        autoComplete="off"
-                    >
-                        {step === 1 && (
-                            <div className="space-y-4 animate-slideIn">
-                                <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <select
-                                        name="organisation"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.organisation}
-                                        onChange={handleInputChange}
-                                        autoComplete="off"
-                                    >
-                                        <option value="">Select your organization</option>
-                                        {organisations.map((org) => (
-                                            <option key={org.id} value={org.name}>{org.name}</option>
-                                        ))}
-                                        <option value="createNew">➕ Create New Organization</option>
-                                    </select>
-                                    {errors.organisation && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.organisation}</p>
-                                    }
-                                </div>
+                    <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
+            {step === 1 && (
+              <div className="space-y-4 animate-slideIn">
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="text"
+                    name="organisation"
+                    placeholder="Enter organization name"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    value={formData.organisation}
+                    onChange={handleInputChange}
+                    autoComplete="off"
+                  />
+                  {errors.organisation && 
+                    <p className="mt-1 text-sm text-red-500 animate-shake">{errors.organisation}</p>
+                  }
+                </div>
 
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="password"
-                                        name="passwordo"
-                                        placeholder="Organization Password"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.passwordo}
-                                        onChange={handleInputChange}
-                                        autoComplete="new-password"
-                                        autoCorrect="off"
-                                        autoCapitalize="off"
-                                        spellCheck="false"
-                                    />
-                                    {errors.passwordo && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.passwordo}</p>
-                                    }
-                                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="password"
+                    name="passwordo"
+                    placeholder="Organization Password"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    value={formData.passwordo}
+                    onChange={handleInputChange}
+                    autoComplete="new-password"
+                  />
+                  {errors.passwordo && 
+                    <p className="mt-1 text-sm text-red-500 animate-shake">{errors.passwordo}</p>
+                  }
+                </div>
 
-                                <button
-                                    type="button"
-                                    onClick={async () => {
-                                        const response = await handleNext();
-                                        if(response) setStep(2);
-                                    }}
-                                    className="group relative w-full h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
-                                    disabled={verifyingTenant}
-                                >
-                                    {verifyingTenant ? (
-                                        <div className="flex items-center">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                                            Verifying...
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center">
-                                            Continue
-                                            <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                        </div>
-                                    )}
-                                </button>
-                            </div>
-                        )}
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewOrgForm(true)}
+                    className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
+                  >
+                    Create New Organization
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const response = await handleNext();
+                    if(response) setStep(2);
+                  }}
+                  className="group relative w-full h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
+                  disabled={verifyingTenant}
+                >
+                  {verifyingTenant ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                      Verifying...
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      Continue
+                      <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  )}
+                </button>
+              </div>
+            )}
 
                         {step === 2 && (
                             <div className="space-y-4 animate-slideIn">
