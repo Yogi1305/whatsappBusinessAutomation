@@ -32,7 +32,7 @@ import TermsAndConditions from './Pages/Misc/terms&conditions.jsx';
 import ContactUs from './Pages/Misc/contactus.jsx';
 import Catalog from './Pages/Catalog/catalog.jsx';
 import ScheduledEventsPage from './ScheduleEvent.jsx';
-import ContactDetails from './Pages/ContactPage/contactDetails.jsx';
+import ContactDetails from './Pages/ContactPage/ContactDetails.jsx';
 import { Toaster } from 'sonner';
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
