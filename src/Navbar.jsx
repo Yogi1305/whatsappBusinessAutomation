@@ -37,7 +37,8 @@ import {
   MenuIcon,
   Loader2,
   Calendar,
-  X // Added Calendar icon for Scheduled Messages
+  X,
+  CreditCard // Added Calendar icon for Scheduled Messages
 } from "lucide-react";
 import { useAuth } from './authContext';
 import logo from "./assets/logo.png";
@@ -183,8 +184,18 @@ const Navbar = () => {
     </div>
   );
 
-  if (isAuthPage) return null;
 
+  
+
+  const handlePaymentClick = (e) => {
+    e.preventDefault();
+    if (!authenticated) {
+      // Redirect to login with retrn URL
+      navigate(`/login`);
+      return;
+    }
+    navigate(`${tenantId}/payment`);
+  };
 
   const NavLinks = () => {
     const linkBaseClasses = authenticated 
@@ -227,6 +238,7 @@ const Navbar = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
+            
           </>
         )}
         <NavigationMenuItem>
@@ -404,6 +416,14 @@ const Navbar = () => {
                     className="hover:bg-primary/10 transition-colors"
                   >
                     Assign
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onSelect={() => navigate(getPath('/payment'))}
+                    className="hover:bg-primary/10 transition-colors"
+                  >
+                    <CreditCard />
+                    Billing
+                    
                   </DropdownMenuItem>
                   
                   {!businessPhoneNumberId && (
