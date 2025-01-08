@@ -48,8 +48,8 @@ const GPayUPIPayment = () => {
   ];
 
   const merchantInfo = {
-    vpa: '9643393874@ptyes',
-    name: 'Your Business Name',
+    vpa: 'cnurenai@kotak',
+    name: 'NURENAISSANCEFABRICA',
     merchantCode: '1234',
     gstin: '29ABCDE1234F2Z5'
   };
