@@ -911,17 +911,26 @@ const handleGoToPage = (pageNumber) => {
   }
 };
 function renderMessageWithNewLines(text) {
-  // Decode Unicode escape sequences
-  const decodedText = JSON.parse(`"${text}"`);
-
-  // Split by \n and render with line breaks
-  return decodedText.split('\n').map((line, index) => (
-    <React.Fragment key={index}>
-      {line}
-      <br />
-    </React.Fragment>
-  ));
+  try {
+    // Ensure text is properly escaped for JSON.parse
+    const sanitizedText = text.replace(/\\/g, "\\\\");
+    
+    // Decode Unicode escape sequences
+    const decodedText = JSON.parse(`"${sanitizedText}"`);
+    
+    // Split by \n and render with line breaks
+    return decodedText.split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        <br />
+      </React.Fragment>
+    ));
+  } catch (error) {
+    console.error("Failed to render message:", error);
+    return <div>Error rendering message</div>;
+  }
 }
+
 
 
   return (

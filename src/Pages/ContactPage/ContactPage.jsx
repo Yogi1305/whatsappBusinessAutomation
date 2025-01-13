@@ -422,7 +422,7 @@ const ContactPage = () => {
 
 
   const handleContactClick = (contactId) => {
-    navigate(`/${tenantId}/chatbot/?id=${contactId}`);
+    navigate(`/${tenantId}/contactDetails?phone=${contactId}`);
   };
 
   const getInitials = (firstName, lastName) => {
@@ -791,7 +791,7 @@ const ContactPage = () => {
                     </Button>
                     <CardContent 
                       className="p-6"
-                      onClick={() => handleContactClick(contact.id)}
+                      onClick={() => handleContactClick(contact.phone)}
                     >
                     <div className="flex items-center gap-4">
                       <div className={`flex items-center justify-center w-12 h-12 rounded-full ${avatarColorClass} text-white font-semibold text-lg`}>
