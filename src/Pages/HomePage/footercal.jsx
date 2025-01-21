@@ -13,6 +13,7 @@ import srRoyal from '../../assets/SR_Logo.jpg';
 import drishtee from '../../assets/drishte_logo.jpg';
 import gargi from '../../assets/gargi.jpg'
 import Scale from '../../assets/scale.jpg';
+import { useNavigate } from "react-router-dom";
 const FloatingElement = ({ children, yOffset = 20, duration = 3 }) => {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, yOffset]);
@@ -370,18 +371,67 @@ export const CalendlySection = () => {
   };
   
   export const PricingSection = () => {
+    const navigate = useNavigate();
+  
+    const handleGetStarted = () => {
+      navigate('/pricing');
+      // Scroll to top after navigation
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    };
+  
     const plans = [
-      { 
-        plan: "Starter", 
-        price: "$59", 
-        features: ["1,000 messages/month", "Basic chatbot", "Email support", "Basic Support"],
+      {
+        plan: "Basic",
+        price: "₹1,499",
+        usdPrice: "$19",
+        eurPrice: "€17",
+        features: [
+          "Scheduling messages",
+          "No-code chatbot builder",
+          "Cataloging",
+          "Template creation",
+          "Direct reply to individual chats",
+          "Basic analytics dashboard",
+          "Support for 2-3 languages"
+        ],
         popular: false
       },
-      { 
-        plan: "Pro", 
-        price: "$100", 
-        features: ["10,000 messages/month", "Advanced AI chatbot", "Priority support", "Custom integrations"],
+      {
+        plan: "Professional",
+        price: "₹4,999",
+        usdPrice: "$59",
+        eurPrice: "€54",
+        features: [
+          "Everything in Basic, plus:",
+          "Flows [RPA]",
+          "AI-based document retrieval",
+          "Phone number verification",
+          "Carousel creation",
+          "Multi-template campaigns",
+          "Advanced analytics",
+          "Full language support"
+        ],
         popular: true
+      },
+      {
+        plan: "Enterprise",
+        price: "₹9,999",
+        usdPrice: "$119",
+        eurPrice: "€109",
+        features: [
+          "Everything in Professional, plus:",
+          "AI prompt to chatbot builder",
+          "WhatsApp payments",
+          "Advanced team support",
+          "API access",
+          "24/7 priority support",
+          "Custom onboarding",
+          "Campaign A/B testing"
+        ],
+        popular: false
       }
     ];
   
@@ -401,32 +451,21 @@ export const CalendlySection = () => {
         </div>
   
         <div className="container mx-auto px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <div className="inline-block px-4 py-1 rounded-full bg-emerald-900/20 border border-emerald-500/20 mb-4">
-              <p className="text-sm font-medium text-emerald-400">Pricing</p>
+              <p className="text-sm font-medium text-emerald-400">Simple Pricing</p>
             </div>
             <h2 className="text-5xl font-bold text-white mb-6">
-              Simple, Transparent Pricing
+              Choose Your Perfect Plan
             </h2>
             <p className="text-xl text-emerald-100/80 max-w-2xl mx-auto">
-              Choose the perfect plan for your business needs
+              Powerful WhatsApp automation solutions for businesses of all sizes
             </p>
-          </motion.div>
+          </div>
   
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {plans.map((plan, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group relative"
-              >
+              <div key={index} className="group relative">
                 <div className={`absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-2xl blur ${
                   plan.popular ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                 } transition duration-300`} />
@@ -443,33 +482,40 @@ export const CalendlySection = () => {
                   <h3 className="text-2xl font-bold text-white mb-2">
                     {plan.plan}
                   </h3>
-                  <div className="mb-6">
-                    <span className="text-5xl font-bold text-white">
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold text-white">
                       {plan.price}
                     </span>
                     <span className="text-emerald-100/80">/month</span>
                   </div>
+                  <div className="flex gap-2 mb-6">
+                    <span className="text-sm text-emerald-100/60">{plan.usdPrice}/mo</span>
+                    <span className="text-sm text-emerald-100/60">|</span>
+                    <span className="text-sm text-emerald-100/60">{plan.eurPrice}/mo</span>
+                  </div>
                   <div className="space-y-4 mb-8">
                     {plan.features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-center text-emerald-100/80">
-                        <Check className="w-5 h-5 text-emerald-400 mr-3" />
-                        {feature}
+                      <div key={featureIndex} className="flex items-start gap-3 text-emerald-100/80">
+                        <Check className="w-5 h-5 text-emerald-400 mt-1 flex-shrink-0" />
+                        <span>{feature}</span>
                       </div>
                     ))}
                   </div>
-                  <button className="w-full group flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-lg font-semibold transition-all duration-300 hover:gap-4">
+                  <button 
+                    onClick={handleGetStarted}
+                    className="w-full group flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-lg font-semibold transition-all duration-300 hover:gap-4"
+                  >
                     Get Started
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
     );
   };
-
   export const SocialProofSection = () => {
     const companies = [
       {
