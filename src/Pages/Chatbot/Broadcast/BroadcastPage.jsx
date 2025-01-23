@@ -553,7 +553,7 @@ const BroadcastPage = () => {
       </div>
     </div>
 
-    {/* Campaigns 
+    {/* Campaigns */}
     <div
       className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer
         ${activeTab === 'campaigns' 
@@ -579,7 +579,7 @@ const BroadcastPage = () => {
         <MessageSquare className="w-5 h-5" />
         <span>Commands</span>
       </div>
-    </div>*/}
+    </div>
   </div>
 </div>
       {/*Mobile Sidebar to TopBar */}
