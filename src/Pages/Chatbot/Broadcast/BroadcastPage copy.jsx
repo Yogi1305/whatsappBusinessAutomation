@@ -11,9 +11,7 @@ import WhatsAppTemplatePopup from './WhatsAppTemplatePopup';
 import { toast } from "sonner"; 
 import { Clock, MessageSquare,FileText } from 'lucide-react';
 import CarouselEditor from './Carousel';
-import CampaignsDashboard from './CampaignDash';
-import WhatsAppCommands from './Commands';
-//import CampaignManager from './Campaign';
+import CampaignManager from './Campaign';
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
   if (pathArray.length >= 2) {
@@ -258,7 +256,7 @@ const BroadcastPage = () => {
       components.push({
         type: "HEADER",
         format: headerType.toUpperCase(),
-        text: headerType === 'text' ?  convertBodyTextToIndexedFormat(headerContent) : undefined,
+        text: headerType === 'text' ? headerContent : undefined,
         example: headerType === 'image' ? { header_handle: [headerMediaId] } : undefined,
       });
     }
@@ -553,7 +551,7 @@ const BroadcastPage = () => {
       </div>
     </div>
 
-    {/* Campaigns 
+    {/* Campaigns */}
     <div
       className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer
         ${activeTab === 'campaigns' 
@@ -567,19 +565,6 @@ const BroadcastPage = () => {
         <span>Campaigns</span>
       </div>
     </div>
-    <div
-      className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer
-        ${activeTab === 'commands' 
-          ? 'bg-primary/10 text-primary font-medium' 
-          : 'text-gray-700 hover:bg-gray-100'
-        }`}
-      onClick={() => handleTabChange('commands')}
-    >
-      <div className="flex items-center space-x-3">
-        <MessageSquare className="w-5 h-5" />
-        <span>Commands</span>
-      </div>
-    </div>*/}
   </div>
 </div>
       {/*Mobile Sidebar to TopBar */}
@@ -646,19 +631,11 @@ const BroadcastPage = () => {
           />
         )}
         {activeTab === 'campaigns' && (
-            <CampaignsDashboard
+            <CampaignManager
               templates={templates}
               contacts={contacts}
               broadcastGroups={broadcastGroup}
               handleCreateCampaign={handleDeleteTemplate}
-              showTemplatePopup={showTemplatePopup}
-              setShowTemplatePopup={setShowTemplatePopup}
-              accountId={accountId}
-              accessToken={accessToken}
-            />
-          )}
-           {activeTab === 'commands' && (
-            <WhatsAppCommands
             />
           )}
           <div>

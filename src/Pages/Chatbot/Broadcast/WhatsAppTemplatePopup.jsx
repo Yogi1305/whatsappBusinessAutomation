@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { validateTemplateName } from './TemplateNameValidater';
 
+
 // Enhanced language configurations with transliteration data
 const languageConfigs = {
   en_US: { 
