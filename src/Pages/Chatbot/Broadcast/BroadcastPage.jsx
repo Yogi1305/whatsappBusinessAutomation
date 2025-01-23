@@ -62,6 +62,7 @@ const BroadcastPage = () => {
   const [headerMediaId, setHeaderMediaId] = useState('');
   const [filteredBroadcastHistory, setFilteredBroadcastHistory] = useState([]);
   const [bodyVariables, setBodyVariables] = useState([]);
+  const [headerVariables, setHeaderVariables] = useState([]);
   
   const [showGroupPopup, setShowGroupPopup] = useState(false);
   const tenantId = getTenantIdFromUrl();
@@ -254,26 +255,50 @@ const BroadcastPage = () => {
     
     const components = [];
 
-    if ((headerType === 'text' && headerContent.trim()) || (headerType === 'image' && headerMediaId)) {
+    if (headerType === 'text' && headerContent.trim()) {
+
+      // const headerVariables = extractVariables(headerContent);
+    
+      // Handle text header
+      const headerComponent = {
+        type: "HEADER",
+        format: "TEXT",
+        text: convertBodyTextToIndexedFormat(headerContent), // Convert text to indexed format
+        example: undefined, 
+      };
+    
+      if (headerVariables.length > 0) {
+        headerComponent.example = {
+          header_text: headerVariables.map(variable => `{{${variable}}}`),
+        };
+      }
+      console.log("Type of header test: ", typeof headerComponent.example.header_text[0])
+      console.log("Header Commponent: ", headerComponent)
+    
+      components.push(headerComponent);
+    } else if (headerType === 'image' && headerMediaId) {
+      // Handle image header
       components.push({
         type: "HEADER",
-        format: headerType.toUpperCase(),
-        text: headerType === 'text' ?  convertBodyTextToIndexedFormat(headerContent) : undefined,
-        example: headerType === 'image' ? { header_handle: [headerMediaId] } : undefined,
+        format: "IMAGE", // Explicitly set format to IMAGE
+        text: undefined, // No text needed for image headers
+        example: { header_handle: [headerMediaId] }, // Provide media ID for image
       });
     }
-
+    
+    // Handle BODY component
     const bodyComponent = {
       type: "BODY",
       text: convertBodyTextToIndexedFormat(bodyText),
     };
-  
+    
     if (bodyVariables && bodyVariables.length > 0) {
       bodyComponent.example = {
-        body_text: [bodyVariables.map(variable => `{{${variable}}}`)]
+        body_text: [bodyVariables.map(variable => `{{${variable}}}`)],
       };
     }
-  
+    console.log("Type of header test: ", typeof bodyComponent.example.body_text[0])
+    console.log("Header Commponent: ", bodyComponent)
     components.push(bodyComponent);
 
     if (footerText.trim()) {
@@ -444,14 +469,14 @@ const BroadcastPage = () => {
   };
 
   const extractVariables = (text) => {
-    const regex = /@(\w+)/g;
+    const regex = /@([\w.]+)/g; // Updated regex to allow dots in variable names
     const matches = text.match(regex);
     return matches ? matches.map(match => match.slice(1)) : [];
   };
 
   const convertBodyTextToIndexedFormat = (text) => {
     let indexCounter = 1;
-    return text.replace(/@(\w+)/g, () => `{{${indexCounter++}}}`);
+    return text.replace(/@([\w.]+)/g, () => `{{${indexCounter++}}}`);
   };
 
 
@@ -701,6 +726,7 @@ const BroadcastPage = () => {
           setShowTemplatePopup={setShowTemplatePopup}
           resetTemplateForm={resetTemplateForm}
           setBodyVariables={setBodyVariables}
+          setHeaderVariables={setHeaderVariables}
           extractVariables={extractVariables}
           convertMentionsForFrontend={convertMentionsForFrontend}
           MentionTextArea={MentionTextArea}

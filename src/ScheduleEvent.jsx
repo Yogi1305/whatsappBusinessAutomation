@@ -152,7 +152,7 @@ const ScheduledEventsPage = () => {
       const token = localStorage.getItem('token');
     
       const [contactsResponse, broadcastGroupResponse] = await Promise.all([
-        axios.get(`${fastURL}//contacts`, {
+        axios.get(`${fastURL}/contacts`, {
           headers: { 
             'X-Tenant-Id': tenantId,
             'Authorization': `Bearer ${token}`

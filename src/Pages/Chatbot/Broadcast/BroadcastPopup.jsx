@@ -339,7 +339,7 @@ const BroadcastPopup = ({
         })
       ].filter(Boolean);
   
-      const payload = {
+      let payload = {
         bg_id: bg_id,
         bg_name: bg_name,
         template: {
@@ -349,9 +349,28 @@ const BroadcastPopup = ({
         business_phone_number_id: businessPhoneNumberId,
         phoneNumbers: phoneNumbers,
       };
+
+      const template_payload = {
+        type: "template",
+        template: {
+          name: selectedTemplate?.name,
+          phone: phoneNumbers
+        }
+      }
+      const group_payload = {
+        type: "group",
+        group: {
+          id: bg_id,
+          templateName: selectedTemplate?.name,
+          name: bg_name
+        }
+      }
+      if(selectedBCGroups.length == 0) payload = template_payload
+      else payload = group_payload
+
       const response = await axios.post(`${whatsappURL}/send-template/`, payload, {
         headers: {
-          'X-Tenant-ID': tenantId
+          'business_phone_number_id': businessPhoneNumberId
         }
       });
   

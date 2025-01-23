@@ -244,6 +244,7 @@ const WhatsAppTemplatePopup = ({
   setShowTemplatePopup,
   resetTemplateForm,
   setBodyVariables,
+  setHeaderVariables,
   extractVariables,
   convertMentionsForFrontend
 }) => {
@@ -341,7 +342,10 @@ const WhatsAppTemplatePopup = ({
                   <TransliteratingInput
                     className="mt-2"
                     value={headerContent}
-                    onChange={(e) => setHeaderContent(e.target.value)}
+                    onChange={(e) => {
+                      setHeaderContent(e.target.value)
+                      setHeaderVariables(extractVariables(e.target.value))
+                    }}
                     language={language}
                     placeholder={`Header text in ${languageConfigs[language]?.name}`}
                     maxLength={60}

@@ -30,6 +30,8 @@ import { LanguageSelector, LanguageSelectorTrigger } from './language';
 let id = 0;
 const getId = () => `${id++}`;
 
+
+
 const nodeTypes = {
   askQuestion: AskQuestionNode,
   sendMessage: SendMessageNode,
@@ -138,16 +140,39 @@ const FlowBuilderContent = () => {
 
   const onConnect = useCallback(
     (params) => {
-      // Check if the source node already has an outgoing connection
-      const sourceHasConnection = edges.some(
-        (edge) => edge.source === params.source && edge.sourceHandle === params.sourceHandle
+      // Check if the exact same connection already exists
+      const duplicateConnection = edges.some(
+        (edge) => 
+          edge.source === params.source && 
+          edge.sourceHandle === params.sourceHandle &&
+          edge.target === params.target && 
+          edge.targetHandle === params.targetHandle
       );
   
-      if (!sourceHasConnection) {
-        setEdges((eds) => addEdge(params, eds));
-      } else {
-        toast.warning("This output is already connected. Please remove the existing connection first.");
+      // Check if the source node already has a connection to a specific target
+      const sourceTargetConnection = edges.some(
+        (edge) => 
+          edge.source === params.source && 
+          edge.sourceHandle === params.sourceHandle &&
+          edge.target !== params.target
+      );
+  
+      if (duplicateConnection) {
+        toast.warning("This exact connection already exists.");
+        return;
       }
+  
+      if (sourceTargetConnection) {
+        toast.warning("This output is already connected to a different node. Please remove the existing connection first.");
+        return;
+      }
+  
+      // If no duplicate or conflicting connections, add the new edge
+      setEdges((eds) => addEdge({
+        ...params,
+        type: 'smoothstep', // Ensures smoother routing
+        animated: true      // Keeps the animated style
+      }, eds));
     },
     [edges, setEdges]
   );
@@ -465,6 +490,8 @@ const FlowBuilderContent = () => {
   //   resetFlow();
   // }, [resetFlow]);
 
+  
+
   const handleFlowSelect = useCallback(async (e) => {
     const flowId = e.target.value;
     setSelectedFlow(flowId);
@@ -650,6 +677,14 @@ const FlowBuilderContent = () => {
               defaultEdgeOptions={{
                 type: 'smoothstep',
                 animated: true,
+                style: {
+                  strokeWidth: 2,
+                  stroke: '#555',
+                },
+                markerEnd: {
+                  type: 'arrowclosed',
+                  color: '#555',
+                },
               }}
               connectOnClick={false}
             >
