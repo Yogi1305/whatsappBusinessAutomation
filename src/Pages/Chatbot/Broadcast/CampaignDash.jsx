@@ -238,10 +238,10 @@ const CampaignsDashboard = ({
                 </div>
                 <Button
       onClick={() => handleSendCampaign(campaign.id)}
-      className="w-full mt-4 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+      className="w-full mt-4 bg-black"
     >
-      <Send className="w-4 h-4 mr-2" /> {/* Add Send icon import */}
-      Send Campaign
+      <Send className="w-1 h-1 mr-2" /> {/* Add Send icon import */}
+      Send
     </Button>
               </CardContent>
             </Card>

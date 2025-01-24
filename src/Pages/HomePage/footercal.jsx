@@ -232,7 +232,7 @@ export const CalendlySection = () => {
                     rootElement={document.getElementById("root")}
                     text={
                       <span className="flex items-center justify-center gap-3 w-full">
-                        MEET THE FOUNDER
+                        FREE CONSULTATION
                         <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
                       </span>
                     }
@@ -297,7 +297,7 @@ export const CalendlySection = () => {
       { 
         icon: Rocket, 
         title: "SCALABLE SOLUTIONS", 
-        description: "Grow your business effortlessly with our scalable WhatsApp marketing solutions.", 
+        description: "Grow your business effortlessly with our scalable WhatsApp marketing solutions, designed to boost engagement & sales. ", 
         link: 'blogs/scalable-solutions',
         image: Scale
       },
@@ -463,13 +463,14 @@ export const CalendlySection = () => {
             </p>
           </div>
   
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {/* Use flex to ensure equal height */}
+          <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto">
             {plans.map((plan, index) => (
-              <div key={index} className="group relative">
+              <div key={index} className="flex-1 group relative">
                 <div className={`absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-2xl blur ${
                   plan.popular ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                 } transition duration-300`} />
-                <div className={`relative p-8 rounded-xl backdrop-blur-sm border ${
+                <div className={`relative h-full p-8 rounded-xl backdrop-blur-sm border ${
                   plan.popular ? 'bg-black/60 border-emerald-500/40' : 'bg-black/50 border-emerald-500/20'
                 } transition-all duration-300`}>
                   {plan.popular && (
