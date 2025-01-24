@@ -683,6 +683,7 @@ const BroadcastPage = () => {
               setShowTemplatePopup={setShowTemplatePopup}
               accountId={accountId}
               accessToken={accessToken}
+              businessPhoneNumberId={businessPhoneNumberId}
             />
           )}
            {activeTab === 'commands' && (

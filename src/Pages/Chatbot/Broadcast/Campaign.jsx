@@ -5,7 +5,7 @@ import {
   ChevronRight, Sparkles, Trash2,
   Upload, Search, Users, Save,
   AlertCircle, CheckCircle2, Copy,
-  Send, Edit2, Wand2
+  Send, Edit2, Wand2,ChevronLeft
 } from 'lucide-react';
 import WhatsAppTemplatePopup from './WhatsAppTemplatePopup';
 //import { suggestedSequences } from './suggestedSequences'; // Import the seque
@@ -156,7 +156,8 @@ const WhatsAppCampaign = ({
   accountId,
   accessToken,
   initialData = null,
-  isEditing = false
+  isEditing = false,
+  onBack
 }) => {
   const [sequence, setSequence] = useState([]);
   const [campaignName, setCampaignName] = useState('new');
@@ -533,7 +534,7 @@ const WhatsAppCampaign = ({
   const isSequenceValid = useMemo(() => {
     return sequence.every(node => 
       node.templateId && 
-      node.timeDelay > 0 && 
+      node.timeDelay >= 0 && 
       node.status
     );
   }, [sequence]);
@@ -622,7 +623,7 @@ const WhatsAppCampaign = ({
     };
 
     try {
-      const response = await axiosInstance[isEditing ? 'put' : 'post'](
+      const response = await axiosInstance[isEditing ? 'patch' : 'post'](
         `${djangoURL}/campaign/${isEditing ? `?id=${initialData.id}` : ''}`,
         campaignData
       );
@@ -868,12 +869,21 @@ const WhatsAppCampaign = ({
     {/* Header */}
     <div className="flex justify-between items-center">
       <div>
+     
         <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
           Create Campaign
         </h2>
         <p className="text-gray-500 mt-1">Design your WhatsApp campaign sequence and manage prospects</p>
       </div>
       <div className="space-y-2">
+      <Button
+      variant="outline"
+      onClick={onBack} // Add this prop to navigate back
+      className="flex items-center gap-2 hover:bg-gray-50"
+    >
+      <ChevronLeft className="w-4 h-4" /> {/* Add ChevronLeft import */}
+      Go Back
+    </Button>
         <Button
           onClick={handleSaveCampaign}
           className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
@@ -1051,7 +1061,7 @@ const WhatsAppCampaign = ({
                             <Clock className="w-4 h-4 text-green-500" />
                             <Input
                               type="number"
-                              min="1"
+                              min="0"
                               value={node.timeDelay}
                               onChange={(e) => updateNode(node.id, { 
                                 timeDelay: parseInt(e.target.value) 

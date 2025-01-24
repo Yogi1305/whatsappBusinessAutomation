@@ -34,6 +34,7 @@ import Catalog from './Pages/Catalog/catalog.jsx';
 import ScheduledEventsPage from './ScheduleEvent.jsx';
 import ContactDetails from './Pages/ContactPage/ContactDetails.jsx';
 import GPayUPIPayment from './payment.jsx';
+import CancellationRefundPolicy from './Pages/Misc/RefundCancel.jsx';
 import { Toaster } from 'sonner';
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
@@ -186,6 +187,7 @@ const App = () => {
               <Route path="contactus" element={<ContactUs/>} />
               <Route path="privacypolicy" element={<PrivacyPolicy />} />
               <Route path="termsandconditions" element={<TermsAndConditions />} />
+              <Route path="refundandcancellation" element={<CancellationRefundPolicy />} />
               <Route path="pricing" element={<PricingPage />} />
               <Route path="blogs" element={<Blogs/>} />
               <Route path="blogs/learn-more" element={<Learn />} />

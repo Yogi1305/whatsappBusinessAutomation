@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Play, Pause, MoreVertical } from 'lucide-react';
+import { Plus, Play, Pause, MoreVertical,Send } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import axiosInstance from '../../../api';
+import axios from 'axios';
+import { toast } from "sonner"; 
+import { whatsappURL } from '../../../Navbar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import CampaignManager from './Campaign';
-import axiosInstance, { djangoURL } from '../../../api';
+import { djangoURL } from '../../../api';
 
 const CampaignsDashboard = ({
     contacts,
@@ -28,7 +32,8 @@ const CampaignsDashboard = ({
     setShowTemplatePopup,
     templates,
     accountId,
-    accessToken
+    accessToken,
+    businessPhoneNumberId
   }) => {
   const [showCampaignCreator, setShowCampaignCreator] = useState(false);
   const [campaigns, setCampaigns] = useState([]);
@@ -135,12 +140,41 @@ const CampaignsDashboard = ({
         setShowTemplatePopup={setShowTemplatePopup}
         accountId={accountId}
         accessToken={accessToken}
-        isEditing={!!editingCampaign} // Pass flag to indicate edit mode
+        isEditing={!!editingCampaign}
+        onBack={() => setShowCampaignCreator(false)} // Pass flag to indicate edit mode
       />
     );
   }
 
-
+  const handleSendCampaign = async (campaignId) => {
+    try {
+      console.log("Business Phone Number ID:", businessPhoneNumberId); // Debugging
+  
+      const response = await axios.post(
+        `${whatsappURL}/send-template/`,
+        {
+          type: "campaign",
+          campaign: {
+            id: campaignId,
+          },
+        },
+        {
+          headers: {
+            'business_phone_number_id': 241683569037594, // Ensure this is correct
+          },
+        }
+      );
+  
+      if (response.status === 200) {
+        toast.success("Campaign sent successfully!");
+      } else {
+        throw new Error("Failed to send campaign");
+      }
+    } catch (error) {
+      console.error("Error sending campaign:", error);
+      toast.error("Failed to send campaign. Please try again.");
+    }
+  };
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -202,6 +236,13 @@ const CampaignsDashboard = ({
                 <div className="text-sm text-gray-500">
                   Messages: {campaign.templates_data?.length || 0}
                 </div>
+                <Button
+      onClick={() => handleSendCampaign(campaign.id)}
+      className="w-full mt-4 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+    >
+      <Send className="w-4 h-4 mr-2" /> {/* Add Send icon import */}
+      Send Campaign
+    </Button>
               </CardContent>
             </Card>
           ))}
