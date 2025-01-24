@@ -3,9 +3,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, ChevronRight, Building2, Lock, User, Mail, Phone } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import axiosInstance, { fastURL, djangoURL } from '../../api';
-import { auth, googleProvider } from '../../firebase';
-import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '../../authContext';
 
 const PopupCard = ({ message, onClose }) => (
   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
@@ -35,7 +32,7 @@ const Register = () => {
         role: '',
         organisation: '',
         passwordo: '',
-        phone: '0000000000' // Default phone number
+        phone: ''
     });
     const [organisations, setOrganisations] = useState([]);
     const [showNewOrgForm, setShowNewOrgForm] = useState(false);
@@ -49,9 +46,7 @@ const Register = () => {
     const [creatingOrg, setCreatingOrg] = useState(false)
     const [showPopup, setShowPopup] = useState(false);
     const [errors, setErrors] = useState({});
-    const [firebaseError, setFirebaseError] = useState(null);
     const [step, setStep] = useState(1);
-    const { login } = useAuth();
 
     useEffect(() => {
         fetch(`${djangoURL}/createTenant`)
@@ -69,6 +64,7 @@ const Register = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+
         setFormData((prev) => ({ ...prev, [name]: value }));
         if (e.target.value === "createNew") {
             setShowNewOrgForm(true);
@@ -177,7 +173,6 @@ const Register = () => {
             setVerifyingTenant(false)
         }
     };
-
     const handleCreateNewOrg = async () => {
         setCreatingOrg(true)
         try {
@@ -208,81 +203,6 @@ const Register = () => {
         }
     };
 
-    const handleFirebaseSignIn = async () => {
-        setFirebaseError(null); // Reset any previous errors
-        setIsSubmitting(true); // Start loading
-
-        try {
-            const result = await signInWithPopup(auth, googleProvider);
-            const user = result.user;
-            const email = user.email;
-            const username = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, 'a');
-            const password = `${username}nutenai`;
-
-            // Create tenant with organisation name and password derived from email
-            const tenantId = await createTenantID();
-            const tenantResponse = await fetch(`${djangoURL}/createTenant/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    tenant_id: tenantId,
-                    organization: username,
-                    password: username,
-                }),
-            });
-
-            if (!tenantResponse.ok) {
-                throw new Error(`HTTP error! Status: ${tenantResponse.status}`);
-            }
-
-            // Register user with the extracted details
-            const registerResponse = await fetch(`${djangoURL}/register/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Tenant-Id': tenantId,
-                },
-                body: JSON.stringify({
-                    username,
-                    email,
-                    password,
-                    role: 'user',
-                    organisation: username,
-                    phone: '0000000000',
-                    tenant: tenantId,
-                }),
-            });
-
-            if (!registerResponse.ok) {
-                throw new Error(`HTTP error! Status: ${registerResponse.status}`);
-            }
-
-            // Automatically log in the user
-            const loginResponse = await fetch(`${djangoURL}/login/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            });
-
-            if (!loginResponse.ok) {
-                throw new Error(`HTTP error! Status: ${loginResponse.status}`);
-            }
-
-            const loginData = await loginResponse.json();
-            localStorage.setItem('token', loginData.token);
-            login(loginData.user_id, loginData.tenant_id, loginData.role, loginData.model);
-            navigate('/'); // Redirect to dashboard or desired page
-
-        } catch (error) {
-            console.error('Firebase sign-in or registration failed:', error);
-            setFirebaseError(error.message); // Set error message for user feedback
-        } finally {
-            setIsSubmitting(false); // Stop loading
-        }
-    };
-
     const renderStepIndicator = () => (
         <div className="flex items-center justify-center mb-8">
             <div className={`w-3 h-3 rounded-full ${step === 1 ? 'bg-blue-600' : 'bg-gray-300'} transition-colors duration-300`} />
@@ -307,73 +227,73 @@ const Register = () => {
                     {renderStepIndicator()}
 
                     <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
-                        {step === 1 && (
-                            <div className="space-y-4 animate-slideIn">
-                                <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="text"
-                                        name="organisation"
-                                        placeholder="Enter organization name"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.organisation}
-                                        onChange={handleInputChange}
-                                        autoComplete="off"
-                                    />
-                                    {errors.organisation && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.organisation}</p>
-                                    }
-                                </div>
+            {step === 1 && (
+              <div className="space-y-4 animate-slideIn">
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="text"
+                    name="organisation"
+                    placeholder="Enter organization name"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    value={formData.organisation}
+                    onChange={handleInputChange}
+                    autoComplete="off"
+                  />
+                  {errors.organisation && 
+                    <p className="mt-1 text-sm text-red-500 animate-shake">{errors.organisation}</p>
+                  }
+                </div>
 
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="password"
-                                        name="passwordo"
-                                        placeholder="Organization Password"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.passwordo}
-                                        onChange={handleInputChange}
-                                        autoComplete="new-password"
-                                    />
-                                    {errors.passwordo && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.passwordo}</p>
-                                    }
-                                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="password"
+                    name="passwordo"
+                    placeholder="Organization Password"
+                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    value={formData.passwordo}
+                    onChange={handleInputChange}
+                    autoComplete="new-password"
+                  />
+                  {errors.passwordo && 
+                    <p className="mt-1 text-sm text-red-500 animate-shake">{errors.passwordo}</p>
+                  }
+                </div>
 
-                                <div className="flex justify-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowNewOrgForm(true)}
-                                        className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
-                                    >
-                                        Create New Organization
-                                    </button>
-                                </div>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewOrgForm(true)}
+                    className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
+                  >
+                    Create New Organization
+                  </button>
+                </div>
 
-                                <button
-                                    type="button"
-                                    onClick={async () => {
-                                        const response = await handleNext();
-                                        if(response) setStep(2);
-                                    }}
-                                    className="group relative w-full h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
-                                    disabled={verifyingTenant}
-                                >
-                                    {verifyingTenant ? (
-                                        <div className="flex items-center">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                                            Verifying...
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center">
-                                            Continue
-                                            <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                        </div>
-                                    )}
-                                </button>
-                            </div>
-                        )}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const response = await handleNext();
+                    if(response) setStep(2);
+                  }}
+                  className="group relative w-full h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
+                  disabled={verifyingTenant}
+                >
+                  {verifyingTenant ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                      Verifying...
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      Continue
+                      <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  )}
+                </button>
+              </div>
+            )}
 
                         {step === 2 && (
                             <div className="space-y-4 animate-slideIn">
@@ -400,11 +320,11 @@ const Register = () => {
                                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                     <input
                                         type="email"
-                                        name="email"
+                                        name="email" // Use a static name
                                         placeholder="Email address"
                                         className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.email || ''}
-                                        onChange={(e) => handleInputChange(e)}
+                                        value={formData.email || ''} // Ensure it doesn't throw an error if formData.email is undefined
+                                        onChange={(e) => handleInputChange(e)} // Ensure `handleInputChange` updates the correct field
                                         autoComplete="new-email"
                                         autoCorrect="off"
                                         autoCapitalize="off"
@@ -414,9 +334,10 @@ const Register = () => {
                                     {errors.email && 
                                         <p className="mt-1 text-sm text-red-500 animate-shake">{errors.email}</p>
                                     }
-                                </div>
+                                    </div>
 
-                                <div className="relative">
+
+                <div className="relative">
                                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                     <input
                                         type="tel"
@@ -434,23 +355,23 @@ const Register = () => {
                                     />
                                 </div>
                                 <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        placeholder="Create Password"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.password}
-                                        onChange={handleInputChange}
-                                        autoComplete="new-password"
-                                        autoCorrect="off"
-                                        autoCapitalize="off"
-                                        spellCheck="false"
-                                    />
-                                    {errors.password && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.password}</p>
-                                    }
-                                </div>
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Create Password"
+                            className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            autoComplete="new-password"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                        />
+                        {errors.password && 
+                            <p className="mt-1 text-sm text-red-500 animate-shake">{errors.password}</p>
+                        }
+                    </div>
 
                                 <div className="flex space-x-3">
                                     <button
@@ -481,113 +402,86 @@ const Register = () => {
                         )}
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <NavLink 
-                            to="/login" 
-                            className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
-                        >
-                            Already have an account? Sign in
-                        </NavLink>
-                    </div>
-
-                    <div className="mt-6 text-center">
-  <button
-    onClick={handleFirebaseSignIn}
-    disabled={isSubmitting}
-    className="w-full flex items-center justify-center bg-white border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition duration-300 font-medium"
-  >
-    {isSubmitting ? (
-      <div className="flex items-center justify-center">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-        Signing up...
-      </div>
-    ) : (
-      <>
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png"
-          alt="Google Logo"
-          className="w-5 h-5 mr-2"
-        />
-        Sign up with Google
-      </>
-    )}
-  </button>
-  {firebaseError && (
-    <p className="mt-2 text-sm text-red-500 animate-shake">{firebaseError}</p>
-  )}
-</div>
-                </div>
-            </div>
-
-            {/* Create New Organization Modal */}
-            {showNewOrgForm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl transform animate-scaleIn">
-                        <h3 className="text-xl font-bold mb-4">Create New Organization</h3>
-                        <div className="space-y-4">
-                            <div className="relative">
-                                <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                <input
-                                    type="text"
-                                    name="name"
-                                    placeholder="Organization Name"
-                                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    value={newOrg.name}
-                                    onChange={handleNewOrgInputChange}
-                                />
-                            </div>
-                            
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                <input
-                                    type="password"
-                                    name="password"
-                                    placeholder="Organization Password"
-                                    className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    value={newOrg.password}
-                                    onChange={handleNewOrgInputChange}
-                                />
-                            </div>
-
-                            <div className="flex space-x-3">
-                                <button
-                                    onClick={() => setShowNewOrgForm(false)}
-                                    className="flex-1 h-12 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300"
-                                >
-                                    Cancel
-                                </button>
-                                
-                                <button
-                                    onClick={handleCreateNewOrg}
-                                    disabled={creatingOrg}
-                                    className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
-                                >
-                                    {creatingOrg ? (
-                                        <div className="flex items-center justify-center">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                                            Creating...
-                                        </div>
-                                    ) : (
-                                        'Create Organization'
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showPopup && (
-                <PopupCard
-                    message="Registration successful! Welcome aboard."
-                    onClose={() => {
-                        setShowPopup(false);
-                        navigate('/login');
-                    }}
-                />
-            )}
+          <div className="mt-6 text-center">
+            <NavLink 
+              to="/login" 
+              className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
+            >
+              Already have an account? Sign in
+            </NavLink>
+          </div>
         </div>
-    );
+      </div>
+
+      {/* Create New Organization Modal */}
+      {showNewOrgForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl transform animate-scaleIn">
+            <h3 className="text-xl font-bold mb-4">Create New Organization</h3>
+            <div className="space-y-4">
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Organization Name"
+                  className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={newOrg.name}
+                  onChange={handleNewOrgInputChange}
+                />
+              </div>
+              
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Organization Password"
+                  className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={newOrg.password}
+                  onChange={handleNewOrgInputChange}
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowNewOrgForm(false)}
+                  className="flex-1 h-12 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  onClick={handleCreateNewOrg}
+                  disabled={creatingOrg}
+                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
+                >
+                  {creatingOrg ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                      Creating...
+                    </div>
+                  ) : (
+                    'Create Organization'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPopup && (
+        <PopupCard
+          message="Registration successful! Welcome aboard."
+          onClose={() => {
+            setShowPopup(false);
+            navigate('/login');
+          }}
+        />
+      )}
+    </div>
+  );
 };
 
 export default Register;

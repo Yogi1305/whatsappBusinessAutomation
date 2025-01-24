@@ -47,6 +47,12 @@ const GPayUPIPayment = () => {
     }
   ];
 
+  const merchantInfo = {
+    vpa: 'cnurenai@kotak',
+    name: 'NURENAISSANCEFABRICA',
+    merchantCode: '1234',
+    gstin: '29ABCDE1234F2Z5'
+  };
 
   useEffect(() => {
     setIsDesktop(!/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent));
