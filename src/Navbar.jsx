@@ -292,7 +292,7 @@ const Navbar = () => {
     >
       <img 
         src={logo} 
-        alt="Nuren AI Logo" 
+        alt="Nuren AI" 
         className="h-8 w-8 md:h-10 md:w-10 group-hover:rotate-6 transition-transform"
       />
       <span className={`hidden sm:inline text-xl md:text-2xl font-bold ${
