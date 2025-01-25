@@ -14,6 +14,7 @@ import { History, Rocket, Terminal, FileText, MessageSquare } from 'lucide-react
 import CarouselEditor from './Carousel';
 import CampaignsDashboard from './CampaignDash';
 import WhatsAppCommands from './Commands';
+import { useAuth } from '../../../authContext';
 //import CampaignManager from './Campaign';
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
@@ -28,6 +29,8 @@ const initial_bg = [
 ]
 
 const BroadcastPage = () => {
+  const { tenant } = useAuth();
+const tier = tenant?.tier || 'Free'; 
   const [accessToken, setAccessToken] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
@@ -581,13 +584,15 @@ const BroadcastPage = () => {
 
     {/* Campaigns */}
     <div
-      className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer
-        ${activeTab === 'campaigns' 
-          ? 'bg-primary/10 text-primary font-medium' 
-          : 'text-gray-700 hover:bg-gray-100'
-        }`}
-      onClick={() => handleTabChange('campaigns')}
-    >
+          className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+            tier === 'enterprise' ? 'cursor-pointer hover:bg-gray-100' : 'cursor-not-allowed opacity-50'
+          }
+            ${activeTab === 'campaigns' 
+              ? 'bg-primary/10 text-primary font-medium' 
+              : 'text-gray-700'
+            }`}
+          onClick={tier === 'enterprise' ? () => handleTabChange('campaigns') : undefined}
+        >
       <div className="flex items-center space-x-3">
         <Rocket className="w-5 h-5" /> {/* Changed to Rocket icon */}
         <span>Drip Campaigns</span>
@@ -596,13 +601,15 @@ const BroadcastPage = () => {
 
     {/* Commands */}
     <div
-      className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer
-        ${activeTab === 'commands' 
-          ? 'bg-primary/10 text-primary font-medium' 
-          : 'text-gray-700 hover:bg-gray-100'
-        }`}
-      onClick={() => handleTabChange('commands')}
-    >
+          className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+            tier === 'enterprise' ? 'cursor-pointer hover:bg-gray-100' : 'cursor-not-allowed opacity-50'
+          }
+            ${activeTab === 'commands' 
+              ? 'bg-primary/10 text-primary font-medium' 
+              : 'text-gray-700'
+            }`}
+          onClick={tier === 'enterprise' ? () => handleTabChange('commands') : undefined}
+        >
       <div className="flex items-center space-x-3">
         <Terminal className="w-5 h-5" /> {/* Changed to Terminal icon */}
         <span>Commands</span>
@@ -673,7 +680,8 @@ const BroadcastPage = () => {
             setShowPopup={setShowPopup}
           />
         )}
-        {activeTab === 'campaigns' && (
+      
+        {activeTab === 'campaigns' && tier === 'enterprise'&&(
             <CampaignsDashboard
               templates={templates}
               contacts={contacts}
@@ -686,7 +694,7 @@ const BroadcastPage = () => {
               businessPhoneNumberId={businessPhoneNumberId}
             />
           )}
-           {activeTab === 'commands' && (
+           {activeTab === 'commands' && tier === 'enterprise'&&(
             <WhatsAppCommands
             />
           )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+
 import { 
   NavigationMenu, 
   NavigationMenuItem, 
@@ -54,6 +55,7 @@ export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
 const socket = io(whatsappURL);
 
 const Navbar = () => {
+ 
   const { authenticated, logout, tenantId } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -199,16 +201,18 @@ const Navbar = () => {
 
   const NavLinks = () => {
     const linkBaseClasses = authenticated 
-      ? "group flex items-center gap-2 hover:bg-primary/10 transition-all duration-300 px-3 py-2 rounded-md"
-      : "group flex items-center gap-2 hover:bg-gray-800 transition-all duration-300 px-3 py-2 rounded-md";
-    
+      ? "group flex items-center gap-2 hover:bg-primary/10 transition-all duration-300 px-3 py-2 rounded-md relative"
+      : "group flex items-center gap-2 hover:bg-gray-800 transition-all duration-300 px-3 py-2 rounded-md relative";
+  
     const iconClasses = authenticated
       ? "w-5 h-5 text-primary group-hover:scale-110 transition-transform"
       : "w-5 h-5 text-gray-300 group-hover:text-white transition-transform";
-    
+  
     const textClasses = authenticated
       ? "text-foreground group-hover:text-primary"
       : "text-gray-300 group-hover:text-white";
+  
+    const isActive = (path) => location.pathname === getPath(path);
   
     const navigationItems = (
       <NavigationMenuList className="flex flex-col mt-20 md:mt-0 md:flex-row md:items-center md:space-x-2 gap-y-2">
@@ -216,58 +220,72 @@ const Navbar = () => {
           <>
             <NavigationMenuItem>
               <Link to={getPath('/contact')}>
-                <NavigationMenuLink className={linkBaseClasses}>
-                  <Contact className={iconClasses} />
+                <NavigationMenuLink className={`${linkBaseClasses} ${isActive('/contact') ? 'text-primary font-semibold' : ''}`}>
+                  <Contact className={`${iconClasses} ${isActive('/contact') ? 'text-primary scale-110' : ''}`} />
                   <span className={textClasses}>Contact</span>
+                  {isActive('/contact') && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-underline"></span>
+                  )}
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Link to={getPath('/broadcast')}>
-                <NavigationMenuLink className={linkBaseClasses}>
-                  <Megaphone className={iconClasses} />
+                <NavigationMenuLink className={`${linkBaseClasses} ${isActive('/broadcast') ? 'text-primary font-semibold' : ''}`}>
+                  <Megaphone className={`${iconClasses} ${isActive('/broadcast') ? 'text-primary scale-110' : ''}`} />
                   <span className={textClasses}>Broadcast</span>
+                  {isActive('/broadcast') && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-underline"></span>
+                  )}
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Link to={getPath('/scheduled-events')}>
-                <NavigationMenuLink className={linkBaseClasses}>
-                  <Calendar className={iconClasses} />
+                <NavigationMenuLink className={`${linkBaseClasses} ${isActive('/scheduled-events') ? 'text-primary font-semibold' : ''}`}>
+                  <Calendar className={`${iconClasses} ${isActive('/scheduled-events') ? 'text-primary scale-110' : ''}`} />
                   <span className={textClasses}>Scheduled Messages</span>
+                  {isActive('/scheduled-events') && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-underline"></span>
+                  )}
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            
           </>
         )}
         <NavigationMenuItem>
           <Link to={getPath('/chatbot')}>
-            <NavigationMenuLink className={linkBaseClasses}>
-              <MessageSquare className={iconClasses} />
+            <NavigationMenuLink className={`${linkBaseClasses} ${isActive('/chatbot') ? 'text-primary font-semibold' : ''}`}>
+              <MessageSquare className={`${iconClasses} ${isActive('/chatbot') ? 'text-primary scale-110' : ''}`} />
               <span className={textClasses}>Chatbot</span>
+              {isActive('/chatbot') && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-underline"></span>
+              )}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem className="hidden md:block">
-          {/* Hidden on mobile, visible on medium+ screens */}
           <Link to={getPath('/flow-builder')}>
-            <NavigationMenuLink className={linkBaseClasses}>
-              <Workflow className={iconClasses} />
+            <NavigationMenuLink className={`${linkBaseClasses} ${isActive('/flow-builder') ? 'text-primary font-semibold' : ''}`}>
+              <Workflow className={`${iconClasses} ${isActive('/flow-builder') ? 'text-primary scale-110' : ''}`} />
               <span className={textClasses}>Flow Builder</span>
+              {isActive('/flow-builder') && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-underline"></span>
+              )}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem className="hidden md:block">
-          {/* Hidden on mobile, visible on medium+ screens */}
           <Link to={getPath('/catalog')}>
-            <NavigationMenuLink className={linkBaseClasses}>
-              <LayoutGrid className={iconClasses} />
+            <NavigationMenuLink className={`${linkBaseClasses} ${isActive('/catalog') ? 'text-primary font-semibold' : ''}`}>
+              <LayoutGrid className={`${iconClasses} ${isActive('/catalog') ? 'text-primary scale-110' : ''}`} />
               <span className={textClasses}>Catalog</span>
+              {isActive('/catalog') && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-underline"></span>
+              )}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
-        
       </NavigationMenuList>
     );
   

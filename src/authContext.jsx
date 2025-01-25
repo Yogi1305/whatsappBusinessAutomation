@@ -1,45 +1,65 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-
+import axiosInstance from "./api";
 const AuthContext = createContext();
-
+import { djangoURL } from "./api";
 const getTenantIdFromUrl = () => {
-  const pathArray = window.location.pathname.split('/').filter(segment => segment.trim() !== '');
+  try {
+    const pathArray = window.location.pathname.split('/').filter(segment => segment.trim() !== '');
 
-  // Exclude common non-tenant paths
-  const excludedPaths = ['login', 'signup', 'forgot-password', 'reset-password', ''];
+    // Exclude common non-tenant paths
+    const excludedPaths = ['login', 'signup', 'forgot-password', 'reset-password', ''];
 
-  // Check if the first segment is not in excluded paths
-  if (pathArray.length > 0 && !excludedPaths.includes(pathArray[0])) {
-    return pathArray[0];
+    // Check if the first segment is not in excluded paths
+    if (pathArray.length > 0 && !excludedPaths.includes(pathArray[0])) {
+      return pathArray[0];
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error parsing tenant ID from URL:", error);
+    return null;
   }
-
-  return null;
 };
 
 export const AuthProvider = ({ children }) => {
   const [tenantId, setTenantId] = useState(() => {
-    const storedTenantId = localStorage.getItem("tenant_id");
-    return storedTenantId ? JSON.parse(storedTenantId) : null;
+    try {
+      const storedTenantId = localStorage.getItem("tenant_id");
+      return storedTenantId ? JSON.parse(storedTenantId) : null;
+    } catch (error) {
+      console.error("Error parsing 'tenant_id' from localStorage:", error);
+      return null;
+    }
   });
 
   const [authenticated, setAuthenticated] = useState(() => {
-    const tenant_id = getTenantIdFromUrl();
-    if (tenant_id === tenantId || tenant_id === null) {
-      const storedAuth = localStorage.getItem("authenticated");
-      return storedAuth ? JSON.parse(storedAuth) : false;
-    } else {
+    try {
+      const tenant_id = getTenantIdFromUrl();
+      if (tenant_id === tenantId || tenant_id === null) {
+        const storedAuth = localStorage.getItem("authenticated");
+        return storedAuth ? JSON.parse(storedAuth) : false;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("Error initializing 'authenticated' state:", error);
       return false;
     }
   });
 
   const [userId, setUserId] = useState(() => {
-    const storedUserId = localStorage.getItem("user_id");
-    return storedUserId ? JSON.parse(storedUserId) : null;
+    try {
+      const storedUserId = localStorage.getItem("user_id");
+      return storedUserId ? JSON.parse(storedUserId) : null;
+    } catch (error) {
+      console.error("Error parsing 'user_id' from localStorage:", error);
+      return null;
+    }
   });
 
   const [userRole, setUserRole] = useState(() => {
-    const storedUserRole = localStorage.getItem("user_role");
     try {
+      const storedUserRole = localStorage.getItem("user_role");
       return storedUserRole ? JSON.parse(storedUserRole) : null;
     } catch (error) {
       console.error("Error parsing 'user_role' from localStorage:", error);
@@ -52,73 +72,51 @@ export const AuthProvider = ({ children }) => {
       const storedModel = localStorage.getItem("model");
       return storedModel ? JSON.parse(storedModel) : null;
     } catch (error) {
-      console.error("Error parsing JSON from localStorage:", error);
+      console.error("Error parsing 'model' from localStorage:", error);
       return null;
     }
   });
 
-  // Add tenant state
   const [tenant, setTenant] = useState(() => {
     try {
-      const storedTenant = { tier: 'Free' };
-      return storedTenant ? JSON.parse(storedTenant) : null;
+      const storedTenant = localStorage.getItem("tenant");
+      return storedTenant ? JSON.parse(storedTenant) : { tier: 'Free' }; // Default to 'Free' tier
     } catch (error) {
       console.error("Error parsing 'tenant' from localStorage:", error);
-      return null;
+      return { tier: 'Free' }; // Default to 'Free' tier
     }
   });
 
-  // Save tenant to localStorage whenever it changes
+  // Fetch tenant details when tenantId changes
   useEffect(() => {
-    try {
-      localStorage.setItem("tenant", JSON.stringify(tenant));
-    } catch (error) {
-      console.error("Error saving 'tenant' to localStorage:", error);
-    }
-  }, [tenant]);
+    const fetchTenantDetails = async () => {
+      if (tenantId) {
+        try {
+          const response = await axiosInstance.get(`${djangoURL}/get-tenant-details/`);
+          setTenant(response.data); // Update tenant state with fetched data
+        } catch (error) {
+          console.error("Error fetching tenant details:", error);
+        }
+      }
+    };
 
-  // Save other states to localStorage
+    fetchTenantDetails();
+  }, [tenantId]);
+
+  // Save all states to localStorage in a single useEffect
   useEffect(() => {
     try {
       localStorage.setItem("authenticated", JSON.stringify(authenticated));
-    } catch (error) {
-      console.error("Error saving 'authenticated' to localStorage:", error);
-    }
-  }, [authenticated]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem("user_id", JSON.stringify(userId));
-    } catch (error) {
-      console.error("Error saving 'user_id' to localStorage:", error);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem("tenant_id", JSON.stringify(tenantId));
-    } catch (error) {
-      console.error("Error saving 'tenant_id' to localStorage:", error);
-    }
-  }, [tenantId]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem("user_role", JSON.stringify(userRole));
-    } catch (error) {
-      console.error("Error saving 'user_role' to localStorage:", error);
-    }
-  }, [userRole]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem("model", JSON.stringify(model));
+      localStorage.setItem("tenant", JSON.stringify(tenant));
     } catch (error) {
-      console.error("Error saving 'model' to localStorage:", error);
+      console.error("Error saving state to localStorage:", error);
     }
-  }, [model]);
+  }, [authenticated, userId, tenantId, userRole, model, tenant]);
 
-  // Update login function to include tenant information
   const login = (userId, tenantId, role, model, tenantData) => {
     setAuthenticated(true);
     setUserId(userId);
@@ -135,15 +133,15 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("tenant_id");
       localStorage.removeItem("user_role");
       localStorage.removeItem("model");
-      localStorage.removeItem("tenant"); // Clear tenant data
+      localStorage.removeItem("tenant");
       setAuthenticated(false);
       setUserId(null);
       setTenantId(null);
       setUserRole(null);
       setModel(null);
-      setTenant(null); // Clear tenant state
+      setTenant({ tier: 'Free' }); // Reset tenant state to default
     } catch (error) {
-      console.error("Error clearing localStorage:", error);
+      console.error("Error during logout:", error);
     }
   };
 
@@ -155,12 +153,12 @@ export const AuthProvider = ({ children }) => {
         tenantId,
         userRole,
         model,
-        tenant, // Provide tenant data
+        tenant,
         login,
         logout,
         setAuthenticated,
         setModel,
-        setTenant, // Allow updating tenant data
+        setTenant,
       }}
     >
       {children}

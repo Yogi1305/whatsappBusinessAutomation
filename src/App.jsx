@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate,Link } from 'react-router-dom';
 import { useAuth } from './authContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useSpring, animated } from 'react-spring';
@@ -36,10 +36,47 @@ import ContactDetails from './Pages/ContactPage/ContactDetails.jsx';
 import GPayUPIPayment from './payment.jsx';
 import CancellationRefundPolicy from './Pages/Misc/RefundCancel.jsx';
 import { Toaster } from 'sonner';
+import { Button } from "@/components/ui/button";
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
   return authenticated ? children : <Navigate to="/login" replace />;
 };
+
+const TierProtectedRoute = ({ children, requiredTier }) => {
+  const { tenant } = useAuth();
+  
+  // Handle loading state
+  if (!tenant) return <div className="container text-center p-8">Loading plan details...</div>;
+  
+  const currentTier = tenant.tier?.toLowerCase() || 'free';
+  const required = requiredTier.toLowerCase();
+
+  if (currentTier === required || 
+      (required === 'premium' && currentTier === 'enterprise') || 
+      (required === 'premium' && currentTier === 'enterprise')) {
+    return children;
+  }
+
+  return (
+    <div className="fixed inset-0 h-screen w-full bg-background/95 backdrop-blur-sm">
+  <div className="flex h-full w-full items-center justify-center">
+    <div className="mx-auto max-w-md space-y-4 p-6 text-center">
+      <Rocket className="h-12 w-12 text-primary mx-auto" />
+      <h1 className="text-2xl font-bold">Feature Locked</h1>
+      <p className="text-muted-foreground">
+        This feature requires {requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1)} plan
+      </p>
+      <Button asChild className="mt-4">
+        <Link to="/pricing">
+          Upgrade to {requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1)}
+        </Link>
+      </Button>
+    </div>
+  </div>
+</div>
+  );
+};
+
 
 const MarketingBanner = () => (
   <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 h-7 overflow-hidden relative border-b border-emerald-500/30 backdrop-blur-sm">
@@ -82,123 +119,108 @@ const MarketingBanner = () => (
   </div>
 );
 const App = () => {
-  const { authenticated, logout, tenantId } = useAuth();
+  const { authenticated, logout, tenantId, tenant } = useAuth();
+  
   const shouldShowBanner = () => {
-    return !authenticated && location.pathname === '/';
+    return !authenticated && window.location.pathname === '/';
   };
+
   return (
     <Router>
-      <Toaster position="top-center" duration={3000} style={{border:'none'}}/>
-        <div className="flex flex-col min-h-screen">
-      {shouldShowBanner() && (
-        <div className="w-full bg-primary text-primary-foreground">
-          <MarketingBanner />
+      <Toaster position="top-center" duration={3000} style={{ border: 'none' }} />
+      <div className="flex flex-col min-h-screen">
+        {shouldShowBanner() && (
+          <div className="w-full bg-primary text-primary-foreground">
+            <MarketingBanner />
+          </div>
+        )}
+
+        <div className={`w-full z-40 ${!authenticated ? 'sticky top-0' : ''} ${
+          authenticated 
+            ? 'bg-background border-b border-border/40 shadow-sm' 
+            : 'bg-black backdrop-blur-sm border-b border-gray-900/50 shadow-lg'}`}>
+          <Navbar isAuthenticated={authenticated} onLogout={logout} />
         </div>
-      )}
-      
-      <div className={`w-full z-40 ${!authenticated && 'sticky top-0'} ${
-      authenticated 
-        ? 'bg-background border-b border-border/40 shadow-sm' 
-        : 'bg-black backdrop-blur-sm border-b border-gray-900/50 shadow-lg'}`}>
-      <Navbar isAuthenticated={authenticated} onLogout={logout} />
-    </div>
-   
+
         <main className="flex-grow container">
           <Routes>
             <Route path="/" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <HomePage />} />
             <Route path="/login" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Login />} />
             <Route path="/register" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Register />} />
-            
             <Route path="/change-password" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <PasswordReset />} />
             <Route path="/chatbotredirect" element={<Chatbotredirect />} />
 
-            {/* Demo routes accessible without authentication */}
+            {/* Demo routes */}
             <Route path="/demo/chatbot" element={<Chatbot demo={true} />} />
             <Route path="/demo/flow-builder" element={<FlowBuilder demo={true} />} />
 
+            {/* Tenant-scoped routes */}
             <Route path="/:tenant_id/*" element={
               <Routes>
-                <Route path="broadcast" element={
-                  <ProtectedRoute>
-                    <BroadcastPage />
-                  </ProtectedRoute>
-                } />
+                {/* Free tier accessible routes */}
+                <Route path="broadcast" element={<ProtectedRoute><BroadcastPage /></ProtectedRoute>} />
+                <Route path="contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
+                <Route path="contactDetails" element={<ProtectedRoute><ContactDetails /></ProtectedRoute>} />
+                <Route path="payment" element={<ProtectedRoute><GPayUPIPayment /></ProtectedRoute>} />
+                <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="chatbot" element={<ProtectedRoute><Chatbot /></ProtectedRoute>} />
+                <Route path="assign" element={<ProtectedRoute><AssignContact /></ProtectedRoute>} />
 
-                <Route path="contact" element={
+                {/* Premium+ features */}
+                <Route path="flow-builder" element={
                   <ProtectedRoute>
-                    <ContactPage />
+                    <TierProtectedRoute requiredTier="premium">
+                      <FlowBuilder />
+                    </TierProtectedRoute>
                   </ProtectedRoute>
                 } />
-                <Route path="scheduled-events/" element={
-                  <ProtectedRoute>
-                    <ScheduledEventsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="contactDetails/" element={
-                  <ProtectedRoute>
-                    <ContactDetails />
-                  </ProtectedRoute>
-                } />
-                <Route path="payment/" element={
-                  <ProtectedRoute>
-                    <GPayUPIPayment />
-                  </ProtectedRoute>
-                } />
-                <Route path="catalog" element={
-                  <ProtectedRoute>
-                  <Catalog/>
-                  </ProtectedRoute>
-                }/>
 
                 <Route path="models" element={
                   <ProtectedRoute>
-                  <Models />
+                    <TierProtectedRoute requiredTier="premium">
+                      <Models />
+                    </TierProtectedRoute>
                   </ProtectedRoute>
                 } />
 
-                <Route path="/profile" element={
+                {/* Enterprise-only features */}
+                <Route path="scheduled-events" element={
                   <ProtectedRoute>
-                  <ProfilePage />
+                    <TierProtectedRoute requiredTier="enterprise">
+                      <ScheduledEventsPage />
+                    </TierProtectedRoute>
                   </ProtectedRoute>
                 } />
 
-                <Route path="chatbot" element={
+                <Route path="catalog" element={
                   <ProtectedRoute>
-                    <Chatbot />
+                    <TierProtectedRoute requiredTier="pro">
+                      <Catalog />
+                    </TierProtectedRoute>
                   </ProtectedRoute>
                 } />
 
-                <Route path="assign" element={
-                  <ProtectedRoute>
-                    <AssignContact />
-                  </ProtectedRoute>
-                } />
-                <Route path="flow-builder" element={
-                  <ProtectedRoute>
-                    <FlowBuilder />
-                  </ProtectedRoute>
-                } />
-
-
-                 <Route path="*" element={<NotFound />} />
+                {/* Fallback routes */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             } />
-              <Route path="*" element={<NotFound />} />
-              <Route path="contactus" element={<ContactUs/>} />
-              <Route path="privacypolicy" element={<PrivacyPolicy />} />
-              <Route path="termsandconditions" element={<TermsAndConditions />} />
-              <Route path="refundandcancellation" element={<CancellationRefundPolicy />} />
-              <Route path="pricing" element={<PricingPage />} />
-              <Route path="blogs" element={<Blogs/>} />
-              <Route path="blogs/learn-more" element={<Learn />} />
-              <Route path="blogs/chatbot" element={<AIChatbotsPage/>} />
-              <Route path="blogs/business-outreach" element={<BusinessOutreachBlog/>} />
-              <Route path="blogs/segmentation" element={<UserExperienceSegmentation/>} />
-              <Route path="blogs/whatsapp-engagement" element={<MaximizingCustomerEngagement/>} />
-              <Route path="blogs/marketing-strategy" element={<WhatsAppMarketingStrategies/>} />
-              <Route path="blogs/customer-feedback" element={<HandleCustomerFeedback/>} />
-          </Routes>
 
+            {/* Public routes */}
+            <Route path="contactus" element={<ContactUs />} />
+            <Route path="privacypolicy" element={<PrivacyPolicy />} />
+            <Route path="termsandconditions" element={<TermsAndConditions />} />
+            <Route path="refundandcancellation" element={<CancellationRefundPolicy />} />
+            <Route path="pricing" element={<PricingPage />} />
+            <Route path="blogs" element={<Blogs />} />
+            <Route path="blogs/learn-more" element={<Learn />} />
+            <Route path="blogs/chatbot" element={<AIChatbotsPage />} />
+            <Route path="blogs/business-outreach" element={<BusinessOutreachBlog />} />
+            <Route path="blogs/segmentation" element={<UserExperienceSegmentation />} />
+            <Route path="blogs/whatsapp-engagement" element={<MaximizingCustomerEngagement />} />
+            <Route path="blogs/marketing-strategy" element={<WhatsAppMarketingStrategies />} />
+            <Route path="blogs/customer-feedback" element={<HandleCustomerFeedback />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </main>
       </div>
     </Router>
