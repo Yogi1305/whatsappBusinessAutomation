@@ -60,6 +60,7 @@ const socket = io(whatsappURL);
 const Chatbot = () => {
   const tenantId=getTenantIdFromUrl();
   // const navigate = useNavigate();
+  const [currentChatPage, setCurrentChatPage] = useState({});
   const [totalPages, setTotalPages] = useState(1);
   const [contacts, setContacts] = useState([]);
   const [selectedContact, setSelectedContact] = useState(null);
@@ -575,20 +576,18 @@ const Chatbot = () => {
 
     
     // Function to fetch conversation data for a given contact
-  const fetchConversation = async (contactId) => {
+  const fetchConversation = async (contactId,page=1) => {
     try {
       const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`${djangoURL}/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
-        method: 'GET',
-        headers: {
-          'X-Tenant-Id': tenantId
-        },
+      const response = await axiosInstance.get(`${fastURL}/whatsapp_convo_get/${contactId}/`, {
+        params: { source: 'whatsapp', bpid: bpid_string, page_no: page },
       });
 
       if (!response.ok) {
         throw new Error('Failed to fetch data from backend');
       }
-      const data = await response.json();
+      const data1=await response.json();
+      const data = data1.conversations;
       console.log("Conversations: ", data)
      
       
@@ -722,7 +721,16 @@ const Chatbot = () => {
       setIsUploading(false);
     }
   };
-    
+    const handleLoadMore = () => {
+  if (selectedContact) {
+    const nextPage = (currentPage[selectedContact.phone] || 1) + 1;
+    setCurrentChatPage((prev) => ({
+      ...prev,
+      [selectedContact.phone]: nextPage,
+    }));
+    fetchConversation(selectedContact.phone, nextPage);
+  }
+};
   const fetchFlows = async () => {
     try {
       const response = await axiosInstance.get(`${fastURL}/node-templates/`, {
@@ -1358,40 +1366,61 @@ function renderMessageWithNewLines(text) {
 
   </div>
   )}
-    <div className="cb-message-container">
-  {conversation.map((message, index) => (
-  <div
-    key={index}
-    className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
+ <div className="cb-message-container">
+  {/* "View More Chats" Button */}
+  <Button 
+    onClick={handleLoadMore} 
+    className="cb-load-more-btn"
+    disabled={isLoading}
   >
-    {(() => {
-    
-      if (typeof message.text === 'string') {
-        if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
-          try {
-            const fixedMessage = fixJsonString(message.text);
-            const parsedMessage = JSON.parse(fixedMessage);
-            // console.log('Parsed Message:', parsedMessage);
-            return renderInteractiveMessage(parsedMessage);
-          } catch (e) {
-            const fixedMessage = fixJsonString(message.text);
-            console.log("Fixed Message: ", fixedMessage)
-            const parsedMessage = JSON.parse(fixedMessage);
-            console.error(`Failed to parse JSON message: ${JSON.stringify(parsedMessage, null, 4)}`, e);
-            return <div className="error">Failed to parse message</div>;
+    {isLoading ? 'Loading...' : 'View More Chats'}
+  </Button>
+
+  {/* Render Messages */}
+  {conversation.map((message, index) => (
+    <div
+      key={index}
+      className={`cb-message ${
+        message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'
+      }`}
+    >
+      {(() => {
+        if (typeof message.text === 'string') {
+          if (
+            message.text.trim().startsWith('{') ||
+            message.text.trim().startsWith('[')
+          ) {
+            try {
+              const fixedMessage = fixJsonString(message.text);
+              const parsedMessage = JSON.parse(fixedMessage);
+              return renderInteractiveMessage(parsedMessage);
+            } catch (e) {
+              const fixedMessage = fixJsonString(message.text);
+              console.log("Fixed Message: ", fixedMessage);
+              const parsedMessage = JSON.parse(fixedMessage);
+              console.error(
+                `Failed to parse JSON message: ${JSON.stringify(parsedMessage, null, 4)}`,
+                e
+              );
+              return <div className="error">Failed to parse message</div>;
+            }
           }
+          return (
+            renderMessageWithNewLines(message.text) || (
+              <div className="error">Message content is undefined</div>
+            )
+          );
+        } else if (typeof message.text === 'object' && message.text !== null) {
+          return renderMessageContent(message);
         }
-        return renderMessageWithNewLines(message.text) || <div className="error">Message content is undefined</div>;
-      }else if (typeof message.text === 'object' && message.text !== null) {
-        // Handle non-string message formats
-        return renderMessageContent(message);
-      }
-      return <div className="erro">Please Select a contact</div>;
-    })()}
-  </div>
+        return <div className="erro">Please Select a contact</div>;
+      })()}
+    </div>
   ))}
+
+  {/* Scroll to bottom ref */}
   <div ref={messageEndRef} />
-  </div>
+</div>
   <div className="cb-input-container">
   <div className="cb-input-actions">
     <EmojiEmotionsIcon className="cb-action-icon" onClick={handleToggleSmileys} />
