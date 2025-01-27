@@ -258,34 +258,27 @@ const tier = tenant?.tier || 'Free';
     e.preventDefault();
     
     const components = [];
-
+  
     if (headerType === 'text' && headerContent.trim()) {
-
-      // const headerVariables = extractVariables(headerContent);
-    
       // Handle text header
       const headerComponent = {
         type: "HEADER",
         format: "TEXT",
         text: convertBodyTextToIndexedFormat(headerContent), // Convert text to indexed format
-        example: undefined, 
       };
-    
+  
       if (headerVariables.length > 0) {
         headerComponent.example = {
           header_text: headerVariables.map(variable => `{{${variable}}}`),
         };
       }
-      console.log("Type of header test: ", typeof headerComponent.example.header_text[0])
-      console.log("Header Commponent: ", headerComponent)
-    
+  
       components.push(headerComponent);
     } else if (headerType === 'image' && headerMediaId) {
       // Handle image header
       components.push({
         type: "HEADER",
         format: "IMAGE", // Explicitly set format to IMAGE
-        text: undefined, // No text needed for image headers
         example: { header_handle: [headerMediaId] }, // Provide media ID for image
       });
     }
@@ -295,23 +288,22 @@ const tier = tenant?.tier || 'Free';
       type: "BODY",
       text: convertBodyTextToIndexedFormat(bodyText),
     };
-    
+  
     if (bodyVariables && bodyVariables.length > 0) {
       bodyComponent.example = {
         body_text: [bodyVariables.map(variable => `{{${variable}}}`)],
       };
     }
-    console.log("Type of header test: ", typeof bodyComponent.example.body_text[0])
-    console.log("Header Commponent: ", bodyComponent)
+  
     components.push(bodyComponent);
-
+  
     if (footerText.trim()) {
       components.push({
         type: "FOOTER",
         text: footerText
       });
     }
-
+  
     if (buttons.length > 0) {
       components.push({
         type: "BUTTONS",
@@ -340,14 +332,14 @@ const tier = tenant?.tier || 'Free';
         }).filter(Boolean)
       });
     }
-
+  
     const templateData = {
       name: templateName,
       category: category,
       components: components,
       language: language
     };
-
+  
     try {
       const url = `https://graph.facebook.com/v20.0/${accountId}/message_templates`;
       
@@ -359,7 +351,7 @@ const tier = tenant?.tier || 'Free';
           'Authorization': `Bearer ${accessToken}`
         }
       });
-
+  
       setShowTemplatePopup(false);
       resetTemplateForm();
       await fetchTemplates();
@@ -370,13 +362,13 @@ const tier = tenant?.tier || 'Free';
                            error.message || 
                            'An error occurred while creating the template';
         
-        // Show error toast
-        toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive",
-            duration: 5000
-        });
+      // Show error toast
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 5000
+      });
     }
   };
 
