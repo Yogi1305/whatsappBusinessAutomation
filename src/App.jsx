@@ -194,7 +194,7 @@ const App = () => {
 
                 <Route path="catalog" element={
                   <ProtectedRoute>
-                    <TierProtectedRoute requiredTier="pro">
+                    <TierProtectedRoute requiredTier="premium">
                       <Catalog />
                     </TierProtectedRoute>
                   </ProtectedRoute>
