@@ -1582,7 +1582,6 @@ function renderMessageWithNewLines(text) {
  </div>
   </div>
   );
-
 };
 
 export default Chatbot;
