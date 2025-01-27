@@ -19,7 +19,7 @@ const WhatsAppCommands = () => {
         <CardContent className="text-center">
           <div className="flex justify-center space-x-4 mt-6">
             {/* Feature Teasers */}
-           ``
+          
             <div className="flex items-center space-x-2 p-4 bg-white rounded-lg shadow-sm">
               <Settings className="w-6 h-6 text-green-500" />
               <span className="text-gray-700">Custom Commands</span>

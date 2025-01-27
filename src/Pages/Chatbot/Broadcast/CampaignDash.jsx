@@ -81,7 +81,7 @@ const CampaignsDashboard = ({
           next: template.next,
           index: template.index,
           status: template.status || 'read',
-          timeDelay: template.time_delay || 60,
+          timeDelay: template.timeDelay !== undefined ? template.timeDelay : 60, 
           isApproved: true
         })),
         selectedProspects: campaignData.phone?.map(phone => ({

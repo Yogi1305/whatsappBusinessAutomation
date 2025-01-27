@@ -193,12 +193,12 @@ const WhatsAppCampaign = ({
         next: node.next,
         index: node.index,
         status: node.status || 'read',
-        timeDelay: node.timeDelay || 60,
+        timeDelay: node.timeDelay !== undefined && node.timeDelay !== null ? node.timeDelay : 60,
         templateId: node.templateId || '',
         isApproved: true,
         isPendingApproval: false
       }));
-
+  
       setSequence(convertedSequence);
       setCampaignName(initialData.name);
       setProspects(initialData.selectedProspects);
