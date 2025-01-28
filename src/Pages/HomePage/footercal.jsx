@@ -278,7 +278,7 @@ export const CalendlySection = () => {
         icon: Zap, 
         title: "QUICK RESPONSES", 
         description: "Create and manage a library of quick responses to common queries, saving time and ensuring consistency.", 
-        link: 'blogs/quick-responses',
+        link: 'blogs/segmentation',
         image: Quick
       },
       { 
@@ -292,14 +292,14 @@ export const CalendlySection = () => {
         icon: Shield, 
         title: "SECURE & COMPLIANT", 
         description: "Ensure data privacy and comply with regulations using our robust security measures.", 
-        link: 'blogs/security-compliance',
+        link: 'blogs/segmentation',
         image: security
       },
       { 
         icon: Rocket, 
         title: "SCALABLE SOLUTIONS", 
         description: "Grow your business effortlessly with our scalable WhatsApp marketing solutions, designed to boost engagement & sales. ", 
-        link: 'blogs/scalable-solutions',
+        link: 'blogs/segmentation',
         image: Scale
       },
     ];
@@ -396,7 +396,8 @@ export const CalendlySection = () => {
           "Template creation",
           "Direct reply to individual chats",
           "Basic analytics dashboard",
-          "Support for 2-3 languages"
+          "Support for 2-3 languages",
+          "24/7 reliability and support"
         ],
         popular: false
       },
