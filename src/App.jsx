@@ -101,103 +101,99 @@ const App = () => {
         : 'bg-black backdrop-blur-sm border-b border-gray-900/50 shadow-lg'}`}>
       <Navbar isAuthenticated={authenticated} onLogout={logout} />
     </div>
-   
-        <main className="flex-grow container">
-          <Routes>
-            <Route path="/" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <HomePage />} />
-            <Route path="/login" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Login />} />
-            <Route path="/register" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Register />} />
-            
-            <Route path="/change-password" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <PasswordReset />} />
-            <Route path="/chatbotredirect" element={<Chatbotredirect />} />
+        <Routes>
+          <Route path="/" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <HomePage />} />
+          <Route path="/login" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Login />} />
+          <Route path="/register" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Register />} />
+          
+          <Route path="/change-password" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <PasswordReset />} />
+          <Route path="/chatbotredirect" element={<Chatbotredirect />} />
 
-            {/* Demo routes accessible without authentication */}
-            <Route path="/demo/chatbot" element={<Chatbot demo={true} />} />
-            <Route path="/demo/flow-builder" element={<FlowBuilder demo={true} />} />
+          {/* Demo routes accessible without authentication */}
+          <Route path="/demo/chatbot" element={<Chatbot demo={true} />} />
+          <Route path="/demo/flow-builder" element={<FlowBuilder demo={true} />} />
 
-            <Route path="/:tenant_id/*" element={
-              <Routes>
-                <Route path="broadcast" element={
-                  <ProtectedRoute>
-                    <BroadcastPage />
-                  </ProtectedRoute>
-                } />
+          <Route path="/:tenant_id/*" element={
+            <Routes>
+              <Route path="broadcast" element={
+                <ProtectedRoute>
+                  <BroadcastPage />
+                </ProtectedRoute>
+              } />
 
-                <Route path="contact" element={
-                  <ProtectedRoute>
-                    <ContactPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="scheduled-events/" element={
-                  <ProtectedRoute>
-                    <ScheduledEventsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="contactDetails/" element={
-                  <ProtectedRoute>
-                    <ContactDetails />
-                  </ProtectedRoute>
-                } />
-                <Route path="payment/" element={
-                  <ProtectedRoute>
-                    <GPayUPIPayment />
-                  </ProtectedRoute>
-                } />
-                <Route path="catalog" element={
-                  <ProtectedRoute>
-                  <Catalog/>
-                  </ProtectedRoute>
-                }/>
+              <Route path="contact" element={
+                <ProtectedRoute>
+                  <ContactPage />
+                </ProtectedRoute>
+              } />
+              <Route path="scheduled-events/" element={
+                <ProtectedRoute>
+                  <ScheduledEventsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="contactDetails/" element={
+                <ProtectedRoute>
+                  <ContactDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="payment/" element={
+                <ProtectedRoute>
+                  <GPayUPIPayment />
+                </ProtectedRoute>
+              } />
+              <Route path="catalog" element={
+                <ProtectedRoute>
+                <Catalog/>
+                </ProtectedRoute>
+              }/>
 
-                <Route path="models" element={
-                  <ProtectedRoute>
-                  <Models />
-                  </ProtectedRoute>
-                } />
+              <Route path="models" element={
+                <ProtectedRoute>
+                <Models />
+                </ProtectedRoute>
+              } />
 
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                  <ProfilePage />
-                  </ProtectedRoute>
-                } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                <ProfilePage />
+                </ProtectedRoute>
+              } />
 
-                <Route path="chatbot" element={
-                  <ProtectedRoute>
-                    <Chatbot />
-                  </ProtectedRoute>
-                } />
+              <Route path="chatbot" element={
+                <ProtectedRoute>
+                  <Chatbot />
+                </ProtectedRoute>
+              } />
 
-                <Route path="assign" element={
-                  <ProtectedRoute>
-                    <AssignContact />
-                  </ProtectedRoute>
-                } />
-                <Route path="flow-builder" element={
-                  <ProtectedRoute>
-                    <FlowBuilder />
-                  </ProtectedRoute>
-                } />
+              <Route path="assign" element={
+                <ProtectedRoute>
+                  <AssignContact />
+                </ProtectedRoute>
+              } />
+              <Route path="flow-builder" element={
+                <ProtectedRoute>
+                  <FlowBuilder />
+                </ProtectedRoute>
+              } />
 
 
-                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            } />
-              <Route path="*" element={<NotFound />} />
-              <Route path="contactus" element={<ContactUs/>} />
-              <Route path="privacypolicy" element={<PrivacyPolicy />} />
-              <Route path="termsandconditions" element={<TermsAndConditions />} />
-              <Route path="pricing" element={<PricingPage />} />
-              <Route path="blogs" element={<Blogs/>} />
-              <Route path="blogs/learn-more" element={<Learn />} />
-              <Route path="blogs/chatbot" element={<AIChatbotsPage/>} />
-              <Route path="blogs/business-outreach" element={<BusinessOutreachBlog/>} />
-              <Route path="blogs/segmentation" element={<UserExperienceSegmentation/>} />
-              <Route path="blogs/whatsapp-engagement" element={<MaximizingCustomerEngagement/>} />
-              <Route path="blogs/marketing-strategy" element={<WhatsAppMarketingStrategies/>} />
-              <Route path="blogs/customer-feedback" element={<HandleCustomerFeedback/>} />
-          </Routes>
-
-        </main>
+                <Route path="*" element={<NotFound />} />
+            </Routes>
+          } />
+            <Route path="*" element={<NotFound />} />
+            <Route path="contactus" element={<ContactUs/>} />
+            <Route path="privacypolicy" element={<PrivacyPolicy />} />
+            <Route path="termsandconditions" element={<TermsAndConditions />} />
+            <Route path="pricing" element={<PricingPage />} />
+            <Route path="blogs" element={<Blogs/>} />
+            <Route path="blogs/learn-more" element={<Learn />} />
+            <Route path="blogs/chatbot" element={<AIChatbotsPage/>} />
+            <Route path="blogs/business-outreach" element={<BusinessOutreachBlog/>} />
+            <Route path="blogs/segmentation" element={<UserExperienceSegmentation/>} />
+            <Route path="blogs/whatsapp-engagement" element={<MaximizingCustomerEngagement/>} />
+            <Route path="blogs/marketing-strategy" element={<WhatsAppMarketingStrategies/>} />
+            <Route path="blogs/customer-feedback" element={<HandleCustomerFeedback/>} />
+        </Routes>
       </div>
     </Router>
   );
