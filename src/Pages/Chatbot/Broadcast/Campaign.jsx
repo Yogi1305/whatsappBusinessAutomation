@@ -1,13 +1,14 @@
-import React, { useState, useMemo,useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
-import { 
-  Plus, X, MessageSquare, Clock, 
-  ChevronRight, Sparkles, Trash2, 
+import {
+  Plus, X, MessageSquare, Clock,
+  ChevronRight, Sparkles, Trash2,
   Upload, Search, Users, Save,
   AlertCircle, CheckCircle2, Copy,
-  Send, Edit2,Wand2
+  Send, Edit2, Wand2,ChevronLeft
 } from 'lucide-react';
 import WhatsAppTemplatePopup from './WhatsAppTemplatePopup';
+//import { suggestedSequences } from './suggestedSequences'; // Import the seque
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import axiosInstance, { djangoURL } from '../../../api';
+import { toast } from 'react-toastify';
+
 var campaignName = 'new';
 const suggestedSequences = [
   {
@@ -152,8 +155,9 @@ const WhatsAppCampaign = ({
   setShowTemplatePopup,
   accountId,
   accessToken,
-  initialData = null, // Add initialData prop
-  isEditing = false 
+  initialData = null,
+  isEditing = false,
+  onBack
 }) => {
   const [sequence, setSequence] = useState([]);
   const [campaignName, setCampaignName] = useState('new');
@@ -161,11 +165,9 @@ const WhatsAppCampaign = ({
   const [selectedProspects, setSelectedProspects] = useState(
     initialData?.selectedProspects?.map(p => p.id) || []
   );
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
-  //const [showTemplatePopup, setShowTemplatePopup] = useState(false);
   const [selectedNodeForTemplate, setSelectedNodeForTemplate] = useState(null);
   const [pendingApprovalTemplates, setPendingApprovalTemplates] = useState([]);
   const [showSuggestedSequences, setShowSuggestedSequences] = useState(false);
@@ -177,21 +179,26 @@ const WhatsAppCampaign = ({
     email: '',
     company: ''
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileHeaders, setFileHeaders] = useState([]);
+  const [columnMapping, setColumnMapping] = useState({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+
   useEffect(() => {
     if (initialData && isEditing) {
-      // Convert the initial sequence data to match our component's structure
       const convertedSequence = initialData.sequence.map(node => ({
-        id: Date.now() + Math.random(), // Generate unique id
-        name: node.name || '', // Preserve the template name
+        id: Date.now() + Math.random(),
+        name: node.name || '',
         next: node.next,
         index: node.index,
         status: node.status || 'read',
-        timeDelay: node.timeDelay || 60,
+        timeDelay: node.timeDelay !== undefined && node.timeDelay !== null ? node.timeDelay : 60,
         templateId: node.templateId || '',
-        isApproved: true, // Since it's from existing data
+        isApproved: true,
         isPendingApproval: false
       }));
-
+  
       setSequence(convertedSequence);
       setCampaignName(initialData.name);
       setProspects(initialData.selectedProspects);
@@ -199,6 +206,120 @@ const WhatsAppCampaign = ({
     }
   }, [initialData, isEditing]);
 
+  const extractVariablesFromTemplates = () => {
+    const variables = new Set();
+
+    sequence.forEach(node => {
+      const template = templates.find(t => t.id === node.templateId) ||
+                      pendingApprovalTemplates.find(t => t.id === node.templateId);
+      if (template?.content) {
+        const matches = template.content.match(/{{(.*?)}}/g);
+        if (matches) {
+          matches.forEach(match => {
+            variables.add(match.replace(/[{}]/g, ''));
+          });
+        }
+      }
+    });
+
+    return Array.from(variables);
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const csv = e.target.result;
+          const lines = csv.split('\n');
+          const headers = lines[0].split(',').map(header => header.trim());
+          setFileHeaders(headers);
+          setSelectedFile(file);
+        } catch (error) {
+          console.error('Error parsing CSV:', error);
+          setUploadError('Failed to parse CSV file. Please ensure it is properly formatted.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const isColumnMappingValid = () => {
+    const variables = extractVariablesFromTemplates();
+    return variables.every(variable => columnMapping[variable]);
+  };
+
+  const handleUploadClick = async () => {
+    if (!selectedFile) {
+      setUploadError("Please select a file first.");
+      return;
+    }
+
+    if (!isColumnMappingValid()) {
+      setUploadError("Please map all variables to columns.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('model_name', "Contact");
+    formData.append('column_mapping', JSON.stringify(columnMapping));
+
+    try {
+      const response = await axiosInstance.post(`${djangoURL}/upload/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      toast.success("Contacts uploaded successfully!");
+    //   fetchContacts(); Refresh contact list
+
+      // Reset file input and state
+      setSelectedFile(null);
+      setFileHeaders([]);
+      setColumnMapping({});
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadError("Failed to upload contacts. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const ColumnMappingSection = () => {
+    const variables = extractVariablesFromTemplates();
+
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Map Columns to Variables</h3>
+        {variables.map(variable => (
+          <div key={variable} className="flex items-center gap-4">
+            <span style={{marginRight:'20px'}}className="w-32 font-medium">{variable}</span>
+            <Select
+              value={columnMapping[variable] || ''}
+              onValueChange={(value) => setColumnMapping(prev => ({ ...prev, [variable]: value }))}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select column" />
+              </SelectTrigger>
+              <SelectContent>
+                {fileHeaders.map(header => (
+                  <SelectItem key={header} value={header}>
+                    {header}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   const handleCreateTemplate = async (templateData) => {
     if (selectedNodeForTemplate) {
@@ -413,7 +534,7 @@ const WhatsAppCampaign = ({
   const isSequenceValid = useMemo(() => {
     return sequence.every(node => 
       node.templateId && 
-      node.timeDelay > 0 && 
+      node.timeDelay >= 0 && 
       node.status
     );
   }, [sequence]);
@@ -435,38 +556,6 @@ const WhatsAppCampaign = ({
     return messages;
   };
 
-  // File upload handler
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const csv = e.target.result;
-          const lines = csv.split('\n');
-          const headers = lines[0].split(',');
-          
-          const newProspects = lines.slice(1)
-            .map((line) => {
-              const values = line.split(',');
-              return {
-                id: Date.now() + Math.random(),
-                name: values[0]?.trim() || '',
-                phone: values[1]?.trim() || '',
-                email: values[2]?.trim() || '',
-                company: values[3]?.trim() || ''
-              };
-            })
-            .filter(p => p.name && p.phone);
-
-          setProspects([...prospects, ...newProspects]);
-        } catch (error) {
-          console.error('Error parsing CSV:', error);
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
 
   // Prospect handling functions
   const handleAddProspect = () => {
@@ -534,7 +623,7 @@ const WhatsAppCampaign = ({
     };
 
     try {
-      const response = await axiosInstance[isEditing ? 'put' : 'post'](
+      const response = await axiosInstance[isEditing ? 'patch' : 'post'](
         `${djangoURL}/campaign/${isEditing ? `?id=${initialData.id}` : ''}`,
         campaignData
       );
@@ -777,229 +866,236 @@ const WhatsAppCampaign = ({
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-            Create Campaign
-          </h2>
-          <p className="text-gray-500 mt-1">Design your WhatsApp campaign sequence and manage prospects</p>
-        </div>
-        <div className="space-y-2">
-          <Button
-            onClick={handleSaveCampaign}
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
-          >
-            <Save className="w-4 h-4" />
-            Save Campaign
-          </Button>
-          
-          {showValidation && !isFormValid && (
-            <div className="text-sm text-red-500">
-              {getValidationMessages().map((message, index) => (
-                <div key={index} className="flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
-                  {message}
+    {/* Header */}
+    <div className="flex justify-between items-center">
+      <div>
+     
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+          Create Campaign
+        </h2>
+        <p className="text-gray-500 mt-1">Design your WhatsApp campaign sequence and manage prospects</p>
+      </div>
+      <div className="space-y-2">
+      <Button
+      variant="outline"
+      onClick={onBack} // Add this prop to navigate back
+      className="flex items-center gap-2 hover:bg-gray-50"
+    >
+      <ChevronLeft className="w-4 h-4" /> {/* Add ChevronLeft import */}
+      Go Back
+    </Button>
+        <Button
+          onClick={handleSaveCampaign}
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+        >
+          <Save className="w-4 h-4" />
+          Save Campaign
+        </Button>
+        
+        {showValidation && !isFormValid && (
+          <div className="text-sm text-red-500">
+            {getValidationMessages().map((message, index) => (
+              <div key={index} className="flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                {message}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Campaign Name Input */}
+    <Input
+      placeholder="Enter campaign name..."
+      value={campaignName}
+      onChange={(e) => setCampaignName(e.target.value)}
+      className={`max-w-md text-lg ${showValidation && !campaignName.trim() ? 'border-red-500' : ''}`}
+    />
+
+    {/* Main Content */}
+    <Tabs defaultValue="sequence" className="w-full">
+      <TabsList className="w-full max-w-md">
+        <TabsTrigger 
+          value="sequence" 
+          className="flex-1 data-[state=active]:bg-blue-50"
+        >
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            Sequence Builder
+          </div>
+        </TabsTrigger>
+        <TabsTrigger 
+          value="prospects" 
+          className="flex-1 data-[state=active]:bg-green-50"
+        >
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Prospects ({selectedProspects.length})
+          </div>
+        </TabsTrigger>
+      </TabsList>
+
+      {/* Sequence Builder Tab */}
+      <TabsContent value="sequence">
+        {showTemplatePopup && (
+          <WhatsAppTemplatePopup
+            onSubmit={handleCreateTemplate}
+            onClose={() => setShowTemplatePopup(false)}
+          />
+        )}
+        
+        <SuggestedSequences />
+        
+        <div className="relative min-h-[500px] bg-gradient-to-b from-gray-50 to-white rounded-lg p-8 border border-dashed">
+          {sequence.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <div className="text-gray-400">No messages in sequence</div>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={addSequenceNode}
+                  className="flex items-center gap-2 border-dashed hover:border-blue-500 hover:text-blue-500"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add First Message
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {sequence.map((node, index) => (
+                <div key={node.id} className="relative">
+                  {index > 0 && (
+                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                      <div className="h-12 w-px bg-gradient-to-b from-blue-200 to-green-200"></div>
+                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 rotate-45">
+                        <ChevronRight className="w-4 h-4 text-green-400" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Card className="border-2 border-gray-100 hover:border-blue-100 transition-all max-w-2xl mx-auto shadow-sm hover:shadow-md">
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1">
+                            <TemplateSelector 
+                              nodeId={node.id}
+                              currentTemplateId={node.templateId}
+                            />
+                          </div>
+                          {node.isPendingApproval && !node.isApproved && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSendForApproval(node.id)}
+                              className="hover:bg-green-50"
+                            >
+                              <Send className="w-4 h-4 mr-2" />
+                              Send for Approval
+                            </Button>
+                          )}
+                          {node.isApproved && (
+                            <span className="text-sm text-green-600 flex items-center gap-1">
+                              <CheckCircle2 className="w-4 h-4" />
+                              Approved
+                            </span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteNode(node.index)}
+                            className="hover:bg-red-50 hover:text-red-500"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {node.templateId && (
+                          <div className={`p-4 rounded-md border ${
+                            node.isApproved ? 'bg-green-50 border-green-100' :
+                            node.isPendingApproval ? 'bg-yellow-50 border-yellow-100' : 
+                            'bg-blue-50 border-blue-100'
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <div className="text-sm font-medium text-blue-700">
+                                {(templates.find(t => t.id === node.templateId) ||
+                                  pendingApprovalTemplates.find(t => t.id === node.templateId))?.name}
+                              </div>
+                              {node.isPendingApproval && !node.isApproved && (
+                                <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
+                                  Pending Approval
+                                </span>
+                              )}
+                              {node.isApproved && (
+                                <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">
+                                  Approved Template
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-blue-600 mt-2">
+                              {(templates.find(t => t.id === node.templateId) ||
+                                pendingApprovalTemplates.find(t => t.id === node.templateId))?.content}
+                            </div>
+                          </div>
+                        )}  
+
+                        <div className="flex items-center gap-4 pt-2">
+                          <Select
+                            value={node.status}
+                            onValueChange={(value) => updateNode(node.id, { status: value })}
+                          >
+                            <SelectTrigger className="w-40 bg-gray-50">
+                              <SelectValue placeholder="Select trigger" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="read">After read</SelectItem>
+                              <SelectItem value="delivered">After delivered</SelectItem>
+                              <SelectItem value="replied">After replied</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-green-500" />
+                            <Input
+                              type="number"
+                              min="0"
+                              value={node.timeDelay}
+                              onChange={(e) => updateNode(node.id, { 
+                                timeDelay: parseInt(e.target.value) 
+                              })}
+                              className="w-24 bg-gray-50"
+                            />
+                            <span className="text-sm text-gray-500">minutes</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {index === sequence.length - 1 && (
+                    <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={addSequenceNode}
+                        className="rounded-full border-dashed hover:border-green-500 hover:text-green-500"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Next Message
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
-      </div>
+      </TabsContent>
 
-      {/* Campaign Name Input */}
-      <Input
-        placeholder="Enter campaign name..."
-        value={campaignName}
-        onChange={(e) => setCampaignName(e.target.value)}
-        className={`max-w-md text-lg ${showValidation && !campaignName.trim() ? 'border-red-500' : ''}`}
-      />
-
-      {/* Main Content */}
-      <Tabs defaultValue="sequence" className="w-full">
-        <TabsList className="w-full max-w-md">
-          <TabsTrigger 
-            value="sequence" 
-            className="flex-1 data-[state=active]:bg-blue-50"
-          >
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              Sequence Builder
-            </div>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="prospects" 
-            className="flex-1 data-[state=active]:bg-green-50"
-          >
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Prospects ({selectedProspects.length})
-            </div>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Sequence Builder Tab */}
-        <TabsContent value="sequence">
-          {showTemplatePopup && (
-            <WhatsAppTemplatePopup
-              onSubmit={handleCreateTemplate}
-              onClose={() => setShowTemplatePopup(false)}
-            />
-          )}
-          
-          <SuggestedSequences />
-          
-          <div className="relative min-h-[500px] bg-gradient-to-b from-gray-50 to-white rounded-lg p-8 border border-dashed">
-            {sequence.length === 0 ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="text-gray-400">No messages in sequence</div>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    onClick={addSequenceNode}
-                    className="flex items-center gap-2 border-dashed hover:border-blue-500 hover:text-blue-500"
-                  >
-                    <Plus className="w-5 h-5" />
-                    Add First Message
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {sequence.map((node, index) => (
-                  <div key={node.id} className="relative">
-                    {index > 0 && (
-                      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
-                        <div className="h-12 w-px bg-gradient-to-b from-blue-200 to-green-200"></div>
-                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 rotate-45">
-                          <ChevronRight className="w-4 h-4 text-green-400" />
-                        </div>
-                      </div>
-                    )}
-                    
-                    <Card className="border-2 border-gray-100 hover:border-blue-100 transition-all max-w-2xl mx-auto shadow-sm hover:shadow-md">
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <TemplateSelector 
-                  nodeId={node.id}
-                  currentTemplateId={node.templateId}
-                />
-              </div>
-              {node.isPendingApproval && !node.isApproved && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSendForApproval(node.id)}
-                  className="hover:bg-green-50"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send for Approval
-                </Button>
-              )}
-              {node.isApproved && (
-                <span className="text-sm text-green-600 flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Approved
-                </span>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => deleteNode(node.index)}
-                className="hover:bg-red-50 hover:text-red-500"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {node.templateId && (
-              <div className={`p-4 rounded-md border ${
-                node.isApproved ? 'bg-green-50 border-green-100' :
-                node.isPendingApproval ? 'bg-yellow-50 border-yellow-100' : 
-                'bg-blue-50 border-blue-100'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-blue-700">
-                    {(templates.find(t => t.id === node.templateId) ||
-                      pendingApprovalTemplates.find(t => t.id === node.templateId))?.name}
-                  </div>
-                  {node.isPendingApproval && !node.isApproved && (
-                    <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
-                      Pending Approval
-                    </span>
-                  )}
-                  {node.isApproved && (
-                    <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">
-                      Approved Template
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-blue-600 mt-2">
-                  {(templates.find(t => t.id === node.templateId) ||
-                    pendingApprovalTemplates.find(t => t.id === node.templateId))?.content}
-                </div>
-              </div>
-            )}  
-
-                          <div className="flex items-center gap-4 pt-2">
-                            <Select
-                              value={node.status}
-                              onValueChange={(value) => updateNode(node.id, { status: value })}
-                            >
-                              <SelectTrigger className="w-40 bg-gray-50">
-                                <SelectValue placeholder="Select trigger" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="read">When message is read</SelectItem>
-                                <SelectItem value="delivered">When delivered</SelectItem>
-                                <SelectItem value="replied">When replied to</SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-green-500" />
-                              <Input
-                                type="number"
-                                min="1"
-                                value={node.timeDelay}
-                                onChange={(e) => updateNode(node.id, { 
-                                  timeDelay: parseInt(e.target.value) 
-                                })}
-                                className="w-24 bg-gray-50"
-                              />
-                              <span className="text-sm text-gray-500">minutes</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                  
-                      {index === sequence.length - 1 && (
-                        <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={addSequenceNode}
-                            className="rounded-full border-dashed hover:border-green-500 hover:text-green-500"
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Next Message
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            
-          </div>
-        </TabsContent>
-
-        <TabsContent value="prospects">
+      <TabsContent value="prospects">
         <Card className="border-none shadow-lg">
           <CardHeader className="bg-gradient-to-r from-green-50 to-blue-50 rounded-t-lg">
             <div className="flex justify-between items-center">
@@ -1081,6 +1177,24 @@ const WhatsAppCampaign = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+            {selectedFile && fileHeaders.length > 0 && (
+  <>
+    <ColumnMappingSection />
+    <Button
+      onClick={handleUploadClick}
+      disabled={!isColumnMappingValid() || isUploading}
+      className="w-full bg-green-600 hover:bg-green-700"
+    >
+      {isUploading ? "Uploading..." : "Upload to Contacts"}
+    </Button>
+    {uploadError && (
+      <div className="text-sm text-red-500">
+        <AlertCircle className="w-4 h-4 inline-block mr-1" />
+        {uploadError}
+      </div>
+    )}
+  </>
+)}
               <div className="flex justify-between items-center">
                 <div className="relative w-72">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
@@ -1160,8 +1274,7 @@ const WhatsAppCampaign = ({
       </TabsContent>
     </Tabs>
   </div>
-  );
+);
 };
 
 export default WhatsAppCampaign;
-

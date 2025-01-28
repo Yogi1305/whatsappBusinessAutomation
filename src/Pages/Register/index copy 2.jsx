@@ -49,10 +49,8 @@ const Register = () => {
     const [creatingOrg, setCreatingOrg] = useState(false)
     const [showPopup, setShowPopup] = useState(false);
     const [errors, setErrors] = useState({});
-    const [firebaseError, setFirebaseError] = useState(null);
     const [step, setStep] = useState(1);
-    const { login } = useAuth();
-
+ const { login } = useAuth();
     useEffect(() => {
         fetch(`${djangoURL}/createTenant`)
             .then((res) => res.json())
@@ -209,14 +207,11 @@ const Register = () => {
     };
 
     const handleFirebaseSignIn = async () => {
-        setFirebaseError(null); // Reset any previous errors
-        setIsSubmitting(true); // Start loading
-
         try {
             const result = await signInWithPopup(auth, googleProvider);
             const user = result.user;
             const email = user.email;
-            const username = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, 'a');
+            const username = email.split('@')[0];
             const password = `${username}nutenai`;
 
             // Create tenant with organisation name and password derived from email
@@ -277,9 +272,6 @@ const Register = () => {
 
         } catch (error) {
             console.error('Firebase sign-in or registration failed:', error);
-            setFirebaseError(error.message); // Set error message for user feedback
-        } finally {
-            setIsSubmitting(false); // Stop loading
         }
     };
 
@@ -491,31 +483,13 @@ const Register = () => {
                     </div>
 
                     <div className="mt-6 text-center">
-  <button
-    onClick={handleFirebaseSignIn}
-    disabled={isSubmitting}
-    className="w-full flex items-center justify-center bg-white border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition duration-300 font-medium"
-  >
-    {isSubmitting ? (
-      <div className="flex items-center justify-center">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-        Signing up...
-      </div>
-    ) : (
-      <>
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png"
-          alt="Google Logo"
-          className="w-5 h-5 mr-2"
-        />
-        Sign up with Google
-      </>
-    )}
-  </button>
-  {firebaseError && (
-    <p className="mt-2 text-sm text-red-500 animate-shake">{firebaseError}</p>
-  )}
-</div>
+                        <button
+                            onClick={handleFirebaseSignIn}
+                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition duration-300 font-medium"
+                        >
+                            Sign up with Google
+                        </button>
+                    </div>
                 </div>
             </div>
 

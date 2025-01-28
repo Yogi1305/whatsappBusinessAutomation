@@ -63,6 +63,7 @@ export const Footer = () => {
       links: [
         { name: 'Privacy Policy', url: '/privacypolicy' },
         { name: 'Terms of Service', url: '/termsandconditions' },
+        { name: 'Refund & Cancellation', url: '/refundandcancellation' },
       ],
     },
   ];
@@ -232,7 +233,7 @@ export const CalendlySection = () => {
                     rootElement={document.getElementById("root")}
                     text={
                       <span className="flex items-center justify-center gap-3 w-full">
-                        MEET THE FOUNDER
+                        FREE CONSULTATION
                         <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
                       </span>
                     }
@@ -277,7 +278,7 @@ export const CalendlySection = () => {
         icon: Zap, 
         title: "QUICK RESPONSES", 
         description: "Create and manage a library of quick responses to common queries, saving time and ensuring consistency.", 
-        link: 'blogs/quick-responses',
+        link: 'blogs/segmentation',
         image: Quick
       },
       { 
@@ -291,14 +292,14 @@ export const CalendlySection = () => {
         icon: Shield, 
         title: "SECURE & COMPLIANT", 
         description: "Ensure data privacy and comply with regulations using our robust security measures.", 
-        link: 'blogs/security-compliance',
+        link: 'blogs/segmentation',
         image: security
       },
       { 
         icon: Rocket, 
         title: "SCALABLE SOLUTIONS", 
-        description: "Grow your business effortlessly with our scalable WhatsApp marketing solutions.", 
-        link: 'blogs/scalable-solutions',
+        description: "Grow your business effortlessly with our scalable WhatsApp marketing solutions, designed to boost engagement & sales. ", 
+        link: 'blogs/segmentation',
         image: Scale
       },
     ];
@@ -395,7 +396,8 @@ export const CalendlySection = () => {
           "Template creation",
           "Direct reply to individual chats",
           "Basic analytics dashboard",
-          "Support for 2-3 languages"
+          "Support for 2-3 languages",
+          "24/7 reliability and support"
         ],
         popular: false
       },
@@ -463,13 +465,14 @@ export const CalendlySection = () => {
             </p>
           </div>
   
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {/* Use flex to ensure equal height */}
+          <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto">
             {plans.map((plan, index) => (
-              <div key={index} className="group relative">
+              <div key={index} className="flex-1 group relative">
                 <div className={`absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-2xl blur ${
                   plan.popular ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                 } transition duration-300`} />
-                <div className={`relative p-8 rounded-xl backdrop-blur-sm border ${
+                <div className={`relative h-full p-8 rounded-xl backdrop-blur-sm border ${
                   plan.popular ? 'bg-black/60 border-emerald-500/40' : 'bg-black/50 border-emerald-500/20'
                 } transition-all duration-300`}>
                   {plan.popular && (
@@ -598,20 +601,7 @@ export const CalendlySection = () => {
               ))}
             </div>
   
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-16 text-center"
-            >
-              <a 
-                href="/case-studies"
-                className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors"
-              >
-                <span className="text-lg font-semibold">View All Case Studies</span>
-                <ArrowRight className="w-5 h-5" />
-              </a>
-            </motion.div>
+           
           </div>
         </div>
       </div>

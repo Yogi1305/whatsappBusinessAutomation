@@ -9,10 +9,12 @@ import BroadcastPopup from './BroadcastPopup';
 import GroupPopup from './GroupPopup';
 import WhatsAppTemplatePopup from './WhatsAppTemplatePopup';
 import { toast } from "sonner"; 
-import { Clock, MessageSquare,FileText } from 'lucide-react';
+//import { Clock, MessageSquare,FileText } from 'lucide-react';
+import { History, Rocket, Terminal, FileText, MessageSquare } from 'lucide-react';
 import CarouselEditor from './Carousel';
 import CampaignsDashboard from './CampaignDash';
 import WhatsAppCommands from './Commands';
+import { useAuth } from '../../../authContext';
 //import CampaignManager from './Campaign';
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
@@ -27,6 +29,8 @@ const initial_bg = [
 ]
 
 const BroadcastPage = () => {
+  const { tenant } = useAuth();
+const tier = tenant?.tier || 'Free'; 
   const [accessToken, setAccessToken] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
@@ -278,15 +282,11 @@ const BroadcastPage = () => {
     console.log("HEADER CONTENT: ", headerType, headerContent)
     let headerComponent;
     if (headerType === 'text' && headerContent.trim()) {
-
-      // const headerVariables = extractVariables(headerContent);
-    
       // Handle text header
       headerComponent = {
         type: "HEADER",
         format: "TEXT",
         text: convertBodyTextToIndexedFormat(headerContent), // Convert text to indexed format
-        example: undefined, 
       };
       console.log("Header Variabbles: ", headerVariables)
       if (headerVariables.length > 0) {
@@ -301,7 +301,6 @@ const BroadcastPage = () => {
       components.push({
         type: "HEADER",
         format: "IMAGE", // Explicitly set format to IMAGE
-        text: undefined, // No text needed for image headers
         example: { header_handle: [headerMediaId] }, // Provide media ID for image
       });
     }
@@ -311,7 +310,7 @@ const BroadcastPage = () => {
       type: "BODY",
       text: convertBodyTextToIndexedFormat(bodyText),
     };
-    
+  
     if (bodyVariables && bodyVariables.length > 0) {
       bodyComponent.example = {
         body_text: [bodyVariables.map(variable => `{{${variable}}}`)],
@@ -319,7 +318,7 @@ const BroadcastPage = () => {
     }
     // console.log("Type of header test: ", typeof bodyComponent.example.body_text[0])
     components.push(bodyComponent);
-
+  
     if (footerText.trim()) {
       components.push({
         type: "FOOTER",
@@ -380,7 +379,7 @@ const BroadcastPage = () => {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-
+  
       setShowTemplatePopup(false);
       resetTemplateForm();
       await fetchTemplates();
@@ -606,7 +605,7 @@ const BroadcastPage = () => {
       onClick={() => handleTabChange('history')}
     >
       <div className="flex items-center space-x-3">
-        <Clock className="w-5 h-5" />
+        <History className="w-5 h-5" /> {/* Changed to History icon */}
         <span>Broadcast History</span>
       </div>
     </div>
@@ -621,63 +620,69 @@ const BroadcastPage = () => {
       onClick={() => handleTabChange('templates')}
     >
       <div className="flex items-center space-x-3">
-        <FileText className="w-5 h-5" />
+      <FileText className="w-5 h-5" />  {/* Changed to Template icon */}
         <span>Template Messages</span>
       </div>
     </div>
 
-    {/* Campaigns 
+    {/* Campaigns */}
     <div
-      className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer
-        ${activeTab === 'campaigns' 
-          ? 'bg-primary/10 text-primary font-medium' 
-          : 'text-gray-700 hover:bg-gray-100'
-        }`}
-      onClick={() => handleTabChange('campaigns')}
-    >
+          className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+            tier === 'enterprise' ? 'cursor-pointer hover:bg-gray-100' : 'cursor-not-allowed opacity-50'
+          }
+            ${activeTab === 'campaigns' 
+              ? 'bg-primary/10 text-primary font-medium' 
+              : 'text-gray-700'
+            }`}
+          onClick={tier === 'enterprise' ? () => handleTabChange('campaigns') : undefined}
+        >
       <div className="flex items-center space-x-3">
-        <MessageSquare className="w-5 h-5" />
-        <span>Campaigns</span>
+        <Rocket className="w-5 h-5" /> {/* Changed to Rocket icon */}
+        <span>Drip Campaigns</span>
       </div>
     </div>
+
+    {/* Commands */}
     <div
-      className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer
-        ${activeTab === 'commands' 
-          ? 'bg-primary/10 text-primary font-medium' 
-          : 'text-gray-700 hover:bg-gray-100'
-        }`}
-      onClick={() => handleTabChange('commands')}
-    >
+          className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+            tier === 'enterprise' ? 'cursor-pointer hover:bg-gray-100' : 'cursor-not-allowed opacity-50'
+          }
+            ${activeTab === 'commands' 
+              ? 'bg-primary/10 text-primary font-medium' 
+              : 'text-gray-700'
+            }`}
+          onClick={tier === 'enterprise' ? () => handleTabChange('commands') : undefined}
+        >
       <div className="flex items-center space-x-3">
-        <MessageSquare className="w-5 h-5" />
+        <Terminal className="w-5 h-5" /> {/* Changed to Terminal icon */}
         <span>Commands</span>
       </div>
-    </div>*/}
+    </div>
   </div>
 </div>
       {/*Mobile Sidebar to TopBar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-2xl border-t z-50">
-    <div className="grid grid-cols-2">
-      <button 
-        onClick={() => handleTabChange('history')}
-        className={`flex flex-col items-center justify-center py-3 transition-all duration-200 ease-in-out
-          ${activeTab === 'history' ? 'text-primary bg-primary/10' : 'text-gray-600 hover:bg-gray-100'}
-        `}
-      >
-        <Clock className="w-5 h-5 mb-1" />
-        <span className="text-xs font-medium">History</span>
-      </button>
-      <button 
-        onClick={() => handleTabChange('templates')}
-        className={`flex flex-col items-center justify-center py-3 transition-all duration-200 ease-in-out
-          ${activeTab === 'templates' ? 'text-primary bg-primary/10' : 'text-gray-600 hover:bg-gray-100'}
-        `}
-      >
-        <MessageSquare className="w-5 h-5 mb-1" />
-        <span className="text-xs font-medium">Templates</span>
-      </button>
-    </div>
+  <div className="grid grid-cols-2">
+    <button 
+      onClick={() => handleTabChange('history')}
+      className={`flex flex-col items-center justify-center py-3 transition-all duration-200 ease-in-out
+        ${activeTab === 'history' ? 'text-primary bg-primary/10' : 'text-gray-600 hover:bg-gray-100'}
+      `}
+    >
+      <History className="w-5 h-5 mb-1" /> {/* Changed to History icon */}
+      <span className="text-xs font-medium">History</span>
+    </button>
+    <button 
+      onClick={() => handleTabChange('templates')}
+      className={`flex flex-col items-center justify-center py-3 transition-all duration-200 ease-in-out
+        ${activeTab === 'templates' ? 'text-primary bg-primary/10' : 'text-gray-600 hover:bg-gray-100'}
+      `}
+    >
+      <FileText className="w-5 h-5" />  {/* Changed to Template icon */}
+      <span className="text-xs font-medium">Templates</span>
+    </button>
   </div>
+</div>
       <div className="flex-1 p-6" style={{marginBottom:'30px'}}>
         {activeTab === 'history' && (
           <BroadcastHistory
@@ -718,7 +723,8 @@ const BroadcastPage = () => {
             setShowPopup={setShowPopup}
           />
         )}
-        {activeTab === 'campaigns' && (
+      
+        {activeTab === 'campaigns' && tier === 'enterprise'&&(
             <CampaignsDashboard
               templates={templates}
               contacts={contacts}
@@ -728,9 +734,10 @@ const BroadcastPage = () => {
               setShowTemplatePopup={setShowTemplatePopup}
               accountId={accountId}
               accessToken={accessToken}
+              businessPhoneNumberId={businessPhoneNumberId}
             />
           )}
-           {activeTab === 'commands' && (
+           {activeTab === 'commands' && tier === 'enterprise'&&(
             <WhatsAppCommands
             />
           )}
