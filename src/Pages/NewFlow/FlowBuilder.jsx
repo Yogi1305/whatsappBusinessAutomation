@@ -780,12 +780,22 @@ const FlowBuilderContent = () => {
   );
 };
 
-const FlowBuilder = () => (
-  <FlowProvider>
-    <ReactFlowProvider>
-      <FlowBuilderContent />
-    </ReactFlowProvider>
-  </FlowProvider>
-);
+const FlowBuilder = () => {
+  const { authenticated } = useAuth(); // Example hook to fetch auth state
+
+  return (
+    <FlowProvider>
+      <ReactFlowProvider>
+        <div
+          className={`${
+            authenticated ? "" : "mt-[70px]"
+          }`}
+        >
+          <FlowBuilderContent />
+        </div>
+      </ReactFlowProvider>
+    </FlowProvider>
+  );
+};
 
 export default FlowBuilder;

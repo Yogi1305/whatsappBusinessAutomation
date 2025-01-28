@@ -934,7 +934,11 @@ function renderMessageWithNewLines(text) {
 
 
   return (
-  <div>
+ <div
+  className={`${
+    authenticated ? "" : "mt-[60px]"
+  } `}
+>
    <div className="md:hidden">
    <div className="mobile-chat-container flex flex-col h-screen">
   {/* Sliding Contacts Drawer */}

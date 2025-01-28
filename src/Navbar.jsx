@@ -257,7 +257,7 @@ const Navbar = () => {
           <Link to={getPath('/chatbot')}>
             <NavigationMenuLink className={`${linkBaseClasses} ${isActive('/chatbot') ? 'text-primary font-semibold' : ''}`}>
               <MessageSquare className={`${iconClasses} ${isActive('/chatbot') ? 'text-primary scale-110' : ''}`} />
-              <span className={textClasses}>Chatbot</span>
+              <span className={textClasses}>Direct Chat</span>
               {isActive('/chatbot') && (
                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-underline"></span>
               )}
