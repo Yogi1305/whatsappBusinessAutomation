@@ -142,7 +142,6 @@ const App = () => {
           <Navbar isAuthenticated={authenticated} onLogout={logout} />
         </div>
 
-        <main className="flex-grow container">
           <Routes>
             <Route path="/" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <HomePage />} />
             <Route path="/login" element={authenticated ? <Navigate to={`/${tenantId}/broadcast`} replace /> : <Login />} />
@@ -221,7 +220,6 @@ const App = () => {
             <Route path="blogs/customer-feedback" element={<HandleCustomerFeedback />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </main>
       </div>
     </Router>
   );
