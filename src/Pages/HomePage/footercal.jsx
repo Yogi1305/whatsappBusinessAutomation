@@ -63,6 +63,7 @@ export const Footer = () => {
       links: [
         { name: 'Privacy Policy', url: '/privacypolicy' },
         { name: 'Terms of Service', url: '/termsandconditions' },
+        { name: 'Refund & Cancellation', url: '/refundandcancellation' },
       ],
     },
   ];
@@ -599,20 +600,7 @@ export const CalendlySection = () => {
               ))}
             </div>
   
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-16 text-center"
-            >
-              <a 
-                href="/case-studies"
-                className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors"
-              >
-                <span className="text-lg font-semibold">View All Case Studies</span>
-                <ArrowRight className="w-5 h-5" />
-              </a>
-            </motion.div>
+           
           </div>
         </div>
       </div>

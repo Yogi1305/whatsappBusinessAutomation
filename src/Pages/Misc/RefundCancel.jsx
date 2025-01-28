@@ -2,7 +2,7 @@ import React from 'react';
 
 const CancellationRefundPolicy = () => {
     return (
-        <div className="bg-gray-50 text-gray-800 p-6 md:p-10 max-w-3xl mx-auto">
+        <div style={{marginTop:'50px'}}className="bg-gray-50 text-gray-800 p-6 md:p-10 max-w-3xl mx-auto">
             <h1 className="text-3xl font-bold mb-4 text-center text-blue-600">Cancellation & Refund Policy</h1>
             <p className="mb-4 text-center"><strong>Last updated on 24-01-2025 13:27:42</strong></p>
             <p className="mb-6">
