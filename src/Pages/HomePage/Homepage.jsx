@@ -4,13 +4,7 @@ import { useSpring, animated } from 'react-spring';
 import { MessageCircle, Users, Zap, BarChart2, Send, Star, Shield, Rocket, Check, ChevronDown } from 'lucide-react';
 import HeroSlider from './HeroSlider';
 import VideoSection from './Videocardcanvas';
-import content0 from '../../assets/content0.png'; // Replace with your image path
-import content1 from '../../assets/content1.mp4'; 
-import man from "../../assets/man.png";
-import connection from "../../assets/connection.png";
-import chatbot from "../../assets/chatbot.jpeg";
-import security from "../../assets/security.png";
-import outreach from "../../assets/outreach.png";
+
 import "./Homepage.css";
 //import CalendlySection from './Calendly';
 import ChatbotDemoSection from './ChatbotDemo';
