@@ -36,6 +36,7 @@ import ContactDetails from './Pages/ContactPage/ContactDetails.jsx';
 import GPayUPIPayment from './payment.jsx';
 import CancellationRefundPolicy from './Pages/Misc/RefundCancel.jsx';
 import { Toaster } from 'sonner';
+import WhatsAppSuperApp from './Pages/Blogs/superapp.jsx';
 import { Button } from "@/components/ui/button";
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
@@ -218,6 +219,7 @@ const App = () => {
             <Route path="blogs/whatsapp-engagement" element={<MaximizingCustomerEngagement />} />
             <Route path="blogs/marketing-strategy" element={<WhatsAppMarketingStrategies />} />
             <Route path="blogs/customer-feedback" element={<HandleCustomerFeedback />} />
+            <Route path="blogs/super-app" element={<WhatsAppSuperApp />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
       </div>
