@@ -252,9 +252,12 @@ const WhatsAppTemplatePopup = ({
   setBodyVariables,
   setHeaderVariables,
   extractVariables,
-  convertMentionsForFrontend
+  convertMentionsForFrontend,
+  loading,
+  setLoading
 }) => {
   const fileInputRef = useRef(null);
+  
 
   const [templateNameError, setTemplateNameError] = useState('');
 
@@ -283,20 +286,19 @@ const WhatsAppTemplatePopup = ({
         <CardContent className="flex gap-6 p-6 overflow-auto">
           <form onSubmit={handleCreateTemplate} className="flex-1 space-y-6">
             <div className="space-y-4">
-          
-            <div>
-              <Label>Template Name</Label>
-              <Input
-                value={templateName}
-                onChange={handleTemplateNameChange}
-                required
-              />
-              {templateNameError && (
-                <div className="text-red-500 text-sm mt-1">
-                  {templateNameError}
-                </div>
-              )}
-            </div>
+              <div>
+                <Label>Template Name</Label>
+                <Input
+                  value={templateName}
+                  onChange={handleTemplateNameChange}
+                  required
+                />
+                {templateNameError && (
+                  <div className="text-red-500 text-sm mt-1">
+                    {templateNameError}
+                  </div>
+                )}
+              </div>
 
               <div>
                 <Label>Category</Label>
@@ -341,6 +343,8 @@ const WhatsAppTemplatePopup = ({
                     <SelectItem value="none">No header</SelectItem>
                     <SelectItem value="text">Text</SelectItem>
                     <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="document">Document</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -358,11 +362,16 @@ const WhatsAppTemplatePopup = ({
                   />
                 )}
                 
-                {headerType === 'image' && (
+                {(headerType === 'image' ||  headerType === 'video' || headerType === 'document') && (
                   <div className="mt-2 space-y-2">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept={
+                        headerType === 'image' ? "image/*" :
+                        headerType === 'video' ? "video/*" :
+                        headerType === 'document' ? ".pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt" :
+                        "*/*"
+                      }
                       onChange={handleImageUpload}
                       className="hidden"
                       ref={fileInputRef}
@@ -372,7 +381,7 @@ const WhatsAppTemplatePopup = ({
                       variant="outline"
                       onClick={() => fileInputRef.current.click()}
                     >
-                      Upload Image
+                      Upload {headerType}
                     </Button>
                     {headerImage && (
                       <p className="text-sm text-gray-600">{headerImage.name}</p>
@@ -465,14 +474,14 @@ const WhatsAppTemplatePopup = ({
                   </div>
                 ))}
                 <Button
-                type="button"
-                variant="outline"
-                onClick={addButton}
-                className="w-full"
-                disabled={buttons.length >= 3}
-              >
-                Add Button
-              </Button>
+                  type="button"
+                  variant="outline"
+                  onClick={addButton}
+                  className="w-full"
+                  disabled={buttons.length >= 3}
+                >
+                  Add Button
+                </Button>
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-4 border-t">
@@ -486,67 +495,112 @@ const WhatsAppTemplatePopup = ({
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                {isEditing ? 'Update' : 'Save'} Template
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Processing' : isEditing ? 'Update' : 'Save'} Template
               </Button>
             </div>
           </form>
 
           <div className="w-[400px] flex-shrink-0 hidden md:block">
-  <Card className="w-full max-w-md mx-auto shadow-lg sticky top-0 z-10">
-    <CardHeader className="p-3 bg-[#128C7E] text-white">
-      <CardTitle className="text-base">Preview</CardTitle>
-    </CardHeader>
-    <CardContent className="p-4 bg-gray-50">
-      <div className="max-w-md mx-auto bg-[#DCF8C6] p-3 rounded-lg relative">
-        {/* Header Content */}
-        {headerType === 'text' && headerContent && (
-          <div className="font-semibold text-gray-800 mb-2 break-words whitespace-normal overflow-hidden w-full">
-            {headerContent}
-          </div>
-        )}
-        
-        {headerType === 'image' && headerContent && (
+          <Card className="w-full max-w-md mx-auto shadow-lg sticky top-0 z-10">
+  <CardHeader className="p-3 bg-[#128C7E] text-white">
+    <CardTitle className="text-base">Preview</CardTitle>
+  </CardHeader>
+  <CardContent className="p-4 bg-gray-50">
+    <div className="max-w-md mx-auto bg-[#DCF8C6] p-3 rounded-lg relative">
+      {/* Header Content */}
+      {headerType === 'text' && headerContent && (
+        <div className="font-semibold text-gray-800 mb-2 break-words whitespace-normal overflow-hidden w-full">
+          {headerContent}
+        </div>
+      )}
+
+      {/* Image Header */}
+      {headerType === 'image' && headerContent && (
+        <div className="mt-2 space-y-2">
           <img
             src={headerContent}
             alt="Header"
             className="w-full h-48 object-cover rounded-lg mb-2"
           />
-        )}
-        
-        {/* Body Text */}
-        <div className="text-gray-900 mb-2 break-words">
-          {convertMentionsForFrontend(bodyText)}
         </div>
-        
-        {/* Footer Text */}
-        {footerText && (
-          <div className="text-sm text-gray-700 break-words mb-2">{footerText}</div>
-        )}
-        
-        {/* Buttons */}
-        {buttons.length > 0 && (
-          <div className="space-y-2 pt-2">
-            {buttons.map((button, index) => (
-              <button
-                key={index}
-                className="w-full bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#1ea855] transition-colors"
-              >
-                {button.text}
-              </button>
-            ))}
-          </div>
-        )}
-        
-        {/* Timestamp and Read Status */}
-        <div className="text-xs text-gray-500 text-right mt-2 flex justify-end items-center">
-          <span className="mr-1">1:10 PM</span>
-          <span className="text-blue-500">✓✓</span>
+      )}
+
+      {/* Video Header */}
+      {headerType === 'video' && headerContent && (
+        <div className="mt-2 space-y-2">
+          <video controls className="w-full h-48 object-cover rounded-lg mb-2">
+            <source src={headerContent} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
         </div>
+      )}
+
+      {/* Document Header */}
+      {headerType === 'document' && headerContent && (
+  <div className="p-3 bg-white border border-gray-300 rounded-lg flex items-center space-x-3">
+    {/* Document Icon */}
+    <div className="bg-gray-200 p-2 rounded-full">
+      📄 {/* Unicode document icon */}
+    </div>
+
+    {/* File Details */}
+    <div className="flex-1">
+      <p className="text-sm text-gray-800 font-semibold break-words">
+        {headerContent.name}
+      </p>
+      <p className="text-xs text-gray-500">
+        {headerContent.size ? (headerContent.size / 1024).toFixed(2) + ' KB' : 'Unknown Size'}
+      </p>
+    </div>
+
+    {/* Download Button */}
+    <a
+      href={headerContent}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition"
+    >
+      Download
+    </a>
+  </div>
+)}
+
+
+      {/* Body Text */}
+      <div className="text-gray-900 mb-2 break-words">
+        {convertMentionsForFrontend(bodyText)}
       </div>
-    </CardContent>
-  </Card>
-</div>
+
+      {/* Footer Text */}
+      {footerText && (
+        <div className="text-sm text-gray-700 break-words mb-2">{footerText}</div>
+      )}
+
+      {/* Buttons */}
+      {buttons.length > 0 && (
+        <div className="space-y-2 pt-2">
+          {buttons.map((button, index) => (
+            <button
+              key={index}
+              className="w-full bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#1ea855] transition-colors"
+            >
+              {button.text}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Timestamp and Read Status */}
+      <div className="text-xs text-gray-500 text-right mt-2 flex justify-end items-center">
+        <span className="mr-1">1:10 PM</span>
+        <span className="text-blue-500">✓✓</span>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
+          </div>
         </CardContent>
       </Card>
     </div>

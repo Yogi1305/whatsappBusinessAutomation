@@ -30,6 +30,7 @@ const initial_bg = [
 
 const BroadcastPage = () => {
   const { tenant } = useAuth();
+  const [loading, setLoading] = useState(false);
 const tier = tenant?.tier || 'Free'; 
   const [accessToken, setAccessToken] = useState('');
   const [showPopup, setShowPopup] = useState(false);
@@ -274,58 +275,73 @@ const tier = tenant?.tier || 'Free';
     setSelectedBCGroups([]);
     setGroupName('');
   };
-
   const handleCreateTemplate = async (e) => {
     e.preventDefault();
-    
+  setLoading(true);
     const components = [];
-    console.log("HEADER CONTENT: ", headerType, headerContent)
-    let headerComponent;
+  
+    // Handle HEADER component
     if (headerType === 'text' && headerContent.trim()) {
-      // Handle text header
-      headerComponent = {
+      // Text header
+      const headerComponent = {
         type: "HEADER",
         format: "TEXT",
         text: convertBodyTextToIndexedFormat(headerContent), // Convert text to indexed format
       };
-      console.log("Header Variabbles: ", headerVariables)
+  
       if (headerVariables.length > 0) {
         headerComponent.example = {
-          header_text: headerVariables.map(variable => `{{${variable}}}`),
+          header_text: [headerVariables.map(variable => `{{${variable}}}`)], // Array of arrays
         };
       }
-    
+  
       components.push(headerComponent);
     } else if (headerType === 'image' && headerMediaId) {
-      // Handle image header
+      // Image header
       components.push({
         type: "HEADER",
-        format: "IMAGE", // Explicitly set format to IMAGE
-        example: { header_handle: [headerMediaId] }, // Provide media ID for image
+        format: "IMAGE",
+        example: { header_handle: [headerMediaId] }, // Media ID for image
+      });
+    } else if (headerType === 'video' && headerMediaId) {
+      // Video header
+      components.push({
+        type: "HEADER",
+        format: "VIDEO",
+        example: { header_handle: [headerMediaId] }, // Media ID for video
+      });
+    } else if (headerType === 'document' && headerMediaId) {
+      // Document header
+      components.push({
+        type: "HEADER",
+        format: "DOCUMENT",
+        example: { header_handle: [headerMediaId] }, // Media ID for document
       });
     }
-    console.log("Body Content: ", bodyText, bodyVariables)
+  
     // Handle BODY component
     const bodyComponent = {
       type: "BODY",
       text: convertBodyTextToIndexedFormat(bodyText),
     };
   
-    if (bodyVariables && bodyVariables.length > 0) {
+    if (bodyVariables.length > 0) {
       bodyComponent.example = {
-        body_text: [bodyVariables.map(variable => `{{${variable}}}`)],
+        body_text: [bodyVariables.map(variable => `{{${variable}}}`)], // Array of arrays
       };
     }
-    // console.log("Type of header test: ", typeof bodyComponent.example.body_text[0])
+  
     components.push(bodyComponent);
   
+    // Handle FOOTER component
     if (footerText.trim()) {
       components.push({
         type: "FOOTER",
-        text: footerText
+        text: footerText,
       });
     }
-    console.log("BUttons content: ", buttons)
+  
+    // Handle BUTTONS component
     if (buttons.length > 0) {
       components.push({
         type: "BUTTONS",
@@ -351,48 +367,54 @@ const tier = tenant?.tier || 'Free';
             default:
               return null;
           }
-        }).filter(Boolean)
+        }).filter(Boolean),
       });
     }
-    console.log("Components: ", components, bodyComponent)
-
+  
+    // Prepare template data
     const templateData = {
       name: templateName,
       category: category,
       components: components,
-      language: language
+      language: language,
     };
-
+  
+    // Prepare update data (if editing)
     const updateTemplateData = {
+      name: templateName, // Include name for updates
       category: category,
-      components: components
-    }
-    console.log("Updated Template Data: ", updateTemplateData)
+      components: components,
+      language: language, // Include language for updates
+    };
+  
     try {
-      const url = isEditing ? `https://graph.facebook.com/v20.0/${templateId}` :  `https://graph.facebook.com/v20.0/${accountId}/message_templates`
-      
+      const url = isEditing
+        ? `https://graph.facebook.com/v20.0/${templateId}` // Update URL
+        : `https://graph.facebook.com/v20.0/${accountId}/message_templates`;
+  
       const response = await axios({
-        method: 'post',
+        method: isEditing ? 'POST' : 'POST', // Use POST for both create and update
         url: url,
         data: isEditing ? updateTemplateData : templateData,
         headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
   
+      // Handle success
       setShowTemplatePopup(false);
       resetTemplateForm();
       await fetchTemplates();
       setActiveTab('templates');
+      alert("Template created successfully!");
+     
     } catch (error) {
       console.error('Error creating/updating template:', error);
+  
+      // Provide detailed error message
       const errorMessage = error.response?.data?.error?.message || error.message || 'An error occurred while creating the template';
-        toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive",
-            duration: 5000
-        });
+      alert(errorMessage);
+     
     }
   };
 
@@ -551,7 +573,7 @@ const tier = tenant?.tier || 'Free';
   
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('type', 'image');
+        formData.append('type', selectedFile.type.split('/')[0]); // Automatically detect type (image, video, audio, etc.)
         formData.append('messaging_product', 'whatsapp');
   
         const response = await axios.post(
@@ -570,7 +592,7 @@ const tier = tenant?.tier || 'Free';
         );
   
         console.log('File uploaded to WhatsApp, ID:', response.data.body.h);
-        setHeaderMediaId(response.data.body.h);
+        setHeaderMediaId(response.data.body.h); // Save the media ID for later use
         setUploadProgress(100);
       } catch (error) {
         console.error('Error uploading file:', error);
@@ -750,6 +772,7 @@ const tier = tenant?.tier || 'Free';
           accountId={accountId}
           uploadProgress={uploadProgress}
           setActiveTab={setActiveTab}
+          fetchTemplates={fetchTemplates}
         />
       )}
     </div>
@@ -785,6 +808,8 @@ const tier = tenant?.tier || 'Free';
           extractVariables={extractVariables}
           convertMentionsForFrontend={convertMentionsForFrontend}
           MentionTextArea={MentionTextArea}
+          loading={loading}
+          setLoading={setLoading}
         />
       </div>
      

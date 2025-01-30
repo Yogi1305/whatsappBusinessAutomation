@@ -30,7 +30,8 @@ const CarouselEditor = ({
   setShowPopup, 
   accessToken,
   accountId,
-  setActiveTab 
+  setActiveTab,
+  fetchTemplates
 }) => {
   // State declarations
   const [uploadProgress, setUploadProgress] = useState(0);
