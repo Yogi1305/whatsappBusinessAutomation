@@ -5,8 +5,7 @@ import super_global from '../../assets/superapp_global.webp';
 const WhatsAppSuperApp = () => {
   return (
     <div className="mt-[70px] container mx-auto px-6 md:px-8 lg:px-12 py-12 max-w-4xl">
-      {/* Meta Tags */}
-      <head>
+     <Helmet>
         <title>WhatsApp: The Hidden Super App Automating Workflows and Payments</title>
         <meta
           name="description"
@@ -31,7 +30,8 @@ const WhatsAppSuperApp = () => {
           content="Discover how WhatsApp is transforming into a global super app by automating workflows and enabling payments."
         />
         <meta name="twitter:image" content="https://www.yourwebsite.com/images/whatsapp-super-app.jpg" />
-      </head>
+      </Helmet>
+
 
       {/* Hero Section */}
       <section className="text-center mb-12">
