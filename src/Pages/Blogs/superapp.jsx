@@ -2,6 +2,7 @@ import React from 'react';
 import hero from '../../assets/Hero_superapp.webp';
 import super_auto from '../../assets/superapp_automation.webp';
 import super_global from '../../assets/superapp_global.webp';
+import { Helmet } from 'react-helmet';
 const WhatsAppSuperApp = () => {
   return (
     <div className="mt-[70px] container mx-auto px-6 md:px-8 lg:px-12 py-12 max-w-4xl">
