@@ -35,6 +35,7 @@ import ScheduledEventsPage from './ScheduleEvent.jsx';
 import ContactDetails from './Pages/ContactPage/ContactDetails.jsx';
 import GPayUPIPayment from './payment.jsx';
 import CancellationRefundPolicy from './Pages/Misc/RefundCancel.jsx';
+import WhatsAppDripMarketing from './Pages/Blogs/dripmarketing.jsx';
 import { Toaster } from 'sonner';
 import WhatsAppSuperApp from './Pages/Blogs/superapp.jsx';
 import { Button } from "@/components/ui/button";
@@ -220,6 +221,7 @@ const App = () => {
             <Route path="blogs/marketing-strategy" element={<WhatsAppMarketingStrategies />} />
             <Route path="blogs/customer-feedback" element={<HandleCustomerFeedback />} />
             <Route path="blogs/super-app" element={<WhatsAppSuperApp />} />
+            <Route path="blogs/drip-marketing" element={<WhatsAppDripMarketing />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
       </div>

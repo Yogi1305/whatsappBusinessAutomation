@@ -884,13 +884,13 @@ const WhatsAppCampaign = ({
       <ChevronLeft className="w-4 h-4" /> {/* Add ChevronLeft import */}
       Go Back
     </Button>
-        <Button
-          onClick={handleSaveCampaign}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
-        >
-          <Save className="w-4 h-4" />
-          Save Campaign
-        </Button>
+    <Button
+  onClick={handleSaveCampaign}
+  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 active:scale-95 transition-all duration-200 ease-in-out"
+>
+  <Save className="w-4 h-4" />
+  Save Campaign
+</Button>
         
         {showValidation && !isFormValid && (
           <div className="text-sm text-red-500">

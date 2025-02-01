@@ -410,7 +410,7 @@ const tier = tenant?.tier || 'Free';
      
     } catch (error) {
       console.error('Error creating/updating template:', error);
-  
+      setLoading(false);
       // Provide detailed error message
       const errorMessage = error.response?.data?.error?.message || error.message || 'An error occurred while creating the template';
       alert(errorMessage);

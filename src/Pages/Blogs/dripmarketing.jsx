@@ -1,10 +1,11 @@
 import React from 'react';
+import { Helmet } from 'react-helmet';
 
 const WhatsAppDripMarketing = () => {
   return (
     <div className="mt-[70px] container mx-auto px-6 md:px-8 lg:px-12 py-12 max-w-4xl">
-      {/* Meta Tags */}
-      <head>
+      {/* Meta Tags with Helmet */}
+      <Helmet>
         <title>WhatsApp Drip Marketing: The Revolutionary Way to 10X Your Engagement</title>
         <meta
           name="description"
@@ -28,7 +29,8 @@ const WhatsAppDripMarketing = () => {
           name="twitter:description"
           content="Master the art of sequential messaging on WhatsApp to dramatically improve your customer engagement rates."
         />
-      </head>
+        <meta name="twitter:image" content="https://www.yourwebsite.com/images/whatsapp-drip-marketing.jpg" />
+      </Helmet>
 
       {/* Hero Section */}
       <section className="text-center mb-12">
