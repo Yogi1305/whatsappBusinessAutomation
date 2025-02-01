@@ -1,4 +1,31 @@
 import React from 'react';
+import { Viewer, Worker } from '@react-pdf-viewer/core';
+import { toolbarPlugin } from "@react-pdf-viewer/toolbar";
+import { getFilePlugin } from "@react-pdf-viewer/get-file";
+
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/toolbar/lib/styles/index.css';
+
+const PdfViewer = ({ pdfUrl }) => {
+  const toolbarPluginInstance = toolbarPlugin();
+  const getFilePluginInstance = getFilePlugin();
+  
+  return (
+    <div className="flex flex-col md:flex-row items-end md:items-center">
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "5px" }}>
+        <getFilePluginInstance.Download />
+      </div>
+      <div style={{ display: "flex", height: "400px", width: "600px" }}>
+      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
+          <Viewer 
+            fileUrl={pdfUrl}
+            plugins={[toolbarPluginInstance, getFilePluginInstance]} 
+          />
+        </Worker>
+      </div>
+    </div>
+  );
+};
 
 export const renderTemplateMessage = (template) => {
   if (!template || !template.name) {
@@ -12,7 +39,7 @@ export const renderTemplateMessage = (template) => {
 };
 
 export const renderInteractiveMessage = (parsedMessage) => {
-  const { type, interactive, text, image, template } = parsedMessage;
+  let { type, interactive, text, image, template } = parsedMessage;
 
   if (type === 'interactive') {
     if (interactive.type === 'list') {
@@ -79,6 +106,14 @@ export const renderInteractiveMessage = (parsedMessage) => {
     );
   } else if (type === 'template') {
     return renderTemplateMessage(template);
+  } else if (type === 'document'){
+    text = parsedMessage?.document?.id
+    console.log("Document url: ", text)
+    return (
+      <div className="image-message">
+        <PdfViewer pdfUrl={text} />
+      </div>
+    )
   }
 
   return <p className="error-message">Unsupported message type</p>;
