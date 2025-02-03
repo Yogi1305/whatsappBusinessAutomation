@@ -10,22 +10,36 @@ const PdfViewer = ({ pdfUrl }) => {
   const toolbarPluginInstance = toolbarPlugin();
   const getFilePluginInstance = getFilePlugin();
   
+  const renderPage = (props) => {
+    return (
+      <div>
+        {props.canvasLayer.children}
+        <div style={props.svgLayer.style}>{props.svgLayer.children}</div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col md:flex-row items-end md:items-center">
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "5px" }}>
         <getFilePluginInstance.Download />
       </div>
       <div style={{ display: "flex", height: "400px", width: "600px" }}>
-      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
+        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
           <Viewer 
             fileUrl={pdfUrl}
-            plugins={[toolbarPluginInstance, getFilePluginInstance]} 
+            plugins={[toolbarPluginInstance, getFilePluginInstance]}
+            renderPage={renderPage}
+            defaultScale={1}
+            renderMode="svg"
           />
         </Worker>
       </div>
     </div>
   );
 };
+
+export default PdfViewer;
 
 export const renderTemplateMessage = (template) => {
   if (!template || !template.name) {
