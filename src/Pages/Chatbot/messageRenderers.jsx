@@ -1,39 +1,46 @@
 import React from 'react';
-import { Viewer, Worker } from '@react-pdf-viewer/core';
-import { toolbarPlugin } from "@react-pdf-viewer/toolbar";
-import { getFilePlugin } from "@react-pdf-viewer/get-file";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/toolbar/lib/styles/index.css';
-
-const PdfViewer = ({ pdfUrl }) => {
-  const toolbarPluginInstance = toolbarPlugin();
-  const getFilePluginInstance = getFilePlugin();
-  
-  const renderPage = (props) => {
+const PdfViewer = ({ document }) => {
+  // Handle null or undefined document
+  if (!document || !document.id) {
     return (
-      <div>
-        {props.canvasLayer.children}
-        <div style={props.svgLayer.style}>{props.svgLayer.children}</div>
-      </div>
+      <Alert variant="destructive" className="w-full max-w-xl">
+        <AlertDescription>Invalid document data provided</AlertDescription>
+      </Alert>
     );
+  }
+
+  const pdfUrl = document.id;
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(pdfUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'document.pdf'; // You can customize the filename
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-end md:items-center">
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "5px" }}>
-        <getFilePluginInstance.Download />
-      </div>
-      <div style={{ display: "flex", height: "400px", width: "600px" }}>
-        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.0.279/build/pdf.worker.min.js">
-          <Viewer 
-            fileUrl={pdfUrl}
-            plugins={[toolbarPluginInstance, getFilePluginInstance]}
-            renderPage={renderPage}
-            defaultScale={1}
-            renderMode="svg"
-          />
-        </Worker>
+    <div className="w-full space-y-2">
+      
+      <div className="w-full h-screen max-h-[600px] border rounded-lg overflow-hidden">
+        <iframe
+          src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+          className="w-full h-full"
+          title="PDF viewer"
+        />
       </div>
     </div>
   );
@@ -125,7 +132,8 @@ export const renderInteractiveMessage = (parsedMessage) => {
     console.log("Document url: ", text)
     return (
       <div className="image-message">
-        <PdfViewer pdfUrl={text} />
+        <PdfViewer document={parsedMessage.document} />
+      { /*<PdfViewer pdfUrl={text} />*/}
       </div>
     )
   }
