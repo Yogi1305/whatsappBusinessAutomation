@@ -22,6 +22,7 @@ const Models = () => {
     const [formValues, setFormValues] = useState({});
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [showInfoModal, setShowInfoModal] = useState(false);
+    const [selectedModelFields, setSelectedModelFields] = useState([])
 
     useEffect(() => {
         const fetchModels = async () => {
@@ -33,7 +34,6 @@ const Models = () => {
                 toast.error('Failed to fetch models');
             }
         };
-
         fetchModels();
     }, []);
 
@@ -43,6 +43,8 @@ const Models = () => {
         try {
             const response = await axiosInstance.get(`${djangoURL}/dynamic-model-data/${model.model_name}/`);
             setModelData(response.data);
+            const fields = Object.keys(response.data[0])
+            setSelectedModelFields(fields)
         } catch (error) {
             console.error('Error fetching model data:', error);
             toast.error('Failed to fetch model data');
@@ -103,8 +105,8 @@ const Models = () => {
         const doc = new jsPDF();
         doc.text(`${selectedModel.model_name} Data`, 14, 16);
         doc.autoTable({
-            head: [selectedModel.fields.map(field => field.field_name)],
-            body: modelData.map(item => selectedModel.fields.map(field => item[field.field_name])),
+            head: [selectedModelFields.map(field => field)],
+            body: modelData.map(item => selectedModelFields.map(field => item[field])),
         });
         doc.save(`${selectedModel.model_name}.pdf`);
         toast.success('PDF file downloaded successfully');
@@ -129,12 +131,12 @@ const Models = () => {
                     <div className="bg-white shadow-md rounded-lg p-6">
                         <h2 className="text-2xl font-semibold mb-4">{selectedModel.model_name} Model</h2>
                         {/* <p className="mb-2">Created by: {selectedModel.created_by}</p> */}
-                        <h3 className="text-xl font-semibold mb-2">Fields:</h3>
+                        {/* <h3 className="text-xl font-semibold mb-2">Fields:</h3>
                         <ul className="list-disc list-inside mb-4">
                             {selectedModel.fields.map((field, index) => (
                                 <li key={index}>{field.field_name} ({field.field_type})</li>
                             ))}
-                        </ul>
+                        </ul> */}
                         <div className="flex flex-wrap gap-4 mb-4">
                             <button onClick={() => handleDownload('excel')} className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                                 <Download className="mr-2" />
@@ -152,9 +154,9 @@ const Models = () => {
                                 <table className="min-w-full bg-white">
                                     <thead className="bg-gray-200">
                                         <tr>
-                                            {selectedModel.fields.map((field) => (
-                                                <th key={field.field_name} className="px-4 py-2 text-left text-gray-600 uppercase text-sm font-semibold">
-                                                    {field.field_name}
+                                            {selectedModelFields.map((field) => (
+                                                <th key={field} className="px-4 py-2 text-left text-gray-600 uppercase text-sm font-semibold">
+                                                    {field}
                                                 </th>
                                             ))}
                                         </tr>
@@ -162,8 +164,8 @@ const Models = () => {
                                     <tbody>
                                         {modelData.map((item, index) => (
                                             <tr key={index} onClick={() => handleEntryClick(item)} className="hover:bg-gray-100 cursor-pointer">
-                                                {selectedModel.fields.map((field) => (
-                                                    <td key={field.field_name} className="border px-4 py-2">{item[field.field_name]}</td>
+                                                {selectedModelFields.map((field) => (
+                                                    <td key={field} className="border px-4 py-2">{item[field]}</td>
                                                 ))}
                                             </tr>
                                         ))}
@@ -182,16 +184,16 @@ const Models = () => {
                     <div className="bg-white rounded-lg p-8 max-w-md w-full">
                         <h2 className="text-2xl font-bold mb-4">Add New Entry</h2>
                         <form onSubmit={handleSubmit}>
-                            {selectedModel.fields.map((field) => (
-                                <div key={field.field_name} className="mb-4">
-                                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={field.field_name}>
-                                        {field.field_name}:
+                            {selectedModelFields.map((field) => (
+                                <div key={field} className="mb-4">
+                                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={field}>
+                                        {field}:
                                     </label>
                                     <input
                                         type={field.field_type === 'bigint' ? 'number' : 'text'}
-                                        id={field.field_name}
-                                        name={field.field_name}
-                                        value={formValues[field.field_name] || ''}
+                                        id={field}
+                                        name={field}
+                                        value={formValues[field] || ''}
                                         onChange={handleChange}
                                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                         required
@@ -215,9 +217,9 @@ const Models = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white rounded-lg p-8 max-w-md w-full">
                         <h2 className="text-2xl font-bold mb-4">Entry Details</h2>
-                        {selectedModel.fields.map((field) => (
-                            <p key={field.field_name} className="mb-2">
-                                <span className="font-semibold">{field.field_name}:</span> {selectedEntry[field.field_name]}
+                        {selectedModelFields.map((field) => (
+                            <p key={field} className="mb-2">
+                                <span className="font-semibold">{field}:</span> {selectedEntry[field]}
                             </p>
                         ))}
                         <button onClick={() => setShowInfoModal(false)} className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
