@@ -6,14 +6,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NurenAI | Whatsapp</title>
     <!-- Google tag (gtag.js) -->
-    <script src="https://whatsapp-script-57bpoh4uq-nurenaissances-projects.vercel.app/whatsapp-widget.js"></script>
 
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-K9DG0PGLQP"></script>
+
+<script src="https://whatsapp-script.vercel.app/whatsapp-widget.js"></script>
+<script>
+(function() {
+    'use strict';
+    
+    // Operational configuration
+    const OPERATIONAL_PARAMS = {
+        allowedPaths: ['/', '/login', '/register'],
+        checkInterval: 300,
+        widgetConfig: {
+            phone: '16508859870',
+            name: 'Nuren AI',
+            quickReplies: [
+                "Hi! I'd like to know more about your services 👋",
+                "What are your business hours? 🕒",
+                "I need support 🆘"
+            ]
+        }
+    };
+
+    // State management
+    let widgetActive = false;
+    const pathMatch = () => OPERATIONAL_PARAMS.allowedPaths
+        .includes(window.location.pathname);
+
+    // DOM element cleanup protocol
+    const executeWidgetSanitization = () => {
+        ['whatsapp-widget-icon', 'whatsapp-widget-chat']
+            .forEach(id => document.getElementById(id)?.remove());
+        widgetActive = false;
+    };
+
+    // History API interception
+    const originalHistoryMethods = {
+        pushState: history.pushState,
+        replaceState: history.replaceState
+    };
+
+    history.pushState = function() {
+        originalHistoryMethods.pushState.apply(history, arguments);
+        operationalStateCheck();
+    };
+
+    history.replaceState = function() {
+        originalHistoryMethods.replaceState.apply(history, arguments);
+        operationalStateCheck();
+    };
+
+    // Operational state control
+    const operationalStateCheck = () => {
+        if (pathMatch() && !widgetActive) {
+            WhatsAppWidget.init(OPERATIONAL_PARAMS.widgetConfig);
+            widgetActive = true;
+        } else if (!pathMatch() && widgetActive) {
+            executeWidgetSanitization();
+        }
+    };
+
+    // Event binding for SPA compliance
+    window.addEventListener('popstate', operationalStateCheck);
+    window.addEventListener('hashchange', operationalStateCheck);
+    
+    // Initialization sequence
+    const initializeOperationalMonitor = () => {
+        operationalStateCheck();
+        setInterval(operationalStateCheck, OPERATIONAL_PARAMS.checkInterval);
+    };
+
+    // Execution protocol
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeOperationalMonitor);
+    } else {
+        initializeOperationalMonitor();
+    }
+})();
+</script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
+  
   gtag('config', 'G-K9DG0PGLQP');
 </script>
   </head>

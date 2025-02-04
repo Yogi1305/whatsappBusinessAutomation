@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate,Link } from 'react-router-dom';
 import { useAuth } from './authContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
