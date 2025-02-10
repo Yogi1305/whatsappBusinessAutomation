@@ -6,9 +6,7 @@ import { renderMessageContent, renderInteractiveMessage,renderTemplateMessage } 
 import { toast } from "sonner";
 import { Navigate, useNavigate, useParams } from "react-router-dom"; 
 import {axiosInstance,fastURL, djangoURL} from "../../api.jsx";
-import MailIcon from '@mui/icons-material/Mail';
-import SearchIcon from '@mui/icons-material/Search';
-import CallRoundedIcon from '@mui/icons-material/CallRounded';
+
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
@@ -46,18 +44,22 @@ import { PhoneIcon, PlusCircle, PlusIcon, Upload, X,Search, ChevronRight,Chevron
 import { useAuth } from '../../authContext.jsx';
 import AuthPopup from './AuthPopup.jsx';
 import { base, div } from 'framer-motion/client';
+
+
 //import { Button, Input } from 'antd';
 import { 
   Phone, 
   Mail, 
   Plus, 
 } from "lucide-react";  
+
 const socket = io(whatsappURL);
 
 
 
 
 const Chatbot = () => {
+  
   const tenantId=getTenantIdFromUrl();
   // const navigate = useNavigate();
   const [totalPages, setTotalPages] = useState(1);
@@ -69,7 +71,7 @@ const Chatbot = () => {
   const [showSmileys, setShowSmileys] = useState(false);
   const [inputFields, setInputFields] = useState([{ type: 'text', value: '' }]);
   const [profileImage, setProfileImage] = useState(null); 
-  const [conversation, setConversation] = useState(['']);
+  const [conversation, setConversation] = useState([]);
   const [flows, setFlows] = useState([]);
   const [selectedFlow, setSelectedFlow] = useState('');
   const [previousContact, setPreviousContact] = useState(null);
@@ -101,6 +103,25 @@ const Chatbot = () => {
   const [prioritizedContacts, setPrioritizedContacts] = useState([]);
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('');
+  const [currentMessagePage, setCurrentMessagePage] = useState(1);
+const [isLoadingMore, setIsLoadingMore] = useState(false);
+const [hasMoreMessages, setHasMoreMessages] = useState(true);
+const messagesContainerRef = useRef(null);
+const previousScroll = useRef({ height: 0, top: 0 });
+const [lastUpdateType, setLastUpdateType] = useState(null);
+const [showLoadMoreButton, setShowLoadMoreButton] = useState(false);
+useEffect(() => {
+  const container = messagesContainerRef.current;
+  if (!container) return;
+
+  const handleScroll = () => {
+    const buffer = 100; // Pixels from top to show button
+    setShowLoadMoreButton(container.scrollTop <= buffer && hasMoreMessages);
+  };
+
+  container.addEventListener('scroll', handleScroll);
+  return () => container.removeEventListener('scroll', handleScroll);
+}, [hasMoreMessages]);
   
   const [isOpen, setIsOpen] = useState(false);
   const toggleFab = () => {
@@ -121,34 +142,36 @@ const Chatbot = () => {
   }, []);
 
 
-  useEffect(() => {
-    const fetchContact = async () => {
-      const contactID = getContactIDfromURL();
-      if (contactID) {
-        // Delay to ensure contacts are loaded
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const contact = contacts.find(c => c.id === parseInt(contactID));
-        setSelectedContact(contact);
-        console.log("Selected Contact 1: ", parseInt(contactID));
-      } else {
-        console.log("No contact ID found in URL.");
-      }
-    };
-  
-    fetchContact();
-  }, [contacts]); // Add contacts as a dependency
-  
+ 
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation]);
+    const container = messagesContainerRef.current;
+    if (!container) return;
+  
+    if (lastUpdateType === 'append') {
+      const newHeight = container.scrollHeight;
+      setTimeout(() => {
+        container.scrollTop = newHeight - previousScroll.current.height;
+      }, 50); // Add small delay for DOM updates
+      setLastUpdateType(null);
+    }
+    else if (lastUpdateType === 'new') {
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({ 
+          behavior: 'auto',
+          block: 'nearest' 
+        });
+      }, 100); // Add slight delay for initial render
+      setLastUpdateType(null);
+    }
+  }, [conversation, lastUpdateType]);
 
-
+  
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
         console.log("fetching business phone number id")
-        const response = await axios.get(`${fastURL}/whatsapp_tenant/`, {
+        const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-Id': tenantId
           }
@@ -372,95 +395,104 @@ const Chatbot = () => {
   }, [conversation]);
 
   useEffect(() => {
-    socket.on('connect', () => {
+    // Add error handling and connection monitoring
+    const handleConnect = () => {
       console.log('Connected to the server');
-    });
-    
-    socket.on('temp-user', (message) => {
-      console.log("New temp user logged");
-    
-      if (message) {
-        const storedSessionId = localStorage.getItem('sessionId');
-        console.log("Stored session ID:", storedSessionId);
-        console.log("Received message temp_user:", message.temp_user);
-        
-        const formattedMessageTempUser = `*/${message.temp_user}`;
-        if (formattedMessageTempUser === storedSessionId) {
-          console.log("Session ID matches. Adding new contact.");
-        
-          // Add new contact and select it
-          setContacts(prevContacts => {
-            // Create a new contact object
-            const newContact = {
-              id: message.temp_user + message.contactPhone,  // Use a unique combination for id
-              phone: message.contactPhone
-            };
-        
-            // Check if contact with the same ID already exists
-            const contactExists = prevContacts.some(contact => contact.id === newContact.id);
-        
-            // If the contact doesn't exist, add it
-            if (!contactExists) {
-              const updatedContacts = [...prevContacts, newContact];
-              console.log("New contacts array:", updatedContacts);
-              return updatedContacts;
-            }
-        
-            else console.log("Contact already exists. Skipping addition.");
-            return prevContacts;  // Return the current contacts if no addition is made
-          });
-        
-          setSelectedContact({
-            phone: message.contactPhone
-          });
-        
-          setShowNewChatInput(false);
-        }else {
-          console.log("Session ID does not match.");
-        }
-      } else {
-        console.log("Message is undefined or null.");
+      // Request any missed messages if needed
+      if (selectedContact) {
+        socket.emit('request-messages', {
+          phone: selectedContact.phone,
+          lastReceived: Date.now() - 60000 // Last 1 minute
+        });
       }
-    });
-    socket.on('new-message', (message) => {
-      if (message&&message.phone_number_id==businessPhoneNumberId) {
-        console.log('Got New Message', message);
-        updateContactPriority(message.contactPhone, message.message);
-        if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
-          console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");  
-          setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'user'}]);
-          //setNewMessages(prevMessages => [...prevMessages, { text: message.message, sender: 'user'}]);
-          } else {
-          // Update unread count for non-selected contacts
-          setContacts(prevContacts => 
-            prevContacts.map(contact => 
-              contact.phone === message.contactPhone
-                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
-                : contact
-            )
-          );
-      }}
-    });
-
-    socket.on('node-message', (message) => {
-      console.log(message.message, "this is node");
-      console.log(selectedContact,"yahandekhhhhhh");
-      if (message) {
-          if (parseInt(message.contactPhone) == parseInt(selectedContact?.phone) && parseInt(message.phone_number_id) == parseInt(businessPhoneNumberId)) {
-            console.log("hogyaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-            setConversation(prevMessages => [...prevMessages, { text: JSON.stringify(message.message), sender: 'bot' }]);
-          }
-
-      }
-    });
-    return () => {
-      socket.off('node-message');
-      socket.off('new-message');
-      socket.off('temp_user');
     };
-  }, [selectedContact]);
+  
+    const handleTempUser = (message) => {
+      if (!message) {
+        console.log("Empty temp-user message received");
+        return;
+      }
+      
+      const storedSessionId = localStorage.getItem('sessionId');
+      console.log("Comparing session IDs:", `*/${message.temp_user}`, storedSessionId);
+  
+      if (`*/${message.temp_user}` === storedSessionId) {
+        const newContactId = `${message.temp_user}-${message.contactPhone}`;
+        
+        setContacts(prevContacts => {
+          if (prevContacts.some(c => c.id === newContactId)) {
+            console.log("Contact already exists:", newContactId);
+            return prevContacts;
+          }
+          
+          console.log("Adding new contact:", newContactId);
+          return [...prevContacts, {
+            id: newContactId,
+            phone: message.contactPhone,
+            unreadCount: 0
+          }];
+        });
+  
+        setSelectedContact({ phone: message.contactPhone });
+        setShowNewChatInput(false);
+      }
+    };
+  
+    const handleNewMessage = (message) => {
+      if (!message || message.phone_number_id !== businessPhoneNumberId) return;
     
-
+      setContacts(prev => prev.map(contact => {
+        if(contact.phone !== message.contactPhone) return contact;
+        
+        // Preserve object reference if no changes needed
+        if(selectedContact?.phone === message.contactPhone) return contact;
+        
+        // Only create new object when actually changing
+        return {...contact, unreadCount: (contact.unreadCount || 0) + 1};
+      }));
+    
+      if(selectedContact?.phone === message.contactPhone) {
+        // Use functional update to prevent reference changes
+        setConversation(prev => [
+          ...prev, 
+          {
+            id: Date.now(),
+            text: JSON.stringify(message.message),
+            sender: 'user',
+            timestamp: Date.now()
+          }
+        ]);
+      }
+    };
+    const handleNodeMessage = (message) => {
+      if (message?.contactPhone === selectedContact?.phone && 
+          message?.phone_number_id === businessPhoneNumberId) {
+        setConversation(prev => [...prev, {
+          text: JSON.stringify(message.message),
+          sender: 'bot',
+          timestamp: Date.now()
+        }]);
+      }
+    };
+  
+    // Setup all listeners
+    socket.on('connect', handleConnect);
+    socket.on('temp-user', handleTempUser);
+    socket.on('new-message', handleNewMessage);
+    socket.on('node-message', handleNodeMessage);
+    socket.on('error', (error) => {
+      console.error('Socket error:', error);
+    });
+  
+    // Cleanup function
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('temp-user', handleTempUser);
+      socket.off('new-message', handleNewMessage);
+      socket.off('node-message', handleNodeMessage);
+      socket.off('error');
+    };
+  }, [selectedContact?.phone, businessPhoneNumberId]); // Add relevant dependencies
 
 
   const handleSend = async () => {
@@ -574,42 +606,95 @@ const Chatbot = () => {
   }, [contacts, searchText]);
 
     
-    // Function to fetch conversation data for a given contact
-  const fetchConversation = async (contactId) => {
+  const fetchConversation = useCallback(async (contactId, page = 1, append = false, signal) => {
     try {
-      const bpid_string = businessPhoneNumberId.toString()
-      const response = await fetch(`${djangoURL}/whatsapp_convo_get/${contactId}/?source=whatsapp&bpid=${bpid_string}`, {
-        method: 'GET',
-        headers: {
-          'X-Tenant-Id': tenantId
-        },
+      setIsLoadingMore(append);
+      if (!contactId || !businessPhoneNumberId) return;
+  
+      const container = messagesContainerRef.current;
+      const prevScrollInfo = append && container ? {
+        height: container.scrollHeight,
+        top: container.scrollTop
+      } : null;
+  
+      const response = await axiosInstance.get(
+        `/whatsapp_convo_get/${contactId}`,
+        {
+          baseURL: fastURL,
+          headers: { 'X-Tenant-Id': tenantId },
+          params: {
+            source: 'whatsapp',
+            bpid: businessPhoneNumberId.toString(),
+            page_no: page
+          },
+          signal
+        }
+      );
+  
+      const data = response.data.conversations || [];
+      const serverPage = response.data.page_no;
+      const totalPages = response.data.total_pages;
+  
+      // Critical fix: Use SERVER'S page number, not client's
+      const hasMore = serverPage < totalPages;
+      setHasMoreMessages(hasMore);
+      setCurrentMessagePage(serverPage);
+  
+      setConversation(prev => {
+        const updated = append ? [...data, ...prev] : data;
+        
+        if (append && container && prevScrollInfo) {
+          requestAnimationFrame(() => {
+            const newHeight = container.scrollHeight;
+            container.scrollTop = newHeight - prevScrollInfo.height;
+          });
+        }
+        return updated;
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch data from backend');
-      }
-      const data = await response.json();
-      console.log("Conversations: ", data)
-     
-      
-     
-      // Merge fetched data with any new messages
-      const mergedConversation = [
-        ...(allConversations[contactId] || []),
-        ...data
-      ];
-      setAllConversations(prev => ({
-        ...prev,
-        [contactId]: mergedConversation
-      }));
-      setConversation(mergedConversation);
-
-      console.log('Data fetched from backend successfully:', mergedConversation);
+  
     } catch (error) {
-      console.error('Error fetching data from backend:', error);
+      if (!axios.isCancel(error)) {
+        console.error('Fetch conversation error:', error);
+        toast.error('Failed to load messages');
+      }
+    } finally {
+      setIsLoadingMore(false);
     }
-  };
-
+  }, [businessPhoneNumberId, tenantId]);
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+  
+    if (lastUpdateType === 'new') {
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }, 100);
+      setLastUpdateType(null);
+    }
+  }, [conversation, lastUpdateType]);
+  useEffect(() => {
+    const contactID = getContactIDfromURL();
+    if (contactID && contacts.length > 0 && businessPhoneNumberId) {
+      const contact = contacts.find(c => c.id === parseInt(contactID));
+      if (contact) {
+        if (!selectedContact || selectedContact.id !== contact.id) {
+          setConversation([]); // Reset conversation state
+          setSelectedContact(contact);
+        }
+        fetchConversation(contact.phone);
+      }
+    }
+  }, [contacts, selectedContact?.id, businessPhoneNumberId, fetchConversation]);
+  useEffect(() => {
+    if (selectedContact?.phone && businessPhoneNumberId) {
+      const controller = new AbortController();
+      fetchConversation(selectedContact.phone, 1, false, controller.signal);
+      return () => controller.abort();
+    }
+  }, [selectedContact?.phone, fetchConversation, businessPhoneNumberId]); //
   const addInputField = () => {
     setInputFields([...inputFields, { value: '' }]);
   };
@@ -630,54 +715,36 @@ const Chatbot = () => {
   }, [selectedContact]);
 
   const [isLoading, setIsLoading] = useState(false);
-
+  const handleLoadMore = () => {
+    if (currentMessagePage > totalPages) {
+      setHasMoreMessages(false); // Explicitly disable loading
+      return;
+    }
+    setLastUpdateType('append');
+    fetchConversation(selectedContact.phone, currentMessagePage + 1, true);
+  };
   const handleContactSelection = async (contact) => {
     try {
-      // Set loading state to true at the start of the function
       setIsLoading(true);
+      setConversation([]); // Clear messages immediately
+      setCurrentMessagePage(1);
+      setHasMoreMessages(true);
   
-      // Existing contact selection logic
-      if (selectedContact) {
-        setPreviousContact(selectedContact);
-      }
-      setSelectedContact({ ...contact, isGroup: false });
+      navigate({ search: `?id=${contact.id}` }, { replace: true });
+      setSelectedContact(contact);
+      setContacts(prev => prev.map(c => 
+        c.id === contact.id ? { ...c, unreadCount: 0 } : c
+      ));
   
-      // Reset unread count for selected contact
-      setContacts(prevContacts =>
-        prevContacts.map(c =>
-          c?.id === contact.id ? { ...c, unreadCount: 0 } : c
-        )
-      );
-  
-      // Fetch conversation
-      let contactMessages = [];
-      if (!allConversations[contact.phone]) {
-        await fetchConversation(contact.phone);
-      }
-  
-      // Filter messages for the selected contact
-      contactMessages = allMessages
-        .filter(message => message.contactPhone === contact.phone)
-        .map(message => ({
-          text: message.text,
-          sender: message.sender,
-          timestamp: message.timestamp
-        }));
-  
-      // Update conversation and reset states
-      setConversation(contactMessages);
-      setNewMessages([]);
-      setUnreadCounts(prev => ({ ...prev, [contact.phone]: 0 }));
-  
+      // Force fetch conversation even if same contact
+      await fetchConversation(contact.phone);
+      
     } catch (error) {
-      console.error('Error selecting contact:', error);
-      // Optionally, add error handling or toast notification
+      console.error('Contact selection failed:', error);
     } finally {
-      // Always set loading to false when operation completes
       setIsLoading(false);
     }
   };
-  
   const handleToggleSmileys = () => {
     setShowSmileys(!showSmileys);
   };
@@ -815,10 +882,7 @@ const Chatbot = () => {
     }
   };
     
-    useEffect(() => { 
-      navigate(window.location.pathname, { replace: true });
-      console.log("selected contact 2 : ", selectedContact)
-    }, [])
+    
 
   const handleNewChat = async () => {
   if (!newPhoneNumber.trim()) return;
@@ -855,7 +919,7 @@ const Chatbot = () => {
   }, [contacts, searchTerm])
   const [showContactsDrawer, setShowContactsDrawer] = useState(false);
 const [visibleMessages, setVisibleMessages] = useState([]);
-const [hasMoreMessages, setHasMoreMessages] = useState(true);
+
 const [currentPage, setCurrentPage] = useState(1);
 const MESSAGES_PER_PAGE = 10;
 
@@ -919,7 +983,7 @@ function renderMessageWithNewLines(text) {
     const decodedText = JSON.parse(`"${sanitizedText}"`);
     
     // Split by \n and render with line breaks
-    return decodedText.split('\n').map((line, index) => (
+    return decodedText.split('\n').map((line, index) => ( 
       <React.Fragment key={index}>
         {line}
         <br />
@@ -1086,16 +1150,19 @@ function renderMessageWithNewLines(text) {
     {/* Pagination and Load More */}
     {selectedContact && visibleMessages.length > 0 && (
      <div className="load-more-container top-0 z-10 bg-white p-2 text-center">
-        {hasMoreMessages && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={loadMoreMessages}
-            className="mx-auto"
-          >
-            Load More Messages
-          </Button>
-        )}
+       {hasMoreMessages && (
+  <Button 
+    variant="outline"
+    onClick={() => fetchConversation(
+      selectedContact.phone, 
+      currentMessagePage + 1, 
+      true
+    )}
+    disabled={!hasMoreMessages || isLoadingMore}
+  >
+    {isLoadingMore ? 'Loading...' : 'Load Earlier Messages'}
+  </Button>
+)}
       </div>
     )}
 
@@ -1362,39 +1429,61 @@ function renderMessageWithNewLines(text) {
 
   </div>
   )}
-    <div className="cb-message-container">
-  {conversation.map((message, index) => (
-  <div
-    key={index}
-    className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
-  >
-    {(() => {
-    
-      if (typeof message.text === 'string') {
-        if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
-          try {
-            const fixedMessage = fixJsonString(message.text);
-            const parsedMessage = JSON.parse(fixedMessage);
-            // console.log('Parsed Message:', parsedMessage);
-            return renderInteractiveMessage(parsedMessage);
-          } catch (e) {
-            const fixedMessage = fixJsonString(message.text);
-            console.log("Fixed Message: ", fixedMessage)
-            const parsedMessage = JSON.parse(fixedMessage);
-            console.error(`Failed to parse JSON message: ${JSON.stringify(parsedMessage, null, 4)}`, e);
-            return <div className="error">Failed to parse message</div>;
+ <div className="cb-message-container" ref={messagesContainerRef}>
+  {showLoadMoreButton && hasMoreMessages && (
+    <div className="sticky top-0 bg-white z-10 p-2 text-center">
+      <Button 
+        variant="outline"
+        onClick={handleLoadMore}
+        disabled={isLoadingMore}
+      >
+        {isLoadingMore ? 'Loading...' : 'Load Earlier Messages'}
+      </Button>
+    </div>
+  )}
+
+  {conversation.length > 0 ? (
+    conversation.map((message) => (
+      <div
+        key={message.id}
+        className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
+        data-message-id={message.id}
+      >
+        {(() => {
+          if (typeof message.text === 'string') {
+            if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
+              try {
+                const fixedMessage = fixJsonString(message.text);
+                const parsedMessage = JSON.parse(fixedMessage);
+                return renderInteractiveMessage(parsedMessage);
+              } catch (e) {
+                console.error('Failed to parse message', e);
+                return <div className="error">Failed to parse message</div>;
+              }
+            }
+            return renderMessageWithNewLines(message.text);
           }
-        }
-        return renderMessageWithNewLines(message.text) || <div className="error">Message content is undefined</div>;
-      }else if (typeof message.text === 'object' && message.text !== null) {
-        // Handle non-string message formats
-        return renderMessageContent(message);
-      }
-      return <div className="erro">Please Select a contact</div>;
-    })()}
-  </div>
-  ))}
-  <div ref={messageEndRef} />
+          if (typeof message.text === 'object' && message.text !== null) {
+            return renderMessageContent(message);
+          }
+          return null;
+        })()}
+      </div>
+    ))
+  ) : (
+    <div className="no-messages-placeholder">
+      {isLoading ? (
+        <div className="loading-messages">
+          Loading messages...
+        </div>
+      ) : selectedContact ? (
+        'No messages found'
+      ) : (
+        'Please select a contact'
+      )}
+    </div>
+  )}
+ <div ref={messageEndRef} />
   </div>
   <div className="cb-input-container">
   <div className="cb-input-actions">

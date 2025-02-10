@@ -131,7 +131,7 @@ const ContactDetails = () => {
   };
   
   const handleSendMessage = (contactId) => {
-    navigate(`../chatbot?phone=${contactId}`);
+    navigate(`../chatbot?id=${contactId}`);
   };
 
   const getInitials = (name) => {
