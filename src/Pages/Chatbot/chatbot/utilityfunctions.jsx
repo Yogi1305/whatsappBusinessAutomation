@@ -23,7 +23,7 @@ export const getTenantIdFromUrl = () => {
     try {
       // Trim the string and log for debugging
       jsonString = jsonString.trim();
-      console.log("Original JSON String: ", jsonString);
+      //console.log("Original JSON String: ", jsonString);
   
       // Early return if it's already valid JSON
       try {
@@ -47,7 +47,7 @@ export const getTenantIdFromUrl = () => {
         .replace(/\\'/g, "'")
         .replace(/\\"/g, '"');
   
-      console.log("Processed JSON String: ", fixedString);
+     //console.log("Processed JSON String: ", fixedString);
   
       // Attempt to parse the fixed string
       JSON.parse(fixedString);

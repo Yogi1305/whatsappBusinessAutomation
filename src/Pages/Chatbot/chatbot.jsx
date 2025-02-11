@@ -393,39 +393,33 @@ useEffect(() => {
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [conversation]);
+  const isSocketUpdate = useRef(false);
 
   useEffect(() => {
-    // Add error handling and connection monitoring
+    // Add a ref to track socket-initiated updates
+    
     const handleConnect = () => {
       console.log('Connected to the server');
-      // Request any missed messages if needed
       if (selectedContact) {
         socket.emit('request-messages', {
           phone: selectedContact.phone,
-          lastReceived: Date.now() - 60000 // Last 1 minute
+          lastReceived: Date.now() - 60000
         });
       }
     };
   
     const handleTempUser = (message) => {
-      if (!message) {
-        console.log("Empty temp-user message received");
-        return;
-      }
+      if (!message) return;
       
       const storedSessionId = localStorage.getItem('sessionId');
-      console.log("Comparing session IDs:", `*/${message.temp_user}`, storedSessionId);
-  
+      
       if (`*/${message.temp_user}` === storedSessionId) {
         const newContactId = `${message.temp_user}-${message.contactPhone}`;
         
         setContacts(prevContacts => {
           if (prevContacts.some(c => c.id === newContactId)) {
-            console.log("Contact already exists:", newContactId);
             return prevContacts;
           }
-          
-          console.log("Adding new contact:", newContactId);
           return [...prevContacts, {
             id: newContactId,
             phone: message.contactPhone,
@@ -433,49 +427,96 @@ useEffect(() => {
           }];
         });
   
-        setSelectedContact({ phone: message.contactPhone });
+        // Set flag before updating selectedContact
+        isSocketUpdate.current = true;
+        setSelectedContact({ phone: message.contactPhone, fromSocket: true });
         setShowNewChatInput(false);
       }
     };
-  
     const handleNewMessage = (message) => {
-      if (!message || message.phone_number_id !== businessPhoneNumberId) return;
-    
-      setContacts(prev => prev.map(contact => {
-        if(contact.phone !== message.contactPhone) return contact;
+      if (
+        message && 
+        parseInt(message.phone_number_id) === parseInt(businessPhoneNumberId)
+      ) {
+        console.log('Received normal message:', message);
+        isSocketUpdate.current = true; // Flag that this is a socket update
+        if (selectedContact?.phone !== message.contactPhone) {
+          setContacts(prevContacts => 
+            prevContacts.map(contact => 
+              contact.phone === message.contactPhone
+                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
+                : contact
+            )
+          );
+          return; // Exit the function here if it's not the selected contact
+        }
+        // Update conversation if it's for the selected contact
+        if (parseInt(message.contactPhone) === parseInt(selectedContact?.phone)) {
+          setConversation((prev) => [
+            ...prev,
+            {
+              id: `msg_${Date.now()}`,
+              text: JSON.stringify(message.message),
+              sender: 'user',
+              timestamp: Date.now(),
+            },
+          ]);
+        }
         
-        // Preserve object reference if no changes needed
-        if(selectedContact?.phone === message.contactPhone) return contact;
-        
-        // Only create new object when actually changing
-        return {...contact, unreadCount: (contact.unreadCount || 0) + 1};
-      }));
+        // Update unread count if message is not for selected contact
+        if (selectedContact?.phone !== message.contactPhone) {
+          setContacts(prevContacts => 
+            prevContacts.map(contact => 
+              contact.phone === message.contactPhone
+                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
+                : contact
+            )
+          );
+        }
+      }
+    };
     
-      if(selectedContact?.phone === message.contactPhone) {
-        // Use functional update to prevent reference changes
-        setConversation(prev => [
-          ...prev, 
-          {
-            id: Date.now(),
-            text: JSON.stringify(message.message),
-            sender: 'user',
-            timestamp: Date.now()
+    const handleNodeMessage = (rawMessage) => {
+      if (
+        rawMessage && 
+        parseInt(rawMessage.phone_number_id) === parseInt(businessPhoneNumberId)
+      ) {
+        try {
+          console.log('Received node message:', rawMessage);
+          isSocketUpdate.current = true;
+          if (selectedContact?.phone !== rawMessage.contactPhone) {
+            setContacts(prevContacts => 
+              prevContacts.map(contact => 
+                contact.phone === rawMessage.contactPhone
+                  ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
+                  : contact
+              )
+            );
+            return; // Exit the function here if it's not the selected contact
           }
-        ]);
+          // Update conversation if it's for the selected contact
+          if (parseInt(rawMessage.contactPhone) === parseInt(selectedContact?.phone)) {
+            setConversation((prev) => [
+              ...prev,
+              {
+                id: `msg_${Date.now()}`,
+                text: JSON.stringify(rawMessage.message),
+                sender: 'bot',
+                timestamp: Date.now(),
+              },
+            ]);
+          }
+    
+          // Update unread count if message is not for selected contact
+         
+    
+        } catch (error) {
+          console.error('Global message handling error:', error);
+        }
       }
     };
-    const handleNodeMessage = (message) => {
-      if (message?.contactPhone === selectedContact?.phone && 
-          message?.phone_number_id === businessPhoneNumberId) {
-        setConversation(prev => [...prev, {
-          text: JSON.stringify(message.message),
-          sender: 'bot',
-          timestamp: Date.now()
-        }]);
-      }
-    };
-  
-    // Setup all listeners
+// Add this helper function outside the component
+
     socket.on('connect', handleConnect);
     socket.on('temp-user', handleTempUser);
     socket.on('new-message', handleNewMessage);
@@ -484,7 +525,6 @@ useEffect(() => {
       console.error('Socket error:', error);
     });
   
-    // Cleanup function
     return () => {
       socket.off('connect', handleConnect);
       socket.off('temp-user', handleTempUser);
@@ -492,8 +532,7 @@ useEffect(() => {
       socket.off('node-message', handleNodeMessage);
       socket.off('error');
     };
-  }, [selectedContact?.phone, businessPhoneNumberId]); // Add relevant dependencies
-
+  }, [selectedContact?.phone, businessPhoneNumberId]);
 
   const handleSend = async () => {
     if (!selectedContact || !messageTemplates[selectedContact.id]) {
@@ -689,12 +728,14 @@ useEffect(() => {
     }
   }, [contacts, selectedContact?.id, businessPhoneNumberId, fetchConversation]);
   useEffect(() => {
-    if (selectedContact?.phone && businessPhoneNumberId) {
+    if (selectedContact?.phone && businessPhoneNumberId && !isSocketUpdate.current) {
       const controller = new AbortController();
       fetchConversation(selectedContact.phone, 1, false, controller.signal);
       return () => controller.abort();
     }
-  }, [selectedContact?.phone, fetchConversation, businessPhoneNumberId]); //
+    // Reset the flag after the effect runs
+    isSocketUpdate.current = false;
+  }, [selectedContact?.phone, businessPhoneNumberId]);
   const addInputField = () => {
     setInputFields([...inputFields, { value: '' }]);
   };
