@@ -58,7 +58,7 @@ const Sidebar = () => {
   };
 
   return (
-    <aside style={sidebarStyle}>
+    <aside style={sidebarStyle}>    
       <div style={headerStyle}>Add Nodes</div>
       <div 
         style={{
@@ -177,6 +177,12 @@ const Sidebar = () => {
           </div>
         </div>
       )}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+  <div className="bg-white bg-opacity-80 text-black text-sm px-4 py-2 pointer-events-auto rounded shadow">
+ Backspace for Node Deletion
+  </div>
+</div>
+
     </aside>
   );
 };
