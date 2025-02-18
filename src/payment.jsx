@@ -252,8 +252,7 @@ const SubscriptionPage = () => {
     const fetchData = async () => {
       try {
         const [plansResponse, subscriptionResponse] = await Promise.all([
-          axiosInstance.get(`${djangoURL}/plan/`),
-          axiosInstance.get(`${djangoURL}/get-subscription/`)
+          axiosInstance.get(`${djangoURL}/plan/`)
         ]);
 
         const formattedPlans = plansResponse.data
@@ -273,7 +272,7 @@ const SubscriptionPage = () => {
         setState(prev => ({
           ...prev,
           plans: formattedPlans,
-          currentSubscription: subscriptionResponse.data,
+          currentSubscription: "test",
           isLoading: false
         }));
       } catch (err) {
@@ -386,70 +385,74 @@ const SubscriptionPage = () => {
               onValueChange={(value) => setState(prev => ({ ...prev, selectedPlan: value }))}
               className="grid md:grid-cols-3 gap-4"
             >
-              {plans.map((plan, index) => (
-                <motion.div
-                  key={plan.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  whileHover={{ scale: 1.02 }}
-                  className={cn(
-                    "relative flex flex-col border-2 rounded-xl p-6 transition-all",
-                    selectedPlan === plan.id ? "border-blue-500 bg-blue-50" : "border-gray-200",
-                    currentSubscription?.currentPlan?.planId === plan.id ? "ring-2 ring-blue-200" : "",
-                    "hover:border-blue-500"
-                  )}
-                >
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 right-4 bg-blue-500">
-                      Most Popular
-                    </Badge>
-                  )}
-  
-                  {currentSubscription?.currentPlan?.planId === plan.id && (
-                    <Badge className="absolute -top-3 left-4 bg-green-500">
-                      Current Plan
-                    </Badge>
-                  )}
-  
-                  <RadioGroupItem 
-                    value={plan.id} 
-                    id={plan.id} 
-                    className="absolute right-4 top-4" 
-                  />
-  
-                  <div>
-                    <div>
-                      <h3 className="text-xl font-bold">{plan.name}</h3>
-                      <p className="text-gray-600 text-sm mt-1">{plan.description}</p>
-                    </div>
-  
-                    <div className="mt-4">
-                      <div className="text-3xl font-bold text-blue-600">
-                        ₹{plan.price.toLocaleString()}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        per {plan.billingCycle.toLowerCase().slice(0,-2)}
-                      </div>
-                    </div>
-  
-                    <ul className="space-y-2 mt-4">
-                      {plan.features.map((feature, index) => (
-                        <motion.li 
-                          key={index}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.1 * index }}
-                          className="flex items-center gap-2"
-                        >
-                          <Check className="h-5 w-5 text-green-500" />
-                          <span className="text-gray-600">{feature}</span>
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </div>
-                </motion.div>
-              ))}
+             {plans.map((plan, index) => (
+  <motion.div
+    key={plan.id}
+    onClick={() =>
+      setState((prev) => ({ ...prev, selectedPlan: plan.id }))
+    }
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.1 * index }}
+    whileHover={{ scale: 1.02 }}
+    className={cn(
+      "relative flex flex-col border-2 rounded-xl p-6 transition-all cursor-pointer",
+      selectedPlan === plan.id ? "border-blue-500 bg-blue-50" : "border-gray-200",
+      currentSubscription?.currentPlan?.planId === plan.id ? "ring-2 ring-blue-200" : "",
+      "hover:border-blue-500"
+    )}
+  >
+    {plan.popular && (
+      <Badge className="absolute -top-3 right-4 bg-blue-500">
+        Most Popular
+      </Badge>
+    )}
+
+    {currentSubscription?.currentPlan?.planId === plan.id && (
+      <Badge className="absolute -top-3 left-4 bg-green-500">
+        Current Plan
+      </Badge>
+    )}
+
+    <RadioGroupItem 
+      value={plan.id} 
+      id={plan.id} 
+      className="absolute right-4 top-4" 
+    />
+
+    <div>
+      <div>
+        <h3 className="text-xl font-bold">{plan.name}</h3>
+        <p className="text-gray-600 text-sm mt-1">{plan.description}</p>
+      </div>
+
+      <div className="mt-4">
+        <div className="text-3xl font-bold text-blue-600">
+          ₹{plan.price.toLocaleString()}
+        </div>
+        <div className="text-sm text-gray-600">
+          per {plan.billingCycle.toLowerCase().slice(0, -2)}
+        </div>
+      </div>
+
+      <ul className="space-y-2 mt-4">
+        {plan.features.map((feature, index) => (
+          <motion.li 
+            key={index}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 * index }}
+            className="flex items-center gap-2"
+          >
+            <Check className="h-5 w-5 text-green-500" />
+            <span className="text-gray-600">{feature}</span>
+          </motion.li>
+        ))}
+      </ul>
+    </div>
+  </motion.div>
+))}
+
             </RadioGroup>
   
             {/* Payment Button Section */}
