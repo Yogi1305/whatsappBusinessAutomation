@@ -13,6 +13,8 @@ import ReactFlow, {
   Handle,
   Position
 } from "reactflow";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import "reactflow/dist/style.css";
 import { AskQuestionNode, SendMessageNode, SetConditionNode, AINode, product,APINode,DelayNode } from './NodeTypes';
 //import { DelayNode } from './DelayNode';
@@ -70,6 +72,8 @@ const FlowBuilderContent = () => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [flowToDelete, setFlowToDelete] = useState(null);
   const [defaultFlowLoaded, setDefaultFlowLoaded] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
+
 
   const handleDeleteClick = (flowId) => {
     setFlowToDelete(flowId);
@@ -695,49 +699,110 @@ const FlowBuilderContent = () => {
           )}
         </div>
       </ReactFlowProvider>
-      <div className="sidebar">
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-      <button className="sidebar_button"onClick={handleSaveClick}>
-          {authenticated ? "Save Flow" : "Save Flow"}
-        </button>
-        <LanguageSelectorTrigger/>
-        </div>
-        {authenticated && (
-          <>  
-            <select style={{marginBottom:'3rem'}} value={selectedFlow} onChange={handleFlowSelect}>
-              <option value="">Select a flow</option>
-              <option value="create_new">Create New Flow</option>
-              {existingFlows.map(flow => (
-                <option key={flow.id} value={flow.id}>{flow.name}</option>
-              ))}
-            </select>
-            {selectedFlow && selectedFlow !== 'create_new' && (
-              <button 
-                onClick={() => handleDeleteClick(selectedFlow)}
-                style={{
-                  backgroundColor: '#ff4d4d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '5px 10px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginBottom: '1rem'
-                }}
+      <div
+      className={`sidebar`}
+      style={{
+        width: collapsed ? "60px" : "250px",
+        transition: "width 0.3s ease",
+        overflow: "hidden",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        padding: "10px",
+      }}
+    >
+      {/* Toggle Button */}
+      <button
+  className="sidebar_toggle_button"
+  onClick={() => setCollapsed(!collapsed)}
+  style={{
+    position: "absolute",
+    left: "-20px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    backgroundColor: "#333",
+    color: "white",
+    border: "none",
+    padding: "10px",
+    borderRadius: "20px",
+    cursor: "pointer",
+    zIndex: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    width: collapsed ? "90px" : "40px", // Adjusted width for text & icon
+    transition: "all 0.3s ease-in-out",
+    whiteSpace: "nowrap",
+  }}
+>
+  {collapsed ? (
+    <>
+      <span style={{ fontSize: "14px", fontWeight: "bold", marginRight: "4px" }}>
+        ...SAVE
+      </span>
+      <ChevronRight size={18} />
+    </>
+  ) : (
+    <ChevronLeft size={18} />
+  )}
+</button>
+
+
+      {!collapsed && (
+        <>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+            <button className="sidebar_button" onClick={handleSaveClick}>
+              {authenticated ? "Save Flow" : "Save Flow"}
+            </button>
+            <LanguageSelectorTrigger />
+          </div>
+
+          {authenticated && (
+            <>
+              <select
+                style={{ marginBottom: "3rem" }}
+                value={selectedFlow}
+                onChange={handleFlowSelect}
               >
-                Delete Selected Flow
-              </button>
-            )}
-            <div style={{marginBottom:'2rem'}}>
-              <label htmlFor="fallbackMessage">Fallback Message:</label>
-              <input
-                id="fallbackMessage"
-                style={{padding:'5px', borderRadius:'6px'}}
-                type="text"
-                value={fallbackMessage}
-                onChange={(e) => setFallbackMessage(e.target.value)}
-                placeholder="Enter fallback message"
-              />
-            </div>
+                <option value="">Select a flow</option>
+                <option value="create_new">Create New Flow</option>
+                {existingFlows.map((flow) => (
+                  <option key={flow.id} value={flow.id}>
+                    {flow.name}
+                  </option>
+                ))}
+              </select>
+
+              {selectedFlow && selectedFlow !== "create_new" && (
+                <button
+                  onClick={() => handleDeleteClick(selectedFlow)}
+                  style={{
+                    backgroundColor: "#ff4d4d",
+                    color: "white",
+                    border: "none",
+                    padding: "5px 10px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  Delete Selected Flow
+                </button>
+              )}
+
+              <div style={{ marginBottom: "2rem" }}>
+                <label htmlFor="fallbackMessage">Fallback Message:</label>
+                <input
+                  id="fallbackMessage"
+                  style={{ padding: "5px", borderRadius: "6px" }}
+                  type="text"
+                  value={fallbackMessage}
+                  onChange={(e) => setFallbackMessage(e.target.value)}
+                  placeholder="Enter fallback message"
+                />
+              </div>
+
               <div>
                 <label htmlFor="fallbackCount">Fallback Count:</label>
                 <select
@@ -745,19 +810,18 @@ const FlowBuilderContent = () => {
                   value={fallbackCount}
                   onChange={(e) => setFallbackCount(Number(e.target.value))}
                 >
-                  {[1, 2, 3, 4, 5,6,7,8,9,10].map((num) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                     <option key={num} value={num}>
                       {num}
                     </option>
                   ))}
                 </select>
               </div>
-              
-            
             </>
-          
-        )}  
-      </div>
+          )}
+        </>
+      )}
+    </div>
       
       
       {showSavePopup && authenticated && (
