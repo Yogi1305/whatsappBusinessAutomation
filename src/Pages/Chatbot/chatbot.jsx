@@ -4,6 +4,13 @@ import { getTenantIdFromUrl,fixJsonString,setCSSVariable,getContactIDfromURL} fr
 import { renderMessageContent, renderInteractiveMessage,renderTemplateMessage } from './messageRenderers';
 // import OpenAI from "openai";
 import { toast } from "sonner";
+import { format } from 'date-fns';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Navigate, useNavigate, useParams } from "react-router-dom"; 
 import {axiosInstance,fastURL, djangoURL} from "../../api.jsx";
 
@@ -1484,33 +1491,51 @@ function renderMessageWithNewLines(text) {
   )}
 
   {conversation.length > 0 ? (
-    conversation.map((message) => (
-      <div
-        key={message.id}
-        className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`}
-        data-message-id={message.id}
-      >
-        {(() => {
-          if (typeof message.text === 'string') {
-            if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) {
-              try {
-                const fixedMessage = fixJsonString(message.text);
-                const parsedMessage = JSON.parse(fixedMessage);
-                return renderInteractiveMessage(parsedMessage);
-              } catch (e) {
-                console.error('Failed to parse message', e);
-                return <div className="error">Failed to parse message</div>;
-              }
+  conversation.map((message) => (
+    <TooltipProvider key={message.id}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div 
+            className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`} 
+            data-message-id={message.id}
+          > 
+            {(() => { 
+              if (typeof message.text === 'string') { 
+                if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) { 
+                  try { 
+                    const fixedMessage = fixJsonString(message.text); 
+                    const parsedMessage = JSON.parse(fixedMessage); 
+                    return renderInteractiveMessage(parsedMessage); 
+                  } catch (e) { 
+                    console.error('Failed to parse message', e); 
+                    return <div className="error">Failed to parse message</div>; 
+                  } 
+                } 
+                return renderMessageWithNewLines(message.text); 
+              } 
+              if (typeof message.text === 'object' && message.text !== null) { 
+                return renderMessageContent(message); 
+              } 
+              return null; 
+            })()} 
+          </div>
+        </TooltipTrigger>
+        <TooltipContent 
+          className="bg-gray-800 text-white px-3 py-1.5 rounded shadow-lg"
+          sideOffset={5}
+        >
+          {(() => {
+            try {
+              return format(new Date(message.time), 'MMM d, yyyy h:mm a');
+            } catch (e) {
+              console.error('Failed to parse time:', message.time);
+              return 'Invalid date';
             }
-            return renderMessageWithNewLines(message.text);
-          }
-          if (typeof message.text === 'object' && message.text !== null) {
-            return renderMessageContent(message);
-          }
-          return null;
-        })()}
-      </div>
-    ))
+          })()}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ))
   ) : (
     <div className="no-messages-placeholder">
       {isLoading ? (
