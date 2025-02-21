@@ -62,7 +62,84 @@ import {
 
 const socket = io(whatsappURL);
 
+// Add this near the top of your file, after imports
+const DUMMY_CONTACTS = [
+  {
+    id: 'dummy1',
+    name: 'John Doe',
+    phone: '911234567890',
+    email: 'john@example.com',
+    unreadCount: 2,
+    last_replied: new Date().toISOString(),
+  },
+  {
+    id: 'dummy2',
+    name: 'Alice Smith',
+    phone: '919876543210',
+    email: 'alice@example.com',
+    unreadCount: 0,
+    last_seen: new Date().toISOString(),
+  },
+  {
+    id: 'dummy3',
+    name: 'Bob Johnson',
+    phone: '917890123456',
+    email: 'bob@example.com',
+    unreadCount: 1,
+    last_delivered: new Date().toISOString(),
+  },
+];
 
+const DUMMY_CONVERSATIONS = {
+  dummy1: [
+    {
+      id: 'd1m1',
+      text: 'Hello! How can I help you today?',
+      sender: 'user',
+      time: new Date(Date.now() - 3600000).toISOString(),
+    },
+    {
+      id: 'd1m2',
+      text: 'I need information about your services',
+      sender: 'bot',
+      time: new Date(Date.now() - 3300000).toISOString(),
+    },
+    {
+      id: 'd1m3',
+      text: 'Sure! We offer various solutions including...',
+      sender: 'user',
+      time: new Date(Date.now() - 3000000).toISOString(),
+    },
+  ],
+  dummy2: [
+    {
+      id: 'd2m1',
+      text: 'Hi Alice! Welcome to our platform',
+      sender: 'bot',
+      time: new Date(Date.now() - 7200000).toISOString(),
+    },
+    {
+      id: 'd2m2',
+      text: 'Thank you! I excited to get started',
+      sender: 'user',
+      time: new Date(Date.now() - 7000000).toISOString(),
+    },
+  ],
+  dummy3: [
+    {
+      id: 'd3m1',
+      text: 'Good morning! Any updates on my request?',
+      sender: 'user',
+      time: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: 'd3m2',
+      text: 'Yes, were processing it right now',
+      sender: 'bot',
+      time: new Date(Date.now() - 86000000).toISOString(),
+    },
+  ],
+};
 
 
 const Chatbot = () => {
@@ -237,17 +314,20 @@ useEffect(() => {
       
       // Fetch contacts for the specific page
       const response = await axiosInstance.get(`${fastURL}/contacts/${page}?order_by=last_replied&sort_by=desc`);
-      setTotalPages(response.data.total_pages);
-      
-      // Process contacts for the current page
-     
-      
-      // Set contacts to only the current page's contacts
-      setContacts(response.data.contacts);
-      
-      // Update current page
-      setCurrentPage(page);
+      if (!response.data.contacts || response.data.contacts.length === 0) {
+        setContacts(DUMMY_CONTACTS);
+        setTotalPages(1);
+        setCurrentPage(1);
+      } else {
+        setContacts(response.data.contacts);
+        setTotalPages(response.data.total_pages);
+        setCurrentPage(page);
+      }
+    
     } catch (error) {
+      setContacts(DUMMY_CONTACTS);
+    setTotalPages(1);
+    setCurrentPage(1);
    //   console.error("Error fetching contacts data:", error);
     } finally {
       setIsLoading(false);
@@ -655,6 +735,24 @@ useEffect(() => {
   const fetchConversation = useCallback(async (contactId, page = 1, append = false, signal) => {
     try {
       setIsLoadingMore(append);
+      
+      // Check if this is a dummy contact by checking the phone number
+      const isDummyContact = DUMMY_CONTACTS.some(contact => contact.phone === contactId);
+      
+      if (isDummyContact) {
+        // Find the dummy contact and its corresponding conversations
+        const dummyContact = DUMMY_CONTACTS.find(contact => contact.phone === contactId);
+        if (dummyContact) {
+          const dummyConversation = DUMMY_CONVERSATIONS[dummyContact.id] || [];
+          setConversation(prev => append ? [...prev, ...dummyConversation] : dummyConversation);
+          setHasMoreMessages(false);
+          setCurrentMessagePage(1);
+          setLastUpdateType(append ? 'append' : 'new');
+          return;
+        }
+      }
+  
+      // Only proceed with API call if it's not a dummy contact
       if (!contactId || !businessPhoneNumberId) return;
   
       const container = messagesContainerRef.current;
@@ -681,7 +779,6 @@ useEffect(() => {
       const serverPage = response.data.page_no;
       const totalPages = response.data.total_pages;
   
-      // Critical fix: Use SERVER'S page number, not client's
       const hasMore = serverPage < totalPages;
       setHasMoreMessages(hasMore);
       setCurrentMessagePage(serverPage);
@@ -700,8 +797,11 @@ useEffect(() => {
   
     } catch (error) {
       if (!axios.isCancel(error)) {
-      //  console.error('Fetch conversation error:', error);
-        toast.error('Failed to load messages');
+        // Only show error toast for non-dummy contacts
+        if (!DUMMY_CONTACTS.some(contact => contact.phone === contactId)) {
+          console.error('Fetch conversation error:', error);
+          toast.error('Failed to load messages');
+        }
       }
     } finally {
       setIsLoadingMore(false);
@@ -780,15 +880,24 @@ useEffect(() => {
   
       navigate({ search: `?id=${contact.id}` }, { replace: true });
       setSelectedContact(contact);
+      
+      // Update unread count
       setContacts(prev => prev.map(c => 
         c.id === contact.id ? { ...c, unreadCount: 0 } : c
       ));
   
-      // Force fetch conversation even if same contact
-      await fetchConversation(contact.phone);
-      
+      // Check if it's a dummy contact
+      const isDummyContact = DUMMY_CONTACTS.some(dc => dc.phone === contact.phone);
+      if (isDummyContact) {
+        const dummyContact = DUMMY_CONTACTS.find(dc => dc.phone === contact.phone);
+        setConversation(DUMMY_CONVERSATIONS[dummyContact.id] || []);
+        setIsLoading(false);
+      } else {
+        await fetchConversation(contact.phone);
+      }
+  
     } catch (error) {
-    //  console.error('Contact selection failed:', error);
+      console.error('Contact selection failed:', error);
     } finally {
       setIsLoading(false);
     }
