@@ -46,7 +46,7 @@ const WhatsAppQRCode = () => {
           }
         );
 
-        console.log("Response QR: ", response.data)
+      //  console.log("Response QR: ", response.data)
 
         if (response.data && response.data.qr_image_url) {
           setQrCodeUrl(response.data.qr_image_url);
@@ -56,7 +56,7 @@ const WhatsAppQRCode = () => {
         }
       } catch (err) {
         setError('Error generating QR code');
-        console.error('QR code generation error:', err);
+      //  console.error('QR code generation error:', err);
       }
       finally {
         setTimeout(() => {

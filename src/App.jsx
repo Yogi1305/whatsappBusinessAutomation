@@ -161,7 +161,7 @@ const App = () => {
               <Routes>
                 {/* Free tier accessible routes */}
                 <Route path="broadcast" element={<ProtectedRoute><BroadcastPage /></ProtectedRoute>} />
-                <Route path="contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
+                <Route path="contact" element={<ProtectedRoute> <TierProtectedRoute requiredTier="premium"><ContactPage /></TierProtectedRoute></ProtectedRoute>} />
                 <Route path="contactDetails" element={<ProtectedRoute><ContactDetails /></ProtectedRoute>} />
                 <Route path="payment" element={<ProtectedRoute><GPayUPIPayment /></ProtectedRoute>} />
                 <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

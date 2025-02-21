@@ -169,7 +169,7 @@ const WhatsAppCommands = () => {
             }
           );
           const commandList = response.data.conversational_automation.commands;
-          console.log("Response: ", response.data)
+        //  console.log("Response: ", response.data)
           const formattedCommands = commandList.map((command, index) => ({
             id: `cmd-${index + 1}`,
             text: command.command_name || "",
@@ -178,7 +178,7 @@ const WhatsAppCommands = () => {
           setCommands(formattedCommands);
         }
       } catch (error) {
-        console.error("Error fetching commands:", error);
+      //  console.error("Error fetching commands:", error);
       } finally {
         setIsLoading(false);
       }
@@ -199,7 +199,7 @@ const WhatsAppCommands = () => {
         }));
         setAgents(formattedAgents);
       } catch (error) {
-        console.error("Error fetching agents:", error);
+      //  console.error("Error fetching agents:", error);
       }
     };
     fetchAgents();
@@ -267,7 +267,7 @@ const WhatsAppCommands = () => {
       }
       else throw new Error("bpid or access_token is not present")
     } catch (error) {
-      console.error('Error saving:', error);
+    //  console.error('Error saving:', error);
     } finally {
       setSavingCommand(false);
     }
@@ -279,7 +279,7 @@ const WhatsAppCommands = () => {
       const data = agents.map(agent => (agent.number))
       axiosInstance.post(`${djangoURL}/tenant-agents/`, {"agents": data})
     } catch (error) {
-      console.error('Error saving:', error);
+    //  console.error('Error saving:', error);
     } finally {
       setSavingAgent(false);
     }

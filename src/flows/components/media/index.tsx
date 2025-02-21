@@ -43,7 +43,7 @@ export function ImageComponent({ config, onChange }: BaseComponentProps) {
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error processing image:', error);
+    //  console.error('Error processing image:', error);
       alert('Error processing image. Please try another image.');
     }
   };

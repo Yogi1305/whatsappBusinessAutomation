@@ -21,7 +21,7 @@ const QuickAddContact = ({ tenantId, onContactAdded }) => {
       setPhoneNumber('');
       toast.success("Contact added successfully");
     } catch (error) {
-      console.error("Error creating contact:", error);
+    //  console.error("Error creating contact:", error);
       toast.error("Failed to add contact");
     }
   };

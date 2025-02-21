@@ -98,109 +98,176 @@ const Login = () => {
   }, [showPopup, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col justify-center items-center p-4">
-      <div className="bg-white/80 backdrop-blur-lg shadow-2xl rounded-2xl w-full max-w-md overflow-hidden border border-white/20">
-        <div className="p-8">
-          {/* Logo Section */}
-          <div className="flex items-center justify-center mb-6">
-            <div className="bg-white p-3 rounded-xl">
-              <img src={logo} alt="Logo" className="h-8 w-auto" />
+    <div className="min-h-screen bg-black flex items-center justify-center p-6">
+    <div className="w-full max-w-6xl mx-auto flex rounded-3xl overflow-hidden bg-black/30 backdrop-blur-lg shadow-2xl border border-[#25D366]/10">
+      {/* Left Section - Graphic/Illustration */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black">
+        <div className="relative z-10 h-full flex flex-col justify-between p-12">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="space-y-6 w-full max-w-sm">
+              {/* Animated chat bubbles */}
+              <div className="flex items-start space-x-2 animate-fadeIn">
+                <div className="bg-[#25D366]/20 p-4 rounded-2xl rounded-tl-none">
+                  <p className="text-white">Hey! 👋</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-2 animate-fadeIn animation-delay-500">
+                <div className="bg-[#25D366]/20 p-4 rounded-2xl">
+                  <p className="text-white">Ready to reach billions?</p>
+                </div>
+              </div>
+              <div className="flex items-start justify-end space-x-2 animate-fadeIn animation-delay-1000">
+                <div className="bg-white/10 p-4 rounded-2xl rounded-tr-none">
+                  <p className="text-[#25D366]">Let's get started! 🚀</p>
+                </div>
+              </div>
             </div>
           </div>
           
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-center text-gray-600 mb-8">Sign in to continue your AI journey</p>
+          <div className="space-y-6">
+            <h2 className="text-4xl font-bold text-[#25D366]">
+              Connect Globally
+            </h2>
+            <p className="text-gray-300 text-lg">
+              Reach 3+ billion users through instant messaging
+            </p>
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-black/30 p-4 rounded-lg border border-[#25D366]/20">
+                <h3 className="text-[#25D366] text-2xl font-bold">3B+</h3>
+                <p className="text-gray-400">Active Users</p>
+              </div>
+              <div className="bg-black/30 p-4 rounded-lg border border-[#25D366]/20">
+                <h3 className="text-[#25D366] text-2xl font-bold">180+</h3>
+                <p className="text-gray-400">Countries</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Right Section - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-12">
+        <div className="w-full max-w-md space-y-8">
+          {/* Logo */}
+          <div className="flex justify-center">
+            <img src={logo} alt="Logo" className="h-12 w-auto" />
+          </div>
+
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-white">Welcome Back</h2>
+            <p className="mt-2 text-gray-400">Sign in to your account</p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mb-6">
-                <p className="text-red-700">{error}</p>
+              <div className="bg-red-500/10 border-l-4 border-red-500 p-4 rounded-md animate-shake">
+                <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
 
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Username"
-                className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
+// In the form section, update the input fields:
 
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="password"
-                placeholder="Password"
-                className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+<div className="space-y-4">
+  <div className="relative">
+    <label className="text-gray-300 text-sm font-medium mb-1 block">
+      Username
+    </label>
+    <div className="relative group">
+      <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
+      <input
+        type="text"
+        placeholder="john.doe@example.com" // Added placeholder
+        className="w-full bg-black/50 border border-gray-800 text-white rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all duration-300 placeholder-gray-600"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        required
+      />
+    </div>
+  </div>
+
+  <div className="relative">
+    <label className="text-gray-300 text-sm font-medium mb-1 block">
+      Password
+    </label>
+    <div className="relative group">
+      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
+      <input
+        type="password"
+        placeholder="Enter your password" // Added placeholder
+        className="w-full bg-black/50 border border-gray-800 text-white rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all duration-300 placeholder-gray-600"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+   
+    </div>
+  </div>
+</div>
+
+
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
+              className="w-full bg-[#25D366] text-black font-semibold py-3 rounded-lg hover:bg-[#128C7E] transition-all duration-300 flex items-center justify-center"
             >
               {isSubmitting ? (
                 <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-2" />
                   Signing in...
                 </div>
               ) : (
                 'Sign In'
               )}
             </button>
-          </form>
 
-          <div className="mt-6 text-center space-y-4">
-            <Link 
-              to="/change-password" 
-              className="block text-gray-600 hover:text-blue-600 transition-colors duration-300"
-            >
-              Forgot password?
-            </Link>
-            
-            <div className="relative">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+                <div className="w-full border-t border-gray-800"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white/80 text-gray-500">Or</span>
+                <span className="px-2 bg-black text-gray-500">Or continue with</span>
               </div>
             </div>
 
             <button
-  onClick={handleGoogleSignIn}
-  className="w-full flex items-center justify-center bg-white border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition duration-300 font-medium"
->
-  <img
-    src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png"
-    alt="Google Logo"
-    className="w-5 h-5 mr-2"
-  />
-  Sign in with Google
-</button>
-
-            <Link 
-              to="/register" 
-              className="block text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
+              onClick={handleGoogleSignIn}
+              className="w-full bg-white/5 border border-gray-800 text-white rounded-lg py-3 flex items-center justify-center hover:bg-white/10 transition-all duration-300"
             >
-              Create a new account
-            </Link>
-          </div>
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png"
+                alt="Google"
+                className="w-5 h-5 mr-2"
+              />
+              Sign in with Google
+            </button>
+
+            <div className="text-center mt-6">
+              <Link
+                to="/forgot-password"
+                className="text-gray-400 hover:text-[#25D366] text-sm transition-colors duration-300"
+              >
+                Forgot your password?
+              </Link>
+              <p className="mt-4 text-gray-400">
+                Don't have an account?{' '}
+                <Link
+                  to="/register"
+                  className="text-[#25D366] hover:text-[#128C7E] font-medium transition-colors duration-300"
+                >
+                  Sign up
+                </Link>
+              </p>
+            </div>
+          </form>
         </div>
       </div>
-
-      {showPopup && (
-        <PopupCard message={`Welcome back! Logging in as ${role}`} />
-      )}
     </div>
+
+    {showPopup && (
+      <PopupCard message={`Welcome back! Logging in as ${role}`} />
+    )}
+  </div>
   );
 };
 

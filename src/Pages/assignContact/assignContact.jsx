@@ -28,7 +28,7 @@ const AssignContact = () => {
       setFilteredLeads(leadsResponse.data);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching data:', error);
+    //  console.error('Error fetching data:', error);
       message.error('Failed to load data. Please try again.');
       setLoading(false);
     }
@@ -60,7 +60,7 @@ const AssignContact = () => {
       message.success('Contact assigned successfully');
       fetchUsersAndLeads(); // Refresh data
     } catch (error) {
-      console.error('Error assigning Contact:', error);
+    //  console.error('Error assigning Contact:', error);
       message.error('Failed to assign Contact. Please try again.');
     }
   };

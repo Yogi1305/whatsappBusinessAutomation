@@ -27,7 +27,7 @@ const formatDate = (dateString) => {
       hour12: true
     });
   } catch (error) {
-    console.error('Invalid date:', dateString);
+  //  console.error('Invalid date:', dateString);
     return 'Invalid Date';
   }
 };
@@ -104,7 +104,7 @@ const GroupPopup = ({
       setCurrentPage(page);
       setPageInputVisible(false);
     } catch (error) {
-      console.error("Error fetching contacts data:", error);
+    //  console.error("Error fetching contacts data:", error);
       toast.error("Failed to fetch contacts");
     } finally {
       setIsLoading(false);
@@ -133,7 +133,7 @@ const GroupPopup = ({
       setBroadcastGroup(formattedGroups);
     
     } catch (error) {
-      console.error('Error deleting group:', error);
+    //  console.error('Error deleting group:', error);
       
       const errorMessage = error.response?.data?.detail || 'Failed to delete group';
       switch (error.response?.status) {
@@ -245,7 +245,7 @@ const GroupPopup = ({
         throw new Error("Failed to create broadcast group");
       }
     } catch (error) {
-      console.error("Error creating broadcast group:", error);
+   //   console.error("Error creating broadcast group:", error);
       toast.error("Failed to create broadcast group");
     }
   };

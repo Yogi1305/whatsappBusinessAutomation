@@ -69,7 +69,7 @@ const Catalog = () => {
       setTextToCopy(prevState => ({ ...prevState, url: djangoResponse.data.spreadsheet_url }));
       setCatalogID(djangoResponse.data.catalog_id);
     } catch (error) {
-      console.error("Error fetching products:", error);
+    //  console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }
@@ -117,7 +117,7 @@ const Catalog = () => {
         [rowIndex]: blockBlobClient.url,
       }));
     } catch (error) {
-      console.error('Error uploading file to Azure:', error);
+    //  console.error('Error uploading file to Azure:', error);
     }
   };
 
@@ -149,7 +149,7 @@ const Catalog = () => {
       const filteredChanges = changes.filter(row => row.row_status !== 'unchanged');
       const response = await axiosInstance.post(`/catalog/`, filteredChanges);
     } catch (error) {
-      console.error("Error submitting catalog data: ", error);
+    //  console.error("Error submitting catalog data: ", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -164,7 +164,7 @@ const Catalog = () => {
           setTextToCopy(prevState => ({ ...prevState, display: "Copy Link" }));
         }, 1000);
       } catch (error) {
-        console.error("Failed to copy text: ", error);
+      //  console.error("Failed to copy text: ", error);
       }
     }
   };
@@ -196,7 +196,7 @@ const Catalog = () => {
       });
       setIsDialogOpen(false);
     } catch (error) {
-      console.error("Error saving catalog ID:", error);
+    //  console.error("Error saving catalog ID:", error);
     }
   };
 

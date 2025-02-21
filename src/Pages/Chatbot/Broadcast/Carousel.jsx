@@ -133,7 +133,7 @@ const CarouselEditor = ({
       setTimeout(() => setUploadProgress(0), 1000);
 
     } catch (error) {
-      console.error('Error uploading image:', error);
+    //  console.error('Error uploading image:', error);
       setUploadProgress(0);
       toast.error("Failed to upload image. Please try again.");
     }
@@ -331,7 +331,7 @@ const CarouselEditor = ({
       });
 
     } catch (error) {
-      console.error('Error creating carousel template:', error);
+    //  console.error('Error creating carousel template:', error);
       const errorMessage = error.response?.data?.error?.message || 
                           error.message || 
                           'An error occurred while creating the carousel template';
@@ -451,7 +451,7 @@ const CarouselEditor = ({
       setActiveTab('templates');
 
     } catch (error) {
-      console.error('Error creating carousel template:', error);
+    //  console.error('Error creating carousel template:', error);
       const errorMessage = error.response?.data?.error?.message || 
                           error.message || 
                           'An error occurred while creating the carousel template';

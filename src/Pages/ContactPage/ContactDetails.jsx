@@ -76,7 +76,7 @@ const ContactDetails = () => {
         setEditedContact(sanitizedContact);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to fetch contact details');
-        console.error('Error fetching contact:', err);
+       // console.error('Error fetching contact:', err);
       } finally {
         setIsLoading(false);
       }
@@ -119,7 +119,7 @@ const ContactDetails = () => {
       setIsEditing(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update contact');
-      console.error('Error updating contact:', err);
+    //  console.error('Error updating contact:', err);
     } finally {
       setIsLoading(false);
     }
@@ -150,7 +150,7 @@ const ContactDetails = () => {
     try {
       return format(new Date(dateString), 'PPpp');
     } catch (err) {
-      console.error('Error formatting date:', err);
+    //  console.error('Error formatting date:', err);
       return 'Invalid Date';
     }
   };

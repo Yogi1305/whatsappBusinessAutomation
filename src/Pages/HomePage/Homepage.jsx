@@ -113,15 +113,6 @@ const Homepage = () => {
   const { scrollYProgress } = useScroll();
   const [isPopupVisible, setIsPopupVisible] = useState(false);
 
-  // Show popup after 10 seconds of page load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPopupVisible(true); // Show the popup after 10 seconds
-    }, 10000);
-
-    return () => clearTimeout(timer); // Cleanup timer on component unmount
-  }, []);
-
   // Show popup when user scrolls 30% down the page
   useEffect(() => {
     const handleScroll = () => {
@@ -144,7 +135,7 @@ const Homepage = () => {
   
 
   const handleEmailSubmit = (email) => {
-    console.log("Submitted email:", email);
+  //  console.log("Submitted email:", email);
     setIsPopupVisible(false); // Close popup after submission
   };
   const handlePopupClose = () => {

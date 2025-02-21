@@ -14,7 +14,7 @@ const Chatbotredirect = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const tenantID = JSON.parse(localStorage.getItem('tenant_id')); // Replace with your actual local storage key
         const code = urlParams.get('code');
-        console.log("Here is the code",code);
+       // console.log("Here is the code",code);
         if (code) {
           // Send the auth code to the backend
           const response = await axios.post(
@@ -24,7 +24,7 @@ const Chatbotredirect = () => {
           );
 
           // Handle the response (you can save token or do other logic here)
-          console.log('Backend response:', response.data);
+        //  console.log('Backend response:', response.data);
 
           // Get tenantID from local storage and redirect
           
@@ -36,7 +36,7 @@ const Chatbotredirect = () => {
                 if (tenantID) {
                   window.location.href = `https://nuren.ai/${tenantID}/chatbot`; // Redirect to nuren.ai/tenantID/chatbot
               } else {
-                  console.error('Tenant ID not found');
+                //  console.error('Tenant ID not found');
                 }
                 return 100;
               }
@@ -44,10 +44,10 @@ const Chatbotredirect = () => {
             });
           }, 1000);
         } else {
-          console.error('Authorization code not found in URL');
+        //  console.error('Authorization code not found in URL');
         }
       } catch (error) {
-        console.error('Error during login flow:', error);
+       // console.error('Error during login flow:', error);
       }
     };
 

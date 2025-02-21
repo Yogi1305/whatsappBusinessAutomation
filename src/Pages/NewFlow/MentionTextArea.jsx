@@ -52,7 +52,7 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
           setMentionOptions(fields.map(field => ({ id: field, label: field })));
         }
       } catch (error) {
-        console.error("Error fetching contact fields:", error);
+      //  console.error("Error fetching contact fields:", error);
       }
     };
     fetchContactFields();
@@ -86,7 +86,7 @@ export const MentionTextArea = ({ value, onChange, placeholder }) => {
   const handleMentionSelect = (option) => {
     const lastAtSymbolIndex = value.lastIndexOf('@');
     const newValue = value.slice(0, lastAtSymbolIndex) + `@${option.label} ` + value.slice(lastAtSymbolIndex + 1);
-    console.log(newValue,"THIS IS AN IMPORTANT VSLUE");
+  //  console.log(newValue,"THIS IS AN IMPORTANT VSLUE");
     onChange({ target: { value: newValue } });
     setShowMentionList(false);
   };

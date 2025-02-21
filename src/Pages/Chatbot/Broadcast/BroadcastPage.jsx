@@ -86,7 +86,7 @@ const tier = tenant?.tier || 'Free';
         setAccessToken(response.data.whatsapp_data[0].access_token);
         return response.data.whatsapp_data[0];
       } catch (error) {
-        console.error('Error fetching business phone ID:', error);
+       // console.error('Error fetching business phone ID:', error);
       }
     };
 
@@ -170,7 +170,7 @@ const tier = tenant?.tier || 'Free';
       }));
       setTemplates(formattedTemplates);
     } catch (error) {
-      console.error('Error fetching templates:', error);
+    //  console.error('Error fetching templates:', error);
     }
   }, [accessToken, accountId]);
 
@@ -192,7 +192,7 @@ const tier = tenant?.tier || 'Free';
         });
         await fetchTemplates();
       } catch (error) {
-        console.error('Error deleting template:', error);
+      //  console.error('Error deleting template:', error);
       }
     }
   };
@@ -250,7 +250,7 @@ const tier = tenant?.tier || 'Free';
         throw new Error("Failed to send broadcast");
       }
     } catch (error) {
-      console.error("Error sending broadcast:", error);
+    //  console.error("Error sending broadcast:", error);
       toast.error("Failed to send broadcast message. Please try again.", {
         position: "top-center",
         duration: 3000
@@ -409,7 +409,7 @@ const tier = tenant?.tier || 'Free';
       alert("Template created successfully!");
      
     } catch (error) {
-      console.error('Error creating/updating template:', error);
+    //  console.error('Error creating/updating template:', error);
       setLoading(false);
       // Provide detailed error message
       const errorMessage = error.response?.data?.error?.message || error.message || 'An error occurred while creating the template';
@@ -428,7 +428,7 @@ const tier = tenant?.tier || 'Free';
       });
       setSelectedTemplateDetails(response.data);
     } catch (error) {
-      console.error('Error fetching template details:', error);
+    //  console.error('Error fetching template details:', error);
     }
   };
 
@@ -466,7 +466,7 @@ const tier = tenant?.tier || 'Free';
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);
     } catch (error) {
-      console.error('Error fetching broadcast history:', error);
+    //  console.error('Error fetching broadcast history:', error);
     }
   };
 
@@ -488,7 +488,7 @@ const tier = tenant?.tier || 'Free';
 
 
   const handleBCGroupSelection = (bgId) => {
-    console.log("Broadcast::::::::", bgId)
+  //  console.log("Broadcast::::::::", bgId)
     setSelectedBCGroups(prevSelected => 
       prevSelected.includes(bgId)
         ? prevSelected.filter(id => id !== bgId)
@@ -511,10 +511,10 @@ const tier = tenant?.tier || 'Free';
   };
 
   const extractVariables = (text) => {
-    console.log("Test: ", text)
+ //   console.log("Test: ", text)
     const regex = /@([\w.]+)/g; // Updated regex to allow dots in variable names
     const matches = text.match(regex);
-    console.log("MAtched: ", matches)
+  //  console.log("MAtched: ", matches)
     return matches ? matches.map(match => match.slice(1)) : [];
   };
 
@@ -544,7 +544,7 @@ const tier = tenant?.tier || 'Free';
       return match; // Keep placeholder if index is invalid
     });
   
-    console.log("Replaced text:", replacedText);
+  //  console.log("Replaced text:", replacedText);
     return replacedText;
   };
 
@@ -569,7 +569,7 @@ const tier = tenant?.tier || 'Free';
       setHeaderContent(URL.createObjectURL(selectedFile));
   
       try {
-        console.log('Uploading file to WhatsApp Media API...');
+    //    console.log('Uploading file to WhatsApp Media API...');
   
         const formData = new FormData();
         formData.append('file', selectedFile);
@@ -591,11 +591,11 @@ const tier = tenant?.tier || 'Free';
           }
         );
   
-        console.log('File uploaded to WhatsApp, ID:', response.data.body.h);
+    //    console.log('File uploaded to WhatsApp, ID:', response.data.body.h);
         setHeaderMediaId(response.data.body.h); // Save the media ID for later use
         setUploadProgress(100);
       } catch (error) {
-        console.error('Error uploading file:', error);
+      //  console.error('Error uploading file:', error);
         setUploadProgress(0);
       }
     }

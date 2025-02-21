@@ -115,11 +115,11 @@ const useTransliteration = (text, language) => {
         const parsedData = JSON.parse(data.replace(/,+/g, ','));
         return parsedData[0][0][0] || inputText;
       } catch (parseError) {
-        console.error('Transliteration parse error:', parseError);
+      //  console.error('Transliteration parse error:', parseError);
         return inputText;
       }
     } catch (error) {
-      console.error('Transliteration error:', error);
+    //  console.error('Transliteration error:', error);
       return inputText;
     }
   }, [language]);

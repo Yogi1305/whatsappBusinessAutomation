@@ -23,11 +23,11 @@ const uploadToBlob = async (file, userId, tenantId) => {
       },
     });
 
-    console.log(`Upload block blob ${newFileName} successfully`, uploadBlobResponse.requestId);
+    //console.log(`Upload block blob ${newFileName} successfully`, uploadBlobResponse.requestId);
 
     return blockBlobClient.url; // Return the URL of the uploaded file
   } catch (error) {
-    console.error('Error uploading file to Azure:', error);
+  //  console.error('Error uploading file to Azure:', error);
     throw error;
   }
 };

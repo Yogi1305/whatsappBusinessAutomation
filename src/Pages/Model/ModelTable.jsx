@@ -30,7 +30,7 @@ const Models = () => {
                 const response = await axiosInstance.get(`${fastURL}/dynamic-models/`);
                 setModels(response.data);
             } catch (error) {
-                console.error('Error fetching models:', error);
+             //   console.error('Error fetching models:', error);
                 toast.error('Failed to fetch models');
             }
         };
@@ -46,7 +46,7 @@ const Models = () => {
             const fields = Object.keys(response.data[0])
             setSelectedModelFields(fields)
         } catch (error) {
-            console.error('Error fetching model data:', error);
+         //   console.error('Error fetching model data:', error);
             toast.error('Failed to fetch model data');
         } finally {
             setLoading(false);
@@ -68,14 +68,14 @@ const Models = () => {
                     'X-Tenant-Id': tenantId
                 }
             });
-            console.log('Data sent successfully:', response.data);
+        //    console.log('Data sent successfully:', response.data);
             setShowModal(false);
             // Refresh model data
             const updatedData = await axiosInstance.get(`${djangoURL}/dynamic-model-data/${selectedModel.model_name}/`);
             setModelData(updatedData.data);
             toast.success('Data submitted successfully');
         } catch (error) {
-            console.error('Error submitting data:', error);
+        //    console.error('Error submitting data:', error);
             toast.error('Failed to submit data');
         }
     };

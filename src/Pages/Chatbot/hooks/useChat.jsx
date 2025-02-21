@@ -29,7 +29,7 @@ export default function useChat(selectedContact) {
       setMessages(prev => [...prev, newMessage]);
       setInputText('');
     } catch (error) {
-      console.error('Error sending message:', error);
+   //   console.error('Error sending message:', error);
     }
   }, [selectedContact, inputText]);
 

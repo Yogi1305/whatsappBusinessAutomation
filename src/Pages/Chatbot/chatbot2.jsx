@@ -38,16 +38,16 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        console.log("fetching business phone number id")
+       // console.log("fetching business phone number id")
         const response = await axios.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-Id': tenantId
           }
         });
-        console.log(response.data.whatsapp_data[0].business_phone_number_id,"THIS IS BPID");
+     //   console.log(response.data.whatsapp_data[0].business_phone_number_id,"THIS IS BPID");
         setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
       } catch (error) {
-        console.error('Error fetching business phone ID:', error);
+      //  console.error('Error fetching business phone ID:', error);
       }
     };
 
@@ -111,7 +111,7 @@ const Chatbot = () => {
       setTotalPages(response.data.total_pages);
       setCurrentPage(page);
     } catch (error) {
-      console.error("Error fetching contacts:", error);
+    //  console.error("Error fetching contacts:", error);
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +132,7 @@ const Chatbot = () => {
         [phoneNumber]: response.data
       }));
     } catch (error) {
-      console.error("Error fetching conversation:", error);
+    //  console.error("Error fetching conversation:", error);
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +168,7 @@ const Chatbot = () => {
         error: true,
         status: 'failed'
       });
-      console.error("Error sending message:", error);
+    //  console.error("Error sending message:", error);
     }
   }, [businessPhoneNumberId]);
 

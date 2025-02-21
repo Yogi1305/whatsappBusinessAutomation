@@ -91,7 +91,7 @@ const FlowBuilderContent = () => {
           setSelectedFlow('');
         }
       } catch (error) {
-        console.error('Error deleting flow:', error);
+      //  console.error('Error deleting flow:', error);
         toast.error("Failed to delete flow");
       }
     }
@@ -211,7 +211,7 @@ const FlowBuilderContent = () => {
       setIsExistingFlow(true);
       toast.info("Default flow loaded");
     } catch (error) {
-      console.error('Error fetching default flow:', error);
+    //  console.error('Error fetching default flow:', error);
       toast.error("Failed to load default flow");
       resetFlow();
     } finally {
@@ -237,7 +237,7 @@ const FlowBuilderContent = () => {
       setExistingFlows(response.data);
       //toast.success("Existing flows fetched successfully");
     } catch (error) {
-      console.error('Error fetching existing flows:', error);
+    //  console.error('Error fetching existing flows:', error);
       //toast.error("Failed to fetch existing flows");
     }
     setIsLoading(false);
@@ -251,7 +251,7 @@ const FlowBuilderContent = () => {
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-      console.log(nodes,"sec 54");
+    //  console.log(nodes,"sec 54");
       const type = event.dataTransfer.getData("application/reactflow");
   
       if (typeof type === "undefined" || !type || type === 'start') {
@@ -283,7 +283,7 @@ const FlowBuilderContent = () => {
   
       setNodes((nds) => {
         const updatedNodes = nds.concat(newNode);
-        console.log('Nodes after adding:', updatedNodes);
+      //  console.log('Nodes after adding:', updatedNodes);
         return updatedNodes;
       });
     },
@@ -293,13 +293,13 @@ const FlowBuilderContent = () => {
 
 
   const validateNodes = useCallback(() => {
-    console.log('Starting node validation');
+  //  console.log('Starting node validation');
     let isValid = true;
     let newErrorNodes = [];
   
     const startNodeConnected = edges.some(edge => edge.source === 'start');
     if (!startNodeConnected) {
-      console.log('Error: Start node is not connected');
+    //  console.log('Error: Start node is not connected');
       isValid = false;
       newErrorNodes.push('start');
       toast.error("Please connect the Start node to another node");
@@ -307,19 +307,19 @@ const FlowBuilderContent = () => {
   
     // Validate fallback message
     if (!fallbackMessage || !fallbackMessage.trim()) {
-      console.log('Error: Fallback message is empty');
+    //  console.log('Error: Fallback message is empty');
       isValid = false;
       toast.error("Please enter a fallback message");
     }
   
     const updatedNodes = nodes.map(node => {
-      console.log(`Validating node: ${node.id}, Type: ${node.type}`);
+     // console.log(`Validating node: ${node.id}, Type: ${node.type}`);
       let hasError = false;
       
       if (node.type === 'askQuestion') {
-        console.log('Ask Question node data:', node.data);
+      //  console.log('Ask Question node data:', node.data);
         if (!node.data.question || !node.data.question.trim()) {
-          console.log(`Error: Empty question in node ${node.id}`);
+      //    console.log(`Error: Empty question in node ${node.id}`);
           hasError = true;
           isValid = false;
           toast.error(`Please enter a question for node ${node.id}`);
@@ -327,19 +327,19 @@ const FlowBuilderContent = () => {
         if (Array.isArray(node.data.options)) {
           const optionTexts = new Set();
           node.data.options.forEach((option, index) => {
-            console.log(`Validating option ${index}:`, option);
+          //  console.log(`Validating option ${index}:`, option);
             if (!option || !option.trim()) {
-              console.log(`Error: Empty option ${index} in node ${node.id}`);
+            //  console.log(`Error: Empty option ${index} in node ${node.id}`);
               hasError = true;
               isValid = false;
               toast.error(`Please enter text for option ${index + 1} in node ${node.id}`);
             } else if (option.length > 24) {
-              console.log(`Error: Option ${index} in node ${node.id} exceeds 24 characters`);
+            // console.log(`Error: Option ${index} in node ${node.id} exceeds 24 characters`);
               hasError = true;
               isValid = false;
               toast.error(`Option ${index + 1} in node ${node.id} exceeds 24 characters`);
             } else if (optionTexts.has(option.toLowerCase())) {
-              console.log(`Error: Duplicate option ${option} in node ${node.id}`);
+            //  console.log(`Error: Duplicate option ${option} in node ${node.id}`);
               hasError = true;
               isValid = false;
               toast.error(`Duplicate option "${option}" in node ${node.id}`);
@@ -348,17 +348,17 @@ const FlowBuilderContent = () => {
             }
           });
         } else {
-          console.log(`Warning: options is not an array in node ${node.id}`);
+        //  console.log(`Warning: options is not an array in node ${node.id}`);
         }
       } else if (node.type === 'sendMessage') {
-        console.log('Send Message node data:', node.data);
+       // console.log('Send Message node data:', node.data);
         if (node.data.fields && typeof node.data.fields === 'object') {
           const { type, content } = node.data.fields;
           
           switch (type) {
             case 'text':
               if (!content.text || !content.text.trim()) {
-                console.log(`Error: Empty message content in node ${node.id}`);
+          //      console.log(`Error: Empty message content in node ${node.id}`);
                 hasError = true;
                 isValid = false;
                 toast.error(`Please enter a message for the Send Message node ${node.id}`);
@@ -368,27 +368,27 @@ const FlowBuilderContent = () => {
             case 'Video':
             case 'Document':
               if (!content.med_id) {
-                console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
+              //  console.log(`Error: No ${type.toLowerCase()} uploaded in node ${node.id}`);
                 hasError = true;
                 isValid = false;
                 toast.error(`Please upload a ${type.toLowerCase()} for the Send Message node ${node.id}`);
               }
               break;
             default:
-              console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
+             // console.log(`Error: Invalid message type "${type}" in node ${node.id}`);
               hasError = true;
               isValid = false;
               toast.error(`Invalid message type in Send Message node ${node.id}`);
           }
         } else {
-          console.log(`Error: Invalid fields structure in Send Message node ${node.id}`);
+        //  console.log(`Error: Invalid fields structure in Send Message node ${node.id}`);
           hasError = true;
           isValid = false;
         }
       } else if (node.type === 'setCondition') {
-        console.log('Set Condition node data:', node.data);
+       // console.log('Set Condition node data:', node.data);
         if (!node.data.condition || !node.data.condition.trim()) {
-          console.log(`Error: Empty condition in node ${node.id}`);
+       //   console.log(`Error: Empty condition in node ${node.id}`);
           hasError = true;
           isValid = false;
           toast.error(`Please enter a condition for node ${node.id}`);
@@ -396,7 +396,7 @@ const FlowBuilderContent = () => {
       }
       
       if (hasError) {
-        console.log(`Adding node ${node.id} to error nodes`);
+      //  console.log(`Adding node ${node.id} to error nodes`);
         newErrorNodes.push(node.id);
       }
   
@@ -409,9 +409,9 @@ const FlowBuilderContent = () => {
       };
     });
   
-    console.log('Updated nodes:', updatedNodes);
-    console.log('Error nodes:', newErrorNodes);
-    console.log('Is valid:', isValid);
+  //  console.log('Updated nodes:', updatedNodes);
+  //  console.log('Error nodes:', newErrorNodes);
+  //  console.log('Is valid:', isValid);
   
     setNodes(updatedNodes);
     setErrorNodes(newErrorNodes);
@@ -439,8 +439,8 @@ const FlowBuilderContent = () => {
       node_data: {
         nodes: nodes.filter(node => node).map(({ id, type, position, data }) => {
           const { updateNodeData, hasError, ...cleanData} = data;
-          console.log(updateNodeData,"here is 1");
-          console.log(data,"here is 2");
+        //  console.log(updateNodeData,"here is 1");
+        //  console.log(data,"here is 2");
           if (type === 'askQuestion' && cleanData.optionType === 'Variables') {
             return { id, type, position, data: { ...cleanData, dataTypes: cleanData.dataTypes || [] } };
           }
@@ -467,11 +467,11 @@ const FlowBuilderContent = () => {
         setIsExistingFlow(true);
         setSelectedFlow(response.data.id);
       }
-      console.log('Flow saved successfully:', response.data);
+    //  console.log('Flow saved successfully:', response.data);
       setShowSavePopup(false);
       fetchExistingFlows();
     } catch (error) {
-      console.error('Error saving flow:', error);
+    //  console.error('Error saving flow:', error);
       toast.error("Failed to save flow");
     }
   }, [authenticated, navigate, nodes, edges, flowName, flowDescription, isExistingFlow, selectedFlow, fallbackMessage, fallbackCount, fetchExistingFlows, validateNodes]);
@@ -538,7 +538,7 @@ const FlowBuilderContent = () => {
         setIsExistingFlow(true);
         toast.success("Flow loaded successfully");
       } catch (error) {
-        console.error('Error fetching flow:', error);
+      //  console.error('Error fetching flow:', error);
         toast.error("Failed to load flow");
         resetFlow();
       } finally {
@@ -548,7 +548,7 @@ const FlowBuilderContent = () => {
   }, [setNodes, setEdges, updateNodeData, resetFlow]);
 
   const handleSaveClick = () => {
-    console.log(JSON.stringify(reactFlowInstance.toObject()),"dekho yahan");
+  //  console.log(JSON.stringify(reactFlowInstance.toObject()),"dekho yahan");
     if (authenticated) {
       if (isExistingFlow) {
         // If it's an existing flow, save directly without showing the popup
@@ -567,8 +567,8 @@ const FlowBuilderContent = () => {
       const response = await axiosInstance.post('/prompt-to-flow/', data);
       
       // Log the response for debugging
-      console.log('Full response:', response);
-      console.log('Response data:', response.data);
+    //  console.log('Full response:', response);
+    //  console.log('Response data:', response.data);
   
       // Ensure the response has the expected structure
       if (!response.data || !response.data.data) {
@@ -624,17 +624,17 @@ const FlowBuilderContent = () => {
       // Toast notification
       toast.success('Flow Generated Successfully!');
     } catch (error) {
-      console.error('Full error details:', error);
+     // console.error('Full error details:', error);
       
       // More detailed error logging
       if (error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
-        console.error('Error response headers:', error.response.headers);
+     //   console.error('Error response data:', error.response.data);
+     //   console.error('Error response status:', error.response.status);
+     //   console.error('Error response headers:', error.response.headers);
       } else if (error.request) {
-        console.error('Error request:', error.request);
+     //   console.error('Error request:', error.request);
       } else {
-        console.error('Error message:', error.message);
+    //    console.error('Error message:', error.message);
       }
   
       toast.error(`Failed to generate flow: ${error.message}`);
@@ -738,9 +738,7 @@ const FlowBuilderContent = () => {
 >
   {collapsed ? (
     <>
-      <span style={{ fontSize: "14px", fontWeight: "bold", marginRight: "4px" }}>
-        ...SAVE
-      </span>
+      
       <ChevronRight size={18} />
     </>
   ) : (

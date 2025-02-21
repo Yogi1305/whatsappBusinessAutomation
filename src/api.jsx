@@ -15,7 +15,7 @@ export const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const tenantId = getTenantIdFromUrl();  // Get tenantId from the URL
-    console.log("tenant id is: ",tenantId);
+    //console.log("tenant id is: ",tenantId);
     if (tenantId) {
       config.headers['X-Tenant-Id'] = tenantId;
      

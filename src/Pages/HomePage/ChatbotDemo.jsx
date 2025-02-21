@@ -39,7 +39,7 @@ const ChatbotDemoSection = ({ isAuthenticated }) => {
   const isMobile = useMediaQuery({ maxWidth: 1280 });
 
   useEffect(() => {
-    const newSocket = io('YOUR_SOCKET_URL');
+    const newSocket = io(`${whatsappURL}`);
     setSocket(newSocket);
     const generatedSessionId = `*/` + Math.random().toString(36).substr(2, 9);
     setSessionId(generatedSessionId);

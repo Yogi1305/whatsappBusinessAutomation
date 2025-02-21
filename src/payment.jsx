@@ -92,11 +92,11 @@ const PaymentDialog = ({ isOpen, onClose, selectedPlan, planDetails }) => {
                   onPaymentInitiated={onClose} // Pass the close handler here
 
                   onPaymentSuccess={(paymentResponse) => {
-                    console.log('Payment Successful:', paymentResponse);
+                    //console.log('Payment Successful:', paymentResponse);
                   }}
 
                   onPaymentFailure={(paymentResponse) => {
-                    console.log('Payment Failed:', paymentResponse);
+                    //console.log('Payment Failed:', paymentResponse);
                   }}
                 />
             </div>
@@ -150,7 +150,7 @@ const RazorpayButton = React.memo(({ selectedPlan, isCurrentPlan, onPaymentIniti
         formRef.current.innerHTML = `<div id="razorpay-payment-button"></div>`;
       }
 
-      console.log("tenant id: ", tenantId)
+      //console.log("tenant id: ", tenantId)
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/payment-button.js';
       script.async = true;
@@ -181,7 +181,7 @@ const RazorpayButton = React.memo(({ selectedPlan, isCurrentPlan, onPaymentIniti
       }
     };
 
-    console.log("tenant id again complete: ", tenantId)
+    //console.log("tenant id again complete: ", tenantId)
     setIsLoaded(false);
     loadRazorpayScript();
 
@@ -281,7 +281,7 @@ const SubscriptionPage = () => {
           error: 'Failed to load subscription data',
           isLoading: false
         }));
-        console.error('Error fetching data:', err);
+      //  console.error('Error fetching data:', err);
       }
     };
 

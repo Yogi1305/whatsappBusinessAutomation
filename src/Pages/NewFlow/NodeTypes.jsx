@@ -419,18 +419,18 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
             'X-Tenant-ID': tenantId
           }
         });
-        console.log("fetch data response: ",bpidResponse.data)
+      //  console.log("fetch data response: ",bpidResponse.data)
         const fetchedBusinessPhoneNumberId = bpidResponse.data.whatsapp_data[0].business_phone_number_id;
         setBusinessPhoneNumberId(fetchedBusinessPhoneNumberId);
-        console.log("BPID: ", businessPhoneNumberId)
+      //  console.log("BPID: ", businessPhoneNumberId)
         const fetchedAccessToken = bpidResponse.data.whatsapp_data[0].access_token
         setAccessToken(fetchedAccessToken);
-        console.log("ACCCES TOKEN: ", accessToken)
+     //  console.log("ACCCES TOKEN: ", accessToken)
 
         // Fetch the access token using the obtained business phone ID
         // const tenantResponse = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
       } catch (error) {
-        console.error('Error fetching data:', error);
+      //  console.error('Error fetching data:', error);
       }
     };
 
@@ -439,7 +439,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
 
 
   const updateNodeDataSafely = (newFields) => {
-    console.log(id,newFields,"pippity bpi");
+  //  console.log(id,newFields,"pippity bpi");
     updateNodeData(id, { fields: newFields });
   };
 
@@ -452,8 +452,8 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         formData.append('file', file);
         formData.append('type', file.type.startsWith('image/') ? 'image' : 'document');
         formData.append('messaging_product', 'whatsapp');
-        console.log("bpid: ",businessPhoneNumberId)
-        console.log("Access token: ", accessToken)
+      //  console.log("bpid: ",businessPhoneNumberId)
+      //  console.log("Access token: ", accessToken)
         const response = await axiosInstance.post(
           `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`,
           formData,
@@ -465,7 +465,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
           }
         );
 
-        console.log('File uploaded to WhatsApp, ID:', response.data.id);
+      //  console.log('File uploaded to WhatsApp, ID:', response.data.id);
         const blobUrl = await uploadToBlob(file, userId, tenantId);
 
         setField({
@@ -483,7 +483,7 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
         }
 
       } catch (error) {
-        console.error('Error uploading file to WhatsApp Media API:', error);
+      //  console.error('Error uploading file to WhatsApp Media API:', error);
       }
     }
   };
@@ -594,13 +594,13 @@ export const SendMessageNode = ({ id,data, isConnectable }) => {
 export const SetConditionNode = ({ id,data, isConnectable }) => {
   const [condition, setCondition] = useState(data.condition || '');
  // const { id } = data;
-  console.log("this is a GOAT",id);
+//  console.log("this is a GOAT",id);
 const { updateNodeData } = useFlow();
 
 
 const handleConditionChange = (e) => {
   const newCondition = e.target.value;
-  console.log(newCondition,id,"lookity look");
+//  console.log(newCondition,id,"lookity look");
   setCondition(newCondition);
   updateNodeData(id, { condition: convertMentionsForBackend(newCondition) });
 };
@@ -652,11 +652,11 @@ export const product = ({ id, data, isConnectable }) => {
     const fetchProducts = async () => {
       try{
         const response = await axiosInstance.get('catalog/')
-        console.log("catalog get Response: ", response.data)
+      //  console.log("catalog get Response: ", response.data)
         setProducts(response.data)
 
       }catch (error) {
-        console.error("Error fetching product IDs:", error);
+     //  console.error("Error fetching product IDs:", error);
       }
     };
 
@@ -665,7 +665,7 @@ export const product = ({ id, data, isConnectable }) => {
 
   const handleProductSelection = (index, newProduct) => {
     const updatedSelectedProductIds = [...selectedProductIds];
-    console.log(newProduct,id,"lookity look");
+  //  console.log(newProduct,id,"lookity look");
     updatedSelectedProductIds[index] = newProduct;
     setSelectedProductIds(updatedSelectedProductIds);
 

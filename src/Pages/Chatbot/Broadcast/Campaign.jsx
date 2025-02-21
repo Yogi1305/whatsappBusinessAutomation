@@ -237,7 +237,7 @@ const WhatsAppCampaign = ({
           setFileHeaders(headers);
           setSelectedFile(file);
         } catch (error) {
-          console.error('Error parsing CSV:', error);
+        //  console.error('Error parsing CSV:', error);
           setUploadError('Failed to parse CSV file. Please ensure it is properly formatted.');
         }
       };
@@ -284,7 +284,7 @@ const WhatsAppCampaign = ({
       setFileHeaders([]);
       setColumnMapping({});
     } catch (error) {
-      console.error("Upload error:", error);
+   //  console.error("Upload error:", error);
       setUploadError("Failed to upload contacts. Please try again.");
     } finally {
       setIsUploading(false);
@@ -341,7 +341,7 @@ const WhatsAppCampaign = ({
           isPendingApproval: true
         });
       } catch (error) {
-        console.error('Error creating template:', error);
+      //  console.error('Error creating template:', error);
         alert("Failed to create template");
       }
       setShowTemplatePopup(false);
@@ -467,7 +467,7 @@ const WhatsAppCampaign = ({
         alert("Template approved successfully");
   
       } catch (error) {
-        console.error('Error sending template for approval:', error);
+      //  console.error('Error sending template for approval:', error);
         alert('Failed to send template for approval');
       }
     }
@@ -632,7 +632,7 @@ const WhatsAppCampaign = ({
         onSaveCampaign(campaignData);
       }
     } catch (error) {
-      console.error('Error saving campaign:', error);
+    //  console.error('Error saving campaign:', error);
     }
   };
 

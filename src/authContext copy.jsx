@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     try {
       return storedUserRole ? JSON.parse(storedUserRole) : null;
     } catch (error) {
-      console.error("Error parsing 'user_role' from localStorage:", error);
+     // console.error("Error parsing 'user_role' from localStorage:", error);
       return null;
     }
   });
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       const storedModel = localStorage.getItem("model");
       return storedModel ? JSON.parse(storedModel) : null;
     } catch (error) {
-      console.error("Error parsing JSON from localStorage:", error);
+     // console.error("Error parsing JSON from localStorage:", error);
       return null;
     }
   });
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       const storedTenant = { tier: 'Free' };
       return storedTenant ? JSON.parse(storedTenant) : null;
     } catch (error) {
-      console.error("Error parsing 'tenant' from localStorage:", error);
+    //  console.error("Error parsing 'tenant' from localStorage:", error);
       return null;
     }
   });
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem("tenant", JSON.stringify(tenant));
     } catch (error) {
-      console.error("Error saving 'tenant' to localStorage:", error);
+    //  console.error("Error saving 'tenant' to localStorage:", error);
     }
   }, [tenant]);
 
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem("authenticated", JSON.stringify(authenticated));
     } catch (error) {
-      console.error("Error saving 'authenticated' to localStorage:", error);
+     // console.error("Error saving 'authenticated' to localStorage:", error);
     }
   }, [authenticated]);
 
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem("user_id", JSON.stringify(userId));
     } catch (error) {
-      console.error("Error saving 'user_id' to localStorage:", error);
+    //  console.error("Error saving 'user_id' to localStorage:", error);
     }
   }, [userId]);
 
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem("tenant_id", JSON.stringify(tenantId));
     } catch (error) {
-      console.error("Error saving 'tenant_id' to localStorage:", error);
+     // console.error("Error saving 'tenant_id' to localStorage:", error);
     }
   }, [tenantId]);
 
@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem("user_role", JSON.stringify(userRole));
     } catch (error) {
-      console.error("Error saving 'user_role' to localStorage:", error);
+    //  console.error("Error saving 'user_role' to localStorage:", error);
     }
   }, [userRole]);
 
@@ -114,7 +114,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem("model", JSON.stringify(model));
     } catch (error) {
-      console.error("Error saving 'model' to localStorage:", error);
+     // console.error("Error saving 'model' to localStorage:", error);
     }
   }, [model]);
 
@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
       setModel(null);
       setTenant(null); // Clear tenant state
     } catch (error) {
-      console.error("Error clearing localStorage:", error);
+    //  console.error("Error clearing localStorage:", error);
     }
   };
 

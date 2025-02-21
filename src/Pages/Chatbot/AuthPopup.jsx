@@ -38,7 +38,7 @@ const AuthPopup = ({ onClose, isAuthenticated }) => {
 
     const handleNewMessage = (message) => {
       if (message && !isAuthenticated) {
-        console.log('Got New Message', message.message);
+        //console.log('Got New Message', message.message);
         setShowPopup(false);
         onClose();
       }
@@ -46,7 +46,7 @@ const AuthPopup = ({ onClose, isAuthenticated }) => {
 
     const handleTempUser = (message) => {
       if (message && !isAuthenticated) {
-        console.log("New temp user logged");
+        //console.log("New temp user logged");
         const storedSessionId = localStorage.getItem('sessionId');
         const formattedMessageTempUser = `*/${message.temp_user}`;
        

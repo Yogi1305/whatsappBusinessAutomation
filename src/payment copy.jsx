@@ -100,7 +100,7 @@ const GPayUPIPayment = () => {
     try {
       return new PaymentRequest(supportedInstruments, details);
     } catch (e) {
-      console.error('Payment Request Error:', e.message);
+    //  console.error('Payment Request Error:', e.message);
       return null;
     }
   };
@@ -121,7 +121,7 @@ const GPayUPIPayment = () => {
       sessionStorage[CAN_MAKE_PAYMENT_CACHE] = JSON.stringify(result);
       return result;
     } catch (err) {
-      console.error('Error checking canMakePayment:', err);
+    //  console.error('Error checking canMakePayment:', err);
       return false;
     }
   };
@@ -155,7 +155,7 @@ const GPayUPIPayment = () => {
       
       return verificationResult;
     } catch (err) {
-      console.error('Payment processing error:', err);
+    //  console.error('Payment processing error:', err);
       throw err;
     }
   };
@@ -191,13 +191,13 @@ const GPayUPIPayment = () => {
 
       if (result.success) {
         // Handle successful payment (e.g., redirect to success page)
-        console.log('Payment successful!');
+        //console.log('Payment successful!');
       } else {
         setError(result.message || 'Payment failed');
       }
     } catch (err) {
       setError(err.message);
-      console.error('Payment error:', err);
+    //  console.error('Payment error:', err);
     } finally {
       setIsProcessing(false);
     }

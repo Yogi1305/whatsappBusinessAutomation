@@ -177,16 +177,16 @@ useEffect(() => {
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
-        console.log("fetching business phone number id")
+        //console.log("fetching business phone number id")
         const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`, {
           headers: {
             'X-Tenant-Id': tenantId
           }
         });
-        console.log(response.data.whatsapp_data[0].business_phone_number_id,"THIS IS BPID");
+        //console.log(response.data.whatsapp_data[0].business_phone_number_id,"THIS IS BPID");
         setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
       } catch (error) {
-        console.error('Error fetching business phone ID:', error);
+      //  console.error('Error fetching business phone ID:', error);
       }
     };
 
@@ -211,7 +211,7 @@ useEffect(() => {
         fetchContacts(updatedPage); // Use the updated value directly
       }
     } catch (error) {
-      console.error('Error fetching contact page:', error);
+    //  console.error('Error fetching contact page:', error);
       // Optionally handle error (show toast, etc.)
     }
   };
@@ -248,7 +248,7 @@ useEffect(() => {
       // Update current page
       setCurrentPage(page);
     } catch (error) {
-      console.error("Error fetching contacts data:", error);
+   //   console.error("Error fetching contacts data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -270,12 +270,12 @@ useEffect(() => {
     const fetchTenantData = async () => {
       try {
         // const business_phone_number_id = 241683569037594;
-        console.log("bpiddddddd: ", businessPhoneNumberId)
+       // console.log("bpiddddddd: ", businessPhoneNumberId)
         const response = await axiosInstance.get(`${fastURL}/whatsapp_tenant/`);
         setAccessToken(response.data.whatsapp_data[0].access_token);
 
       } catch (error) {
-        console.error('Error fetching tenant data:', error);
+       // console.error('Error fetching tenant data:', error);
       }
     };  
     fetchTenantData();
@@ -303,7 +303,7 @@ useEffect(() => {
             },
           }
         );
-        console.log('File uploaded to WhatsApp, ID:', response.data.id);
+        //console.log('File uploaded to WhatsApp, ID:', response.data.id);
         setHeaderMediaId(response.data.id);
         setImageToSend(response.data.id);
 
@@ -328,7 +328,7 @@ useEffect(() => {
           throw new Error('Failed to upload media');
         }
       } catch (error) {
-        console.error('Error uploading file:', error);
+      //  console.error('Error uploading file:', error);
         alert('Failed to upload file. Please try again.');
       } finally {
         setIsUploading(false);
@@ -384,7 +384,7 @@ useEffect(() => {
         setShowImagePreview(false);
       }
     } catch (error) {
-      console.error('Error sending image:', error);
+    //  console.error('Error sending image:', error);
       alert('Failed to send image. Please try again.');
     }
   };
@@ -406,7 +406,7 @@ useEffect(() => {
     // Add a ref to track socket-initiated updates
     
     const handleConnect = () => {
-      console.log('Connected to the server');
+     // console.log('Connected to the server');
       if (selectedContact) {
         socket.emit('request-messages', {
           phone: selectedContact.phone,
@@ -445,7 +445,7 @@ useEffect(() => {
         message && 
         parseInt(message.phone_number_id) === parseInt(businessPhoneNumberId)
       ) {
-        console.log('Received normal message:', message);
+        //console.log('Received normal message:', message);
         isSocketUpdate.current = true; // Flag that this is a socket update
         if (selectedContact?.phone !== message.contactPhone) {
           setContacts(prevContacts => 
@@ -489,7 +489,7 @@ useEffect(() => {
         parseInt(rawMessage.phone_number_id) === parseInt(businessPhoneNumberId)
       ) {
         try {
-          console.log('Received node message:', rawMessage);
+         // console.log('Received node message:', rawMessage);
           isSocketUpdate.current = true;
           if (selectedContact?.phone !== rawMessage.contactPhone) {
             setContacts(prevContacts => 
@@ -518,7 +518,7 @@ useEffect(() => {
          
     
         } catch (error) {
-          console.error('Global message handling error:', error);
+        //  console.error('Global message handling error:', error);
         }
       }
     };
@@ -529,7 +529,7 @@ useEffect(() => {
     socket.on('new-message', handleNewMessage);
     socket.on('node-message', handleNodeMessage);
     socket.on('error', (error) => {
-      console.error('Socket error:', error);
+    //  console.error('Socket error:', error);
     });
   
     return () => {
@@ -601,7 +601,7 @@ useEffect(() => {
     } catch (error) {
       // Add error toast with specific error message
       toast.error(`Failed to send message: ${error.response?.data?.message || error.message || 'Unknown error'}`);
-      console.error('Error sending message:', error);
+    //  console.error('Error sending message:', error);
     }
   };
 
@@ -700,7 +700,7 @@ useEffect(() => {
   
     } catch (error) {
       if (!axios.isCancel(error)) {
-        console.error('Fetch conversation error:', error);
+      //  console.error('Fetch conversation error:', error);
         toast.error('Failed to load messages');
       }
     } finally {
@@ -756,7 +756,7 @@ useEffect(() => {
   useEffect(() => {
     setConversation(['']);
     setNewMessages(['']);
-    console.log("selected contact 3:", selectedContact)
+    //console.log("selected contact 3:", selectedContact)
     
     if(selectedContact){
     fetchConversation(selectedContact.phone);}
@@ -788,7 +788,7 @@ useEffect(() => {
       await fetchConversation(contact.phone);
       
     } catch (error) {
-      console.error('Contact selection failed:', error);
+    //  console.error('Contact selection failed:', error);
     } finally {
       setIsLoading(false);
     }
@@ -831,7 +831,7 @@ useEffect(() => {
       });
       setUploadStatus('File uploaded successfully!');
     } catch (error) {
-      console.error('Error uploading file:', error);
+    //  console.error('Error uploading file:', error);
       setUploadStatus('Error uploading file. Please try again.');
     } finally {
       setIsUploading(false);
@@ -849,9 +849,9 @@ useEffect(() => {
         id: flow.id.toString() // Ensure id is a string for consistency
       }));
       setFlows(flowsWithIds);
-      console.log('Fetched flows:', flowsWithIds);
+      //console.log('Fetched flows:', flowsWithIds);
     } catch (error) {
-      console.error("Error fetching flows:", error);
+    //  console.error("Error fetching flows:", error);
     }
   };
 
@@ -861,32 +861,32 @@ useEffect(() => {
 
   const handleFlowChange = (event) => {
     const selectedValue = event.target.value;
-    console.log("Selected flow ID:", selectedValue);
+   // console.log("Selected flow ID:", selectedValue);
     setSelectedFlow(selectedValue);
     const selectedFlowData = flows.find(flow => flow.id === selectedValue);
-    console.log("Selected flow data:", selectedFlowData);
+   // console.log("Selected flow data:", selectedFlowData);
   };
     
   useEffect(() => {
-    console.log("Selected flow has changed:", selectedFlow);
+  //  console.log("Selected flow has changed:", selectedFlow);
   }, [selectedFlow]);
 
   const [isSending, setIsSending] = useState(false);
 
   const handleSendFlowData = async () => {
     if (!selectedFlow) {
-      console.error('No flow selected');
+    //  console.error('No flow selected');
       return;
     }
 
     try {
-      console.log("FLOW ID: ", selectedFlow)
+     // console.log("FLOW ID: ", selectedFlow)
       setIsSending(true);
       const dataToSend = {
         node_template_id: selectedFlow
       };
     
-      console.log('Sending flow data:', dataToSend);
+     // console.log('Sending flow data:', dataToSend);
     
       // First POST request to insert data
       const insertResponse = await axiosInstance.post(
@@ -900,7 +900,7 @@ useEffect(() => {
         }
       );
     
-      console.log('Flow data sent successfully:', insertResponse.data);
+     // console.log('Flow data sent successfully:', insertResponse.data);
     
       // Check if the first request is successful
       if (insertResponse.status === 200) {
@@ -916,15 +916,15 @@ useEffect(() => {
           }
         );
     
-        console.log('Session reset successfully:', resetSessionResponse.data);
+     //   console.log('Session reset successfully:', resetSessionResponse.data);
     
         if (resetSessionResponse.status === 200) {
-          console.log(`Session deleted successfully for ${businessPhoneNumberId}`);
+     //     console.log(`Session deleted successfully for ${businessPhoneNumberId}`);
         }
       }
     
     } catch (error) {
-      console.error('Error occurred:', error);
+    //  console.error('Error occurred:', error);
     } finally {
       setIsSending(false);
     }
@@ -950,7 +950,7 @@ useEffect(() => {
   setShowNewChatInput(false);
   setNewPhoneNumber('');
   } catch (error) {
-  console.error("Error creating new contact:", error);
+ //console.error("Error creating new contact:", error);
   }
   };
   const [searchTerm, setSearchTerm] = useState('');
@@ -1038,7 +1038,7 @@ function renderMessageWithNewLines(text) {
       </React.Fragment>
     ));
   } catch (error) {
-    console.error("Failed to render message:", error);
+   // console.error("Failed to render message:", error);
     return <div>Error rendering message</div>;
   }
 }
@@ -1234,7 +1234,7 @@ function renderMessageWithNewLines(text) {
               const parsedMessage = JSON.parse(fixedMessage);
               return renderInteractiveMessage(parsedMessage);
             } catch (e) {
-              console.error('Failed to parse message', e);
+            //  console.error('Failed to parse message', e);
               return <div className="error">Failed to parse message</div>;
             }
           }
@@ -1507,7 +1507,7 @@ function renderMessageWithNewLines(text) {
                     const parsedMessage = JSON.parse(fixedMessage); 
                     return renderInteractiveMessage(parsedMessage); 
                   } catch (e) { 
-                    console.error('Failed to parse message', e); 
+                  //  console.error('Failed to parse message', e); 
                     return <div className="error">Failed to parse message</div>; 
                   } 
                 } 
@@ -1528,7 +1528,7 @@ function renderMessageWithNewLines(text) {
             try {
               return format(new Date(message.time), 'MMM d, yyyy h:mm a');
             } catch (e) {
-              console.error('Failed to parse time:', message.time);
+            //  console.error('Failed to parse time:', message.time);
               return 'Invalid date';
             }
           })()}

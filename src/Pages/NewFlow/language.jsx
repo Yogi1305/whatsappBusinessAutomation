@@ -88,7 +88,7 @@ const LanguageOption = ({ language, isSelected, onToggle }) => (
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch (err) {
-        console.error('Failed to copy text:', err);
+     //  console.error('Failed to copy text:', err);
       }
     };
   
@@ -215,7 +215,7 @@ export const LanguageSelector = () => {
       toast.success('Template configured successfully!');
     } catch (error) {
       toast.error('Failed to configure template');
-      console.error('Error:', error);
+     // console.error('Error:', error);
     } finally {
       setIsLoading(false);
     }

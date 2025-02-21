@@ -25,7 +25,7 @@ export const useBroadcastManager = (tenantId) => {
       setAccessToken(response.data.whatsapp_data[0].access_token);
       return response.data.whatsapp_data[0];
     } catch (error) {
-      console.error('Error fetching business phone ID:', error);
+    //  console.error('Error fetching business phone ID:', error);
     }
   };
 
@@ -36,7 +36,7 @@ export const useBroadcastManager = (tenantId) => {
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);
     } catch (error) {
-      console.error('Error fetching broadcast history:', error);
+    //  console.error('Error fetching broadcast history:', error);
     }
   };
 
@@ -96,7 +96,7 @@ export const useBroadcastManager = (tenantId) => {
       }
       return false;
     } catch (error) {
-      console.error("Error sending broadcast:", error);
+    //  console.error("Error sending broadcast:", error);
       toast.error("Failed to send broadcast message. Please try again.");
       return false;
     }
@@ -143,7 +143,7 @@ export const useTemplateManager = (accessToken, accountId) => {
       }));
       setTemplates(formattedTemplates);
     } catch (error) {
-      console.error('Error fetching templates:', error);
+    //  console.error('Error fetching templates:', error);
     }
   }, [accessToken, accountId]);
 
@@ -157,7 +157,7 @@ export const useTemplateManager = (accessToken, accountId) => {
       });
       setSelectedTemplateDetails(response.data);
     } catch (error) {
-      console.error('Error fetching template details:', error);
+    //  console.error('Error fetching template details:', error);
     }
   };
 
@@ -173,7 +173,7 @@ export const useTemplateManager = (accessToken, accountId) => {
         await fetchTemplates();
         return true;
       } catch (error) {
-        console.error('Error deleting template:', error);
+      //  console.error('Error deleting template:', error);
         return false;
       }
     }
@@ -194,7 +194,7 @@ export const useTemplateManager = (accessToken, accountId) => {
       await fetchTemplates();
       return true;
     } catch (error) {
-      console.error('Error creating template:', error);
+    //  console.error('Error creating template:', error);
       toast({
         title: "Error",
         description: error.response?.data?.error?.message || error.message || 'An error occurred while creating the template',
@@ -251,7 +251,7 @@ export const useMediaUpload = (accessToken) => {
       setUploadProgress(100);
       return response.data.body.h;
     } catch (error) {
-      console.error('Error uploading file:', error);
+    //  console.error('Error uploading file:', error);
       setUploadProgress(0);
       throw error;
     }

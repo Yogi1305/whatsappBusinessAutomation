@@ -81,7 +81,7 @@ const Navbar = () => {
         setBusinessPhoneNumberId(whatsappData.business_phone_number_id);
         setAccessToken(whatsappData.access_token);
       } catch (error) {
-        console.error('Error fetching business phone ID:', error);
+      //  console.error('Error fetching business phone ID:', error);
       }
     };
 
@@ -99,7 +99,7 @@ const Navbar = () => {
       setNotifications(fetchedNotifications);
       setUnreadCount(fetchedNotifications.length);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+    //  console.error('Error fetching notifications:', error);
     }
   };
 
@@ -114,7 +114,7 @@ const Navbar = () => {
   };
   useEffect(() => {
     const handleNewSocketMessage = (message) => {
-      console.log("notification aaya", message); 
+      //console.log("notification aaya", message); 
       if (message&&message.phone_number_id==businessPhoneNumberId) {
        // Log the received message
        fetchNotifications();// Process the new message
@@ -146,7 +146,7 @@ const Navbar = () => {
       setNotifications(prev => prev.filter(n => n.id !== id));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error removing notification:', error);
+    //  console.error('Error removing notification:', error);
       // Optional: Add error handling, like showing a toast message
     }
   };
@@ -169,7 +169,7 @@ const Navbar = () => {
       // Redirect based on device type
       window.location.href = isMobile ? '/login' : '/';
     } catch (error) {
-      console.error('Logout failed', error);
+    //  console.error('Logout failed', error);
       setIsLogouting(false);
     }
   };

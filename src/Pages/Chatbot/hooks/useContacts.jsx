@@ -18,7 +18,7 @@ export default function useContacts() {
       setTotalPages(response.data.total_pages);
       setCurrentPage(page);
     } catch (error) {
-      console.error("Error fetching contacts:", error);
+    //  console.error("Error fetching contacts:", error);
     }
   };
 

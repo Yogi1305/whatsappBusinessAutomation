@@ -54,14 +54,14 @@ export const getTenantIdFromUrl = () => {
       
       return fixedString;
     } catch (e) {
-      console.error('Error fixing JSON string:', e, 'Original string:', jsonString);
+    //  console.error('Error fixing JSON string:', e, 'Original string:', jsonString);
       
       // Fallback strategies
       try {
         // Last resort: try to create a valid JSON object
         return JSON.stringify(eval('(' + jsonString + ')'));
       } catch {
-        console.error('Could not parse JSON string at all');
+     //   console.error('Could not parse JSON string at all');
         return '{}'; // Return an empty object as absolute fallback
       }
     }

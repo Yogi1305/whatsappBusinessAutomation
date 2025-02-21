@@ -42,7 +42,7 @@ const BroadcastHistory = ({
       }
       return response.data;
     } catch (error) {
-      console.error('Error refreshing status:', error);
+    //  console.error('Error refreshing status:', error);
       return false;
     }
   };

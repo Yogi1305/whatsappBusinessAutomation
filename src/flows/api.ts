@@ -123,7 +123,7 @@ interface FlowCreateRequest {
         publish: true
       };
   
-      console.log('Sending flow data:', JSON.stringify(requestData, null, 2));
+      //console.log('Sending flow data:', JSON.stringify(requestData, null, 2));
   
       const response = await axios.post(
         `${BASE_URL}/${WABA_ID}/flows`,
@@ -139,7 +139,7 @@ interface FlowCreateRequest {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('API Error:', error.response?.data);
+       // console.error('API Error:', error.response?.data);
         throw new Error(error.response?.data?.error?.message || 'Failed to save flow');
       }
       throw error;
@@ -162,7 +162,7 @@ interface FlowCreateRequest {
         publish: true
       };
   
-      console.log('Updating flow data:', JSON.stringify(requestData, null, 2));
+      //console.log('Updating flow data:', JSON.stringify(requestData, null, 2));
   
       const response = await axios.put(
         `${BASE_URL}/${WABA_ID}/flows/${flowId}`,
@@ -178,7 +178,7 @@ interface FlowCreateRequest {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('API Error:', error.response?.data);
+      //  console.error('API Error:', error.response?.data);
         throw new Error(error.response?.data?.error?.message || 'Failed to update flow');
       }
       throw error;

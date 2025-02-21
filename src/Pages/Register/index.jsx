@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Check, ChevronLeft, ChevronRight, Building2, Lock, User, Mail, Phone } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Building2, Lock, User, Mail, Phone, Globe, Zap,MessageSquare  } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import axiosInstance, { fastURL, djangoURL } from '../../api';
 import { auth, googleProvider } from '../../firebase';
+import register from '../../assets/resgister.png';
 import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '../../authContext';
+const FullScreenLoader = () => (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-[#25D366] border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p className="text-white text-lg">Setting up your account...</p>
+    </div>
+  </div>
+);
 
 const PopupCard = ({ message, onClose }) => (
   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
@@ -123,7 +132,7 @@ const Register = () => {
             setShowPopup(true);
 
         } catch (error) {
-            console.error('Registration failed:', error);
+          //  console.error('Registration failed:', error);
         } finally {
             setIsSubmitting(false);
         }
@@ -147,7 +156,7 @@ const Register = () => {
         const { organisation, passwordo } = formData;
     
         if (!organisation || !passwordo) {
-            console.error("Both organisation and password are required");
+          //  console.error("Both organisation and password are required");
             setErrors({ organisation: "Organisation is required", password: "Password is required" });
             return false;
         }
@@ -162,15 +171,15 @@ const Register = () => {
             const response = await axiosInstance.post('/verifyTenant/', backendPayload);
     
             if (response.status !== 200) {
-                console.error("Error:", response.data);
+            //    console.error("Error:", response.data);
                 setErrors({ organisation: "Invalid organisation or password" });
                 return false;
             } else {
-                console.log("Success:", response.data);
+             //   console.log("Success:", response.data);
                 return true;
             }
         } catch (error) {
-            console.error("Request Failed:", error);
+        //    console.error("Request Failed:", error);
             setErrors({ password: "Password is incorrect. Please provide correct password" });
             return false;
         } finally {
@@ -204,7 +213,7 @@ const Register = () => {
             setNewOrg({ name: '', tenantId: '', password: '' });
             alert('New organisation created successfully!');
         } catch (error) {
-            console.error('Error creating new organisation:', error);
+        //    console.error('Error creating new organisation:', error);
         }
     };
 
@@ -276,7 +285,7 @@ const Register = () => {
             navigate('/'); // Redirect to dashboard or desired page
 
         } catch (error) {
-            console.error('Firebase sign-in or registration failed:', error);
+        //    console.error('Firebase sign-in or registration failed:', error);
             setFirebaseError(error.message); // Set error message for user feedback
         } finally {
             setIsSubmitting(false); // Stop loading
@@ -292,232 +301,255 @@ const Register = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col justify-center items-center p-4">
-            <div className="bg-white/80 backdrop-blur-lg shadow-2xl rounded-2xl w-full max-w-md overflow-hidden border border-white/20">
-                <div className="p-8">
-                    <div className="flex items-center justify-center mb-6">
-                        <div className="bg-white p-3 rounded-xl">
-                            <img src={logo} alt="Logo" className="h-8 w-auto" />
-                        </div>
-                    </div>
-                    
-                    <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">Create Account</h2>
-                    <p className="text-center text-gray-600 mb-6">Join us to get started with your AI journey</p>
-                    
-                    {renderStepIndicator()}
-
-                    <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
-                        {step === 1 && (
-                            <div className="space-y-4 animate-slideIn">
-                                <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="text"
-                                        name="organisation"
-                                        placeholder="Enter organization name"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.organisation}
-                                        onChange={handleInputChange}
-                                        autoComplete="off"
-                                    />
-                                    {errors.organisation && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.organisation}</p>
-                                    }
-                                </div>
-
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="password"
-                                        name="passwordo"
-                                        placeholder="Organization Password"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.passwordo}
-                                        onChange={handleInputChange}
-                                        autoComplete="new-password"
-                                    />
-                                    {errors.passwordo && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.passwordo}</p>
-                                    }
-                                </div>
-
-                                <div className="flex justify-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowNewOrgForm(true)}
-                                        className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
-                                    >
-                                        Create New Organization
-                                    </button>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={async () => {
-                                        const response = await handleNext();
-                                        if(response) setStep(2);
-                                    }}
-                                    className="group relative w-full h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
-                                    disabled={verifyingTenant}
-                                >
-                                    {verifyingTenant ? (
-                                        <div className="flex items-center">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                                            Verifying...
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center">
-                                            Continue
-                                            <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                        </div>
-                                    )}
-                                </button>
-                            </div>
-                        )}
-
-                        {step === 2 && (
-                            <div className="space-y-4 animate-slideIn">
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="text"
-                                        name="username"
-                                        placeholder="Username"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.username}
-                                        onChange={handleInputChange}
-                                        autoComplete="off"
-                                        autoCorrect="off"
-                                        autoCapitalize="off"
-                                        spellCheck="false"
-                                    />
-                                    {errors.username && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.username}</p>
-                                    }
-                                </div>
-
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        placeholder="Email address"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.email || ''}
-                                        onChange={(e) => handleInputChange(e)}
-                                        autoComplete="new-email"
-                                        autoCorrect="off"
-                                        autoCapitalize="off"
-                                        spellCheck="false"
-                                        x-autocompletetype="off"
-                                    />
-                                    {errors.email && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.email}</p>
-                                    }
-                                </div>
-
-                                <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        placeholder="Phone number"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.phone}
-                                        onChange={handleInputChange}
-                                        autoComplete="off"
-                                        autoCorrect="off"
-                                        autoCapitalize="off"
-                                        spellCheck="false"
-                                        pattern="[0-9]*"
-                                        inputMode="numeric"
-                                    />
-                                </div>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        placeholder="Create Password"
-                                        className="pl-10 w-full h-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                                        value={formData.password}
-                                        onChange={handleInputChange}
-                                        autoComplete="new-password"
-                                        autoCorrect="off"
-                                        autoCapitalize="off"
-                                        spellCheck="false"
-                                    />
-                                    {errors.password && 
-                                        <p className="mt-1 text-sm text-red-500 animate-shake">{errors.password}</p>
-                                    }
-                                </div>
-
-                                <div className="flex space-x-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(1)}
-                                        className="flex-1 h-12 flex items-center justify-center border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300"
-                                    >
-                                        <ChevronLeft className="mr-2 h-5 w-5" />
-                                        Back
-                                    </button>
-                                    
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="flex-1 h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? (
-                                            <div className="flex items-center">
-                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                                                Creating...
-                                            </div>
-                                        ) : (
-                                            'Create Account'
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </form>
-
-                    <div className="mt-6 text-center">
-                        <NavLink 
-                            to="/login" 
-                            className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
-                        >
-                            Already have an account? Sign in
-                        </NavLink>
-                    </div>
-
-                    <div className="mt-6 text-center">
-  <button
-    onClick={handleFirebaseSignIn}
-    disabled={isSubmitting}
-    className="w-full flex items-center justify-center bg-white border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition duration-300 font-medium"
-  >
-    {isSubmitting ? (
-      <div className="flex items-center justify-center">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-        Signing up...
-      </div>
-    ) : (
-      <>
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png"
-          alt="Google Logo"
-          className="w-5 h-5 mr-2"
-        />
-        Sign up with Google
-      </>
-    )}
-  </button>
-  {firebaseError && (
-    <p className="mt-2 text-sm text-red-500 animate-shake">{firebaseError}</p>
-  )}
+        <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    {isSubmitting && <FullScreenLoader />}
+    
+    <div className="container mx-auto flex rounded-3xl overflow-hidden max-w-6xl bg-black/30 backdrop-blur-lg shadow-2xl border border-[#25D366]/10">
+      {/* Left Section */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-black p-12 justify-center items-center">
+  <img 
+    src={register}
+    alt="Person connecting apps with WhatsApp" 
+    className="w-full max-w-md rounded-lg shadow-lg"
+  />
 </div>
+
+
+
+      {/* Right Section - Form */}
+      <div className="w-full lg:w-1/2 p-8 md:p-12 overflow-y-auto">
+        <div className="max-w-md mx-auto space-y-8">
+          {/* Logo */}
+          
+
+          {/* Title */}
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
+            <p className="text-gray-400">Join us to start your AI journey</p>
+          </div>
+
+          {/* Step Indicator */}
+          <div className="flex items-center justify-center space-x-4">
+            <div className={`h-2 w-2 rounded-full transition-all duration-300 ${step === 1 ? 'bg-[#25D366] w-8' : 'bg-gray-600'}`} />
+            <div className={`h-2 w-2 rounded-full transition-all duration-300 ${step === 2 ? 'bg-[#25D366] w-8' : 'bg-gray-600'}`} />
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {step === 1 ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-gray-300 text-sm font-medium mb-1 block">
+                    Organization Name
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
+                    <input
+                      type="text"
+                      name="organisation"
+                      placeholder="Enter your organization name"
+                      className="w-full bg-black/50 border border-gray-800 text-white rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all duration-300"
+                      value={formData.organisation}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  {errors.organisation && (
+                    <p className="mt-1 text-sm text-red-500">{errors.organisation}</p>
+                  )}
                 </div>
+
+                <div>
+                  <label className="text-gray-300 text-sm font-medium mb-1 block">
+                    Organization Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
+                    <input
+                      type="password"
+                      name="passwordo"
+                      placeholder="Enter organization password"
+                      className="w-full bg-black/50 border border-gray-800 text-white rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all duration-300"
+                      value={formData.passwordo}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  {errors.passwordo && (
+                    <p className="mt-1 text-sm text-red-500">{errors.passwordo}</p>
+                  )}
+                </div>
+
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewOrgForm(true)}
+                    className="text-[#25D366] hover:text-[#128C7E] font-medium transition-colors duration-300"
+                  >
+                    Create New Organization
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const response = await handleNext();
+                    if(response) setStep(2);
+                  }}
+                  className="w-full bg-[#25D366] text-black font-semibold py-3 rounded-xl hover:bg-[#128C7E] transition-all duration-300 flex items-center justify-center"
+                  disabled={verifyingTenant}
+                >
+                  {verifyingTenant ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-2" />
+                      Verifying...
+                    </>
+                  ) : (
+                    'Continue'
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4 animate-slideIn">
+                <div>
+                  <label className="text-gray-300 text-sm font-medium mb-1 block">
+                    Username
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
+                    <input
+                      type="text"
+                      name="username"
+                      placeholder="Choose a username"
+                      className="w-full bg-black/50 border border-gray-800 text-white rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all duration-300"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  {errors.username && (
+                    <p className="mt-1 text-sm text-red-500">{errors.username}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-gray-300 text-sm font-medium mb-1 block">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="Enter your email"
+                      className="w-full bg-black/50 border border-gray-800 text-white rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all duration-300"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-gray-300 text-sm font-medium mb-1 block">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
+                    <input
+                      type="tel"
+                      name="phone"
+                      placeholder="Enter your phone number"
+                      className="w-full bg-black/50 border border-gray-800 text-white rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all duration-300"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-gray-300 text-sm font-medium mb-1 block">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
+                    <input
+                      type="password"
+                      name="password"
+                      placeholder="Create a strong password"
+                      className="w-full bg-black/50 border border-gray-800 text-white rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all duration-300"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                  )}
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex-1 h-12 flex items-center justify-center bg-black/50 border border-gray-800 text-white rounded-xl hover:bg-black/70 transition-all duration-300"
+                  >
+                    <ChevronLeft className="mr-2 h-5 w-5" />
+                    Back
+                  </button>
+                  
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 h-12 flex items-center justify-center bg-[#25D366] text-black font-semibold rounded-xl hover:bg-[#128C7E] transition-all duration-300"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-2" />
+                        Creating...
+                      </div>
+                    ) : (
+                      'Create Account'
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </form>
+
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-800"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-black text-gray-500">Or continue with</span>
+              </div>
             </div>
+
+            <button
+              onClick={handleFirebaseSignIn}
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center bg-white/5 border border-gray-800 text-white rounded-xl py-3 hover:bg-white/10 transition duration-300"
+            >
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png"
+                alt="Google Logo"
+                className="w-5 h-5 mr-2"
+              />
+              Sign up with Google
+            </button>
+
+            <p className="text-center text-gray-400">
+              Already have an account?{' '}
+              <NavLink 
+                to="/login" 
+                className="text-[#25D366] hover:text-[#128C7E] font-medium transition-colors duration-300"
+              >
+                Sign in
+              </NavLink>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
 
             {/* Create New Organization Modal */}
             {showNewOrgForm && (

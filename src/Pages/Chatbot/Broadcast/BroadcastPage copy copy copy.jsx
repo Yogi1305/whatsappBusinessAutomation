@@ -81,7 +81,7 @@ const BroadcastPage = () => {
         setAccessToken(response.data.whatsapp_data[0].access_token);
         return response.data.whatsapp_data[0];
       } catch (error) {
-        console.error('Error fetching business phone ID:', error);
+      //  console.error('Error fetching business phone ID:', error);
       }
     };
 
@@ -165,7 +165,7 @@ const BroadcastPage = () => {
       }));
       setTemplates(formattedTemplates);
     } catch (error) {
-      console.error('Error fetching templates:', error);
+    //  console.error('Error fetching templates:', error);
     }
   }, [accessToken, accountId]);
 
@@ -187,7 +187,7 @@ const BroadcastPage = () => {
         });
         await fetchTemplates();
       } catch (error) {
-        console.error('Error deleting template:', error);
+      //  console.error('Error deleting template:', error);
       }
     }
   };
@@ -245,7 +245,7 @@ const BroadcastPage = () => {
         throw new Error("Failed to send broadcast");
       }
     } catch (error) {
-      console.error("Error sending broadcast:", error);
+    //  console.error("Error sending broadcast:", error);
       toast.error("Failed to send broadcast message. Please try again.", {
         position: "top-center",
         duration: 3000
@@ -275,7 +275,7 @@ const BroadcastPage = () => {
     e.preventDefault();
     
     const components = [];
-    console.log("HEADER CONTENT: ", headerType, headerContent)
+   // console.log("HEADER CONTENT: ", headerType, headerContent)
     let headerComponent;
     if (headerType === 'text' && headerContent.trim()) {
 
@@ -288,7 +288,7 @@ const BroadcastPage = () => {
         text: convertBodyTextToIndexedFormat(headerContent), // Convert text to indexed format
         example: undefined, 
       };
-      console.log("Header Variabbles: ", headerVariables)
+    //  console.log("Header Variabbles: ", headerVariables)
       if (headerVariables.length > 0) {
         headerComponent.example = {
           header_text: headerVariables.map(variable => `{{${variable}}}`),
@@ -305,7 +305,7 @@ const BroadcastPage = () => {
         example: { header_handle: [headerMediaId] }, // Provide media ID for image
       });
     }
-    console.log("Body Content: ", bodyText, bodyVariables)
+   // console.log("Body Content: ", bodyText, bodyVariables)
     // Handle BODY component
     const bodyComponent = {
       type: "BODY",
@@ -326,7 +326,7 @@ const BroadcastPage = () => {
         text: footerText
       });
     }
-    console.log("BUttons content: ", buttons)
+   // console.log("BUttons content: ", buttons)
     if (buttons.length > 0) {
       components.push({
         type: "BUTTONS",
@@ -355,7 +355,7 @@ const BroadcastPage = () => {
         }).filter(Boolean)
       });
     }
-    console.log("Components: ", components, bodyComponent)
+   // console.log("Components: ", components, bodyComponent)
 
     const templateData = {
       name: templateName,
@@ -368,7 +368,7 @@ const BroadcastPage = () => {
       category: category,
       components: components
     }
-    console.log("Updated Template Data: ", updateTemplateData)
+   // console.log("Updated Template Data: ", updateTemplateData)
     try {
       const url = isEditing ? `https://graph.facebook.com/v20.0/${templateId}` :  `https://graph.facebook.com/v20.0/${accountId}/message_templates`
       
@@ -386,7 +386,7 @@ const BroadcastPage = () => {
       await fetchTemplates();
       setActiveTab('templates');
     } catch (error) {
-      console.error('Error creating/updating template:', error);
+    //  console.error('Error creating/updating template:', error);
       const errorMessage = error.response?.data?.error?.message || error.message || 'An error occurred while creating the template';
         toast({
             title: "Error",
@@ -407,7 +407,7 @@ const BroadcastPage = () => {
       });
       setSelectedTemplateDetails(response.data);
     } catch (error) {
-      console.error('Error fetching template details:', error);
+    //  console.error('Error fetching template details:', error);
     }
   };
 
@@ -445,7 +445,7 @@ const BroadcastPage = () => {
       setBroadcastHistory(formattedHistory);
       setFilteredBroadcastHistory(formattedHistory);
     } catch (error) {
-      console.error('Error fetching broadcast history:', error);
+    //  console.error('Error fetching broadcast history:', error);
     }
   };
 
@@ -467,7 +467,7 @@ const BroadcastPage = () => {
 
 
   const handleBCGroupSelection = (bgId) => {
-    console.log("Broadcast::::::::", bgId)
+  //  console.log("Broadcast::::::::", bgId)
     setSelectedBCGroups(prevSelected => 
       prevSelected.includes(bgId)
         ? prevSelected.filter(id => id !== bgId)
@@ -490,10 +490,10 @@ const BroadcastPage = () => {
   };
 
   const extractVariables = (text) => {
-    console.log("Test: ", text)
+  //  console.log("Test: ", text)
     const regex = /@([\w.]+)/g; // Updated regex to allow dots in variable names
     const matches = text.match(regex);
-    console.log("MAtched: ", matches)
+  //  console.log("MAtched: ", matches)
     return matches ? matches.map(match => match.slice(1)) : [];
   };
 
@@ -523,7 +523,7 @@ const BroadcastPage = () => {
       return match; // Keep placeholder if index is invalid
     });
   
-    console.log("Replaced text:", replacedText);
+  //  console.log("Replaced text:", replacedText);
     return replacedText;
   };
 
@@ -548,7 +548,7 @@ const BroadcastPage = () => {
       setHeaderContent(URL.createObjectURL(selectedFile));
   
       try {
-        console.log('Uploading file to WhatsApp Media API...');
+      //  console.log('Uploading file to WhatsApp Media API...');
   
         const formData = new FormData();
         formData.append('file', selectedFile);
@@ -570,11 +570,11 @@ const BroadcastPage = () => {
           }
         );
   
-        console.log('File uploaded to WhatsApp, ID:', response.data.body.h);
+      //  console.log('File uploaded to WhatsApp, ID:', response.data.body.h);
         setHeaderMediaId(response.data.body.h);
         setUploadProgress(100);
       } catch (error) {
-        console.error('Error uploading file:', error);
+       // console.error('Error uploading file:', error);
         setUploadProgress(0);
       }
     }

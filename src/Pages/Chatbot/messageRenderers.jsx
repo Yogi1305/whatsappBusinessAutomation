@@ -28,7 +28,7 @@ const PdfViewer = ({ document }) => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Download failed:', error);
+    //  console.error('Download failed:', error);
     }
   };
 
@@ -129,7 +129,7 @@ export const renderInteractiveMessage = (parsedMessage) => {
     return renderTemplateMessage(template);
   } else if (type === 'document'){
     text = parsedMessage?.document?.id
-    console.log("Document url: ", text)
+  //  console.log("Document url: ", text)
     return (
       <div className="image-message">
         <PdfViewer document={parsedMessage.document} />

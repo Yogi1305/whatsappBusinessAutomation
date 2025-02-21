@@ -16,7 +16,7 @@ const getTenantIdFromUrl = () => {
 
     return null;
   } catch (error) {
-    console.error("Error parsing tenant ID from URL:", error);
+   // console.error("Error parsing tenant ID from URL:", error);
     return null;
   }
 };
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
       const storedTenantId = localStorage.getItem("tenant_id");
       return storedTenantId ? JSON.parse(storedTenantId) : null;
     } catch (error) {
-      console.error("Error parsing 'tenant_id' from localStorage:", error);
+   //   console.error("Error parsing 'tenant_id' from localStorage:", error);
       return null;
     }
   });
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
     } catch (error) {
-      console.error("Error initializing 'authenticated' state:", error);
+    //  console.error("Error initializing 'authenticated' state:", error);
       return false;
     }
   });
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       const storedUserId = localStorage.getItem("user_id");
       return storedUserId ? JSON.parse(storedUserId) : null;
     } catch (error) {
-      console.error("Error parsing 'user_id' from localStorage:", error);
+    //  console.error("Error parsing 'user_id' from localStorage:", error);
       return null;
     }
   });
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       const storedUserRole = localStorage.getItem("user_role");
       return storedUserRole ? JSON.parse(storedUserRole) : null;
     } catch (error) {
-      console.error("Error parsing 'user_role' from localStorage:", error);
+    //  console.error("Error parsing 'user_role' from localStorage:", error);
       return null;
     }
   });
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       const storedModel = localStorage.getItem("model");
       return storedModel ? JSON.parse(storedModel) : null;
     } catch (error) {
-      console.error("Error parsing 'model' from localStorage:", error);
+    //  console.error("Error parsing 'model' from localStorage:", error);
       return null;
     }
   });
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
       const storedTenant = localStorage.getItem("tenant");
       return storedTenant ? JSON.parse(storedTenant) : { tier: 'Free' }; // Default to 'Free' tier
     } catch (error) {
-      console.error("Error parsing 'tenant' from localStorage:", error);
+    //  console.error("Error parsing 'tenant' from localStorage:", error);
       return { tier: 'Free' }; // Default to 'Free' tier
     }
   });
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
           const response = await axiosInstance.get(`${djangoURL}/get-tenant-details/`);
           setTenant(response.data); // Update tenant state with fetched data
         } catch (error) {
-          console.error("Error fetching tenant details:", error);
+      //    console.error("Error fetching tenant details:", error);
         }
       }
     };
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("model", JSON.stringify(model));
       localStorage.setItem("tenant", JSON.stringify(tenant));
     } catch (error) {
-      console.error("Error saving state to localStorage:", error);
+    //  console.error("Error saving state to localStorage:", error);
     }
   }, [authenticated, userId, tenantId, userRole, model, tenant]);
 
@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }) => {
       setModel(null);
       setTenant({ tier: 'Free' }); // Reset tenant state to default
     } catch (error) {
-      console.error("Error during logout:", error);
+    //  console.error("Error during logout:", error);
     }
   };
 

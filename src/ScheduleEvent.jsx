@@ -76,7 +76,7 @@ const ScheduledEventsPage = () => {
         setBusinessPhoneNumberId(whatsappData.business_phone_number_id);
         setAccessToken(whatsappData.access_token);
       } catch (error) {
-        console.error('Error fetching business phone ID:', error);
+       // console.error('Error fetching business phone ID:', error);
       }
     };
 
@@ -93,17 +93,17 @@ const ScheduledEventsPage = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-      console.log('Fetched scheduled events - Raw Data:', response.data);
+      //console.log('Fetched scheduled events - Raw Data:', response.data);
       
       // If the events are nested, you might need to adjust this
       const eventsData = Array.isArray(response.data) 
         ? response.data 
         : response.data.results || response.data.data || [];
       
-      console.log('Processed events:', eventsData);
+      //console.log('Processed events:', eventsData);
       setEvents(eventsData);
     } catch (error) {
-      console.error('Failed to fetch scheduled events', error.response ? error.response.data : error);
+    //  console.error('Failed to fetch scheduled events', error.response ? error.response.data : error);
     }
   }, [tenantId, fastURL]);
   // Fetch event details when a card is clicked
@@ -118,7 +118,7 @@ const ScheduledEventsPage = () => {
       });
       setSelectedEvent(response.data);
     } catch (error) {
-      console.error('Failed to fetch event details', error);
+    //  console.error('Failed to fetch event details', error);
     }
   };
   // Fetch templates and contacts
@@ -143,7 +143,7 @@ const ScheduledEventsPage = () => {
       
       setTemplates(formattedTemplates);
     } catch (error) {
-      console.error('Failed to fetch templates', error.response ? error.response.data : error.message);
+    //  console.error('Failed to fetch templates', error.response ? error.response.data : error.message);
     }
   }, [accessToken, accountId]);
   
@@ -176,13 +176,13 @@ const ScheduledEventsPage = () => {
         ...group,
         displayName: group.name
       }));
-      console.log("Processed Contacts: ", processedContacts)
+      //console.log("Processed Contacts: ", processedContacts)
       setContacts(processedContacts);
       setBroadcastGroups(processedGroups);
-      console.log("Broadcast Groups: ", broadcastGroups)
+      //console.log("Broadcast Groups: ", broadcastGroups)
     
     } catch (error) {
-      console.error('Failed to fetch contacts or groups', error.response ? error.response.data : error.message);
+   //   console.error('Failed to fetch contacts or groups', error.response ? error.response.data : error.message);
     }
   }, [fastURL, tenantId]);
 
@@ -195,7 +195,7 @@ const ScheduledEventsPage = () => {
 
   // Handle creating a new event
   const handleCreateEvent = async () => {
-    console.log("raw_recipient",newEvent.recipients)
+    //console.log("raw_recipient",newEvent.recipients)
     try {
       const token = localStorage.getItem('token');
       // Construct payload for creating a scheduled event
@@ -233,7 +233,7 @@ const ScheduledEventsPage = () => {
         recipients: []
       });
     } catch (error) {
-      console.error('Failed to create event', error.response ? error.response.data : error);
+    //  console.error('Failed to create event', error.response ? error.response.data : error);
       // Optionally add error handling UI
     }
   };
@@ -251,7 +251,7 @@ const ScheduledEventsPage = () => {
       // Refresh events list
       fetchScheduledEvents();
     } catch (error) {
-      console.error('Failed to delete event', error);
+   //   console.error('Failed to delete event', error);
     }
   };
 

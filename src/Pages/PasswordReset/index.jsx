@@ -42,7 +42,7 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
 
   const handleSendOtp = async (username, phone) => {
     if (!username || !phone) {
-      console.error("Both username and phone are required");
+   //   console.error("Both username and phone are required");
       setError({ username: "username is required", phone: "phone is required" });
       return false; // return false if validation fails
     }
@@ -52,7 +52,7 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
       const response = await axiosInstance.post('/change-password/', body);
   
       if (response.status !== 200) {
-        console.error("Error:", response.data);
+      //  console.error("Error:", response.data);
         setError({username: "Invalid username or phone"});
         return false; // return false if the API returns an error
       } 
@@ -87,7 +87,7 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
         else return false
       }
     } catch (error) {
-      console.error("Request Failed:", error);
+   //   console.error("Request Failed:", error);
       return false;
     }
   };
@@ -101,16 +101,16 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
 
     try {
       const body = JSON.stringify({ username, newPassword })
-      console.log("body: ", body)
+     // console.log("body: ", body)
       const response = await axiosInstance.post(`/change-password/`, body,
         {headers : { 'Content-Type': 'application/json' }});
-      console.log("response: ", response)
+     // console.log("response: ", response)
 
       const data = response.data;
-      console.log("data: ", data)
+     // console.log("data: ", data)
       setShowPopup(true);
     } catch (error) {
-      console.log("erreoer: ", error)
+     // console.log("erreoer: ", error)
     } finally {
       setIsSubmitting(false);
     }
@@ -184,7 +184,7 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
                     onClick={ async () => {
                     setStep(2);
                     const response = await handleSendOtp(username, phone); 
-                    console.log("response is : ", response)
+                   // console.log("response is : ", response)
                   }}
                     className= {`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 `}
                   >
@@ -218,10 +218,10 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
                   
                   if (otp === enteredOTP) {
                     setStep(3); 
-                    console.log("otp matched!")
+                 //   console.log("otp matched!")
                     setOtp('')
                   } else {
-                    console.log(otp)
+                 //   console.log(otp)
                     alert('Invalid OTP, please try again');
                   }
                 }}

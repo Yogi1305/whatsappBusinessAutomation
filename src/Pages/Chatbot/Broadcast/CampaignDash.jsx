@@ -49,7 +49,7 @@ const CampaignsDashboard = ({
       const response = await axiosInstance.get(`${djangoURL}/campaign/`);
       setCampaigns(response.data);
     } catch (error) {
-      console.error('Failed to fetch campaigns:', error);
+    //  console.error('Failed to fetch campaigns:', error);
       setError('Failed to fetch campaigns');
     } finally {
       setLoading(false);
@@ -93,7 +93,7 @@ const CampaignsDashboard = ({
       setEditingCampaign(transformedData);
       setShowCampaignCreator(true);
     } catch (error) {
-      console.error('Failed to fetch campaign details:', error);
+    //  console.error('Failed to fetch campaign details:', error);
       setError('Failed to fetch campaign details');
     }
   };
@@ -107,7 +107,7 @@ const CampaignsDashboard = ({
       setShowDeleteDialog(false);
       setCampaignToDelete(null);
     } catch (error) {
-      console.error('Failed to delete campaign:', error);
+    //  console.error('Failed to delete campaign:', error);
       setError('Failed to delete campaign');
     }
   };
@@ -148,7 +148,7 @@ const CampaignsDashboard = ({
 
   const handleSendCampaign = async (campaignId) => {
     try {
-      console.log("Business Phone Number ID:", businessPhoneNumberId); // Debugging
+    //  console.log("Business Phone Number ID:", businessPhoneNumberId); // Debugging
   
       const response = await axios.post(
         `${whatsappURL}/send-template/`,
@@ -171,7 +171,7 @@ const CampaignsDashboard = ({
         throw new Error("Failed to send campaign");
       }
     } catch (error) {
-      console.error("Error sending campaign:", error);
+    //  console.error("Error sending campaign:", error);
       toast.error("Failed to send campaign. Please try again.");
     }
   };

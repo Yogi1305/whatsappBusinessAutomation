@@ -97,7 +97,7 @@ const BroadcastPopup = ({
         
         return response.data.whatsapp_data[0];
       } catch (error) {
-        console.error('Error fetching business phone ID:', error);
+      //  console.error('Error fetching business phone ID:', error);
       }
     };
 
@@ -141,7 +141,7 @@ const BroadcastPopup = ({
       // Update current page
       setCurrentPage(page);
     } catch (error) {
-      console.error("Error fetching contacts data:", error);
+    //  console.error("Error fetching contacts data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -384,7 +384,7 @@ const BroadcastPopup = ({
         throw new Error("Failed to send broadcast");
       }
     } catch (error) {
-      console.error("Error sending broadcast:", error);
+    //  console.error("Error sending broadcast:", error);
       toast.error("Failed to send broadcast message. Please try again.", {
         position: "top-center",
         duration: 3000
@@ -428,7 +428,7 @@ const handlePhoneSearch = async () => {
       fetchContacts(updatedPage); // Use the updated value directly
     }
   } catch (error) {
-    console.error('Error fetching contact page:', error);
+  //  console.error('Error fetching contact page:', error);
     // Optionally handle error (show toast, etc.)
   }
 };

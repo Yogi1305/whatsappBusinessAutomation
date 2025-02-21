@@ -267,7 +267,7 @@ const SaveFlowPopup = ({ onSave, onCancel, fallbackMessage, fallbackCount }) => 
 
     try {
       const response = await axiosInstance.post(`${djangoURL}/node-templates/`, flow);
-      console.log('Flow saved successfully:', response.data);
+      //console.log('Flow saved successfully:', response.data);
       setSuccessMessage('Flow saved successfully!');
       setShowSuccessPopup(true);
       setTimeout(() => {
@@ -276,7 +276,7 @@ const SaveFlowPopup = ({ onSave, onCancel, fallbackMessage, fallbackCount }) => 
         onCancel();
       }, 2000);
     } catch (error) {
-      console.error('Error saving flow:', error);
+    //  console.error('Error saving flow:', error);
       if (error.response && error.response.data) {
         setError(error.response.data.name || "Error saving flow. Please try again.");
       } else {

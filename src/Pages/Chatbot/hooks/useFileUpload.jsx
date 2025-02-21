@@ -29,7 +29,7 @@ export default function useFileUpload(businessPhoneNumberId, accessToken) {
       setUploadStatus('Upload successful!');
       return response.data.id;
     } catch (error) {
-      console.error('Upload failed:', error);
+    //  console.error('Upload failed:', error);
       setUploadStatus('Upload failed');
       return null;
     }

@@ -166,7 +166,7 @@ const ContactPage = () => {
       setIsDeleteDialogOpen(false);
       setDeleteContactId(null);
     } catch (error) {
-      console.error("Error deleting contact:", error);
+    //  console.error("Error deleting contact:", error);
       toast.error("Failed to delete contact. Please try again.");
     }
   };
@@ -292,7 +292,7 @@ const ContactPage = () => {
       setContacts(response.data.contacts);
       setTotalPages(response.data.total_pages);
     } catch (error) {
-      console.error("Error fetching contacts:", error);
+    //  console.error("Error fetching contacts:", error);
       toast.error("Failed to fetch contacts. Please try again later.");
     } finally {
       setIsLoading(false);
@@ -487,7 +487,7 @@ const ContactPage = () => {
         setCurrentPage(response.data.page_no);
       }
     } catch (error) {
-      console.error('Error fetching contact page:', error);
+    //  console.error('Error fetching contact page:', error);
       // Optionally handle error (show toast, etc.)
     }
   };
@@ -518,7 +518,7 @@ const ContactPage = () => {
         }
         setSelectedFile(null);
       } catch (error) {
-        console.error("Upload error:", error);
+      //  console.error("Upload error:", error);
         toast.error("Failed to upload contacts. Please try again.");
       } finally {
         setIsUploading(false);
