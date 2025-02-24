@@ -92,11 +92,11 @@ const PaymentDialog = ({ isOpen, onClose, selectedPlan, planDetails }) => {
                   onPaymentInitiated={onClose} // Pass the close handler here
 
                   onPaymentSuccess={(paymentResponse) => {
-                    //console.log('Payment Successful:', paymentResponse);
+                    console.log('Payment Successful:', paymentResponse);
                   }}
 
                   onPaymentFailure={(paymentResponse) => {
-                    //console.log('Payment Failed:', paymentResponse);
+                    console.log('Payment Failed:', paymentResponse);
                   }}
                 />
             </div>
@@ -106,10 +106,10 @@ const PaymentDialog = ({ isOpen, onClose, selectedPlan, planDetails }) => {
       )}
     </AnimatePresence>
   );
+  // pl_Pwn75lx0zWzkuX
 };
-
 const RAZORPAY_BUTTON_IDS = {
-  'plan_Pon6Uno5uktIC4': 'pl_Pwn75lx0zWzkuX', // Basic Plan
+  'plan_Pon6Uno5uktIC4': 'pl_Px5631CjQDmIWy', // Basic Plan
   'plan_Pon6DdCSMahsu7': 'pl_PxA3pUu4eJiGZh', // Premium Plan
   'plan_Pon5wTJRvRQ0uC': 'pl_PxA64Vu3OJ6ySj'  // Enterprise Plan
 };
@@ -150,7 +150,7 @@ const RazorpayButton = React.memo(({ selectedPlan, isCurrentPlan, onPaymentIniti
         formRef.current.innerHTML = `<div id="razorpay-payment-button"></div>`;
       }
 
-      //console.log("tenant id: ", tenantId)
+      console.log("tenant id: ", tenantId)
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/payment-button.js';
       script.async = true;
@@ -181,7 +181,7 @@ const RazorpayButton = React.memo(({ selectedPlan, isCurrentPlan, onPaymentIniti
       }
     };
 
-    //console.log("tenant id again complete: ", tenantId)
+    console.log("tenant id again complete: ", tenantId)
     setIsLoaded(false);
     loadRazorpayScript();
 
@@ -273,7 +273,7 @@ const SubscriptionPage = () => {
         setState(prev => ({
           ...prev,
           plans: formattedPlans,
-          currentSubscription: "test",
+          currentSubscription: subscriptionResponse.data.data,
           isLoading: false
         }));
       } catch (err) {
@@ -282,7 +282,7 @@ const SubscriptionPage = () => {
           error: 'Failed to load subscription data',
           isLoading: false
         }));
-      //  console.error('Error fetching data:', err);
+        console.error('Error fetching data:', err);
       }
     };
 
@@ -301,7 +301,7 @@ const SubscriptionPage = () => {
       </div>
     );
   }
-
+  console.log("Subscriptions: ", currentSubscription)
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -332,7 +332,7 @@ const SubscriptionPage = () => {
               <div>
                 <p className="text-sm text-gray-600">Days Remaining</p>
                 <p className="text-lg font-bold">
-                  {currentSubscription?.daysRemaining ?? '0'} days
+                  {state.currentSubscription?.daysRemaining ?? '0'} days
                 </p>
               </div>
             </motion.div>
@@ -345,8 +345,8 @@ const SubscriptionPage = () => {
               <div>
                 <p className="text-sm text-gray-600">Next Billing Date</p>
                 <p className="text-lg font-bold">
-                  {currentSubscription?.nextBillingDate ? 
-                    new Date(currentSubscription.nextBillingDate).toLocaleDateString() : 
+                  {state.currentSubscription?.nextBillingDate ? 
+                    new Date(state.currentSubscription.nextBillingDate).toLocaleDateString() : 
                     'Not available'}
                 </p>
               </div>
@@ -360,7 +360,7 @@ const SubscriptionPage = () => {
               <div>
                 <p className="text-sm text-gray-600">Current Plan</p>
                 <p className="text-lg font-bold capitalize">
-                  {currentSubscription?.currentPlan?.planName ?? 'No active plan'}
+                  {state.currentSubscription?.currentPlan?.planName ?? 'No active plan'}
                 </p>
               </div>
             </motion.div>
@@ -386,74 +386,70 @@ const SubscriptionPage = () => {
               onValueChange={(value) => setState(prev => ({ ...prev, selectedPlan: value }))}
               className="grid md:grid-cols-3 gap-4"
             >
-             {plans.map((plan, index) => (
-  <motion.div
-    key={plan.id}
-    onClick={() =>
-      setState((prev) => ({ ...prev, selectedPlan: plan.id }))
-    }
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.1 * index }}
-    whileHover={{ scale: 1.02 }}
-    className={cn(
-      "relative flex flex-col border-2 rounded-xl p-6 transition-all cursor-pointer",
-      selectedPlan === plan.id ? "border-blue-500 bg-blue-50" : "border-gray-200",
-      currentSubscription?.currentPlan?.planId === plan.id ? "ring-2 ring-blue-200" : "",
-      "hover:border-blue-500"
-    )}
-  >
-    {plan.popular && (
-      <Badge className="absolute -top-3 right-4 bg-blue-500">
-        Most Popular
-      </Badge>
-    )}
-
-    {currentSubscription?.currentPlan?.planId === plan.id && (
-      <Badge className="absolute -top-3 left-4 bg-green-500">
-        Current Plan
-      </Badge>
-    )}
-
-    <RadioGroupItem 
-      value={plan.id} 
-      id={plan.id} 
-      className="absolute right-4 top-4" 
-    />
-
-    <div>
-      <div>
-        <h3 className="text-xl font-bold">{plan.name}</h3>
-        <p className="text-gray-600 text-sm mt-1">{plan.description}</p>
-      </div>
-
-      <div className="mt-4">
-        <div className="text-3xl font-bold text-blue-600">
-          ₹{plan.price.toLocaleString()}
-        </div>
-        <div className="text-sm text-gray-600">
-          per {plan.billingCycle.toLowerCase().slice(0, -2)}
-        </div>
-      </div>
-
-      <ul className="space-y-2 mt-4">
-        {plan.features.map((feature, index) => (
-          <motion.li 
-            key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 * index }}
-            className="flex items-center gap-2"
-          >
-            <Check className="h-5 w-5 text-green-500" />
-            <span className="text-gray-600">{feature}</span>
-          </motion.li>
-        ))}
-      </ul>
-    </div>
-  </motion.div>
-))}
-
+              {plans.map((plan, index) => (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ scale: 1.02 }}
+                  className={cn(
+                    "relative flex flex-col border-2 rounded-xl p-6 transition-all",
+                    selectedPlan === plan.id ? "border-blue-500 bg-blue-50" : "border-gray-200",
+                    state.currentSubscription?.currentPlan?.planId === plan.id ? "ring-2 ring-blue-200" : "",
+                    "hover:border-blue-500"
+                  )}
+                >
+                  {plan.popular && (
+                    <Badge className="absolute -top-3 right-4 bg-blue-500">
+                      Most Popular
+                    </Badge>
+                  )}
+  
+                  {state.currentSubscription?.currentPlan?.planId === plan.id && (
+                    <Badge className="absolute -top-3 left-4 bg-green-500">
+                      Current Plan
+                    </Badge>
+                  )}
+  
+                  <RadioGroupItem 
+                    value={plan.id} 
+                    id={plan.id} 
+                    className="absolute right-4 top-4" 
+                  />
+  
+                  <div>
+                    <div>
+                      <h3 className="text-xl font-bold">{plan.name}</h3>
+                      <p className="text-gray-600 text-sm mt-1">{plan.description}</p>
+                    </div>
+  
+                    <div className="mt-4">
+                      <div className="text-3xl font-bold text-blue-600">
+                        ₹{plan.price.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        per {plan.billingCycle.toLowerCase().slice(0,-2)}
+                      </div>
+                    </div>
+  
+                    <ul className="space-y-2 mt-4">
+                      {plan.features.map((feature, index) => (
+                        <motion.li 
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 * index }}
+                          className="flex items-center gap-2"
+                        >
+                          <Check className="h-5 w-5 text-green-500" />
+                          <span className="text-gray-600">{feature}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              ))}
             </RadioGroup>
   
             {/* Payment Button Section */}

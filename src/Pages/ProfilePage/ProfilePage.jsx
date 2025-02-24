@@ -99,7 +99,7 @@ const ProfilePage = () => {
         }));
   
       } catch (error) {
-        console.error('Error fetching data:', error.response ? error.response.data : error.message);
+      //  console.error('Error fetching data:', error.response ? error.response.data : error.message);
       }
     };
   
@@ -159,7 +159,7 @@ const ProfilePage = () => {
         setProfileImageId(response.data.body.h);
         setUploadProgress(100);
       } catch (error) {
-        console.error('Error uploading file:', error);
+      //  console.error('Error uploading file:', error);
         setUploadProgress(0);
       }
     }
@@ -195,7 +195,7 @@ const ProfilePage = () => {
       // await axiosInstance.put(`/get-user/${tenantId}/`, profile);
 
     } catch (error) {
-      console.error('Error updating profile:', error);
+    //  console.error('Error updating profile:', error);
     }
   };
 
