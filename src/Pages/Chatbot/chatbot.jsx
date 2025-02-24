@@ -1664,12 +1664,13 @@ function renderMessageWithNewLines(text) {
   <div className="cb-input-actions">
     <EmojiEmotionsIcon className="cb-action-icon" onClick={handleToggleSmileys} />
     <input
-      type="file"
-      accept="image/*"
-      style={{ display: 'none' }}
-      onChange={handleFileSelect}
-      ref={fileInputRef}
-    />
+  type="file"
+  accept="image/*, application/pdf, .doc, .docx, .txt"
+  style={{ display: 'none' }}
+  onChange={handleFileSelect}
+  ref={fileInputRef}
+/>
+
     <AttachFileIcon className="cb-action-icon" onClick={() => fileInputRef.current.click()} />
   </div>
   <textarea
