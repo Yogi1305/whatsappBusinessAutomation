@@ -252,7 +252,8 @@ const SubscriptionPage = () => {
     const fetchData = async () => {
       try {
         const [plansResponse, subscriptionResponse] = await Promise.all([
-          axiosInstance.get(`${djangoURL}/plan/`)
+          axiosInstance.get(`${djangoURL}/plan/`),
+          axiosInstance.get(`${djangoURL}/get-subscription/`)
         ]);
 
         const formattedPlans = plansResponse.data
