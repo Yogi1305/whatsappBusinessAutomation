@@ -442,9 +442,9 @@ useEffect(() => {
         `${whatsappURL}/send-message`,
         {
           phoneNumbers: [phoneNumber],
-          messageType: "image",
+          messageType: "media",
           additionalData: {
-            imageId: imageToSend, 
+            mediaId: imageToSend, 
             caption: imageCaption
           },
           business_phone_number_id: businessPhoneNumberId
