@@ -109,7 +109,7 @@ const PaymentDialog = ({ isOpen, onClose, selectedPlan, planDetails }) => {
   // pl_Pwn75lx0zWzkuX
 };
 const RAZORPAY_BUTTON_IDS = {
-  'plan_Pon6Uno5uktIC4': 'pl_Px5631CjQDmIWy', // Basic Plan
+  'plan_Pon6Uno5uktIC4': 'pl_Pwn75lx0zWzkuX', // Basic Plan
   'plan_Pon6DdCSMahsu7': 'pl_PxA3pUu4eJiGZh', // Premium Plan
   'plan_Pon5wTJRvRQ0uC': 'pl_PxA64Vu3OJ6ySj'  // Enterprise Plan
 };
