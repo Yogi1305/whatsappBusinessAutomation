@@ -43,12 +43,16 @@ const Login = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      
+     
       const data = await response.json();
       
+      
       if (response.status === 200) {
+       
         login(data.user_id, data.tenant_id, data.role, data.model);
         setShowPopup(true);
+        
+
       } else {
         throw new Error('Login failed');
       }
@@ -60,6 +64,9 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    setUsername('');
+    setPassword('');
+    localStorage.removeItem('auth_token'); 
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;

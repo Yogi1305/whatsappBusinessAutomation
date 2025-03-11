@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-
+import { PopupButton } from 'react-calendly';
 import { 
   NavigationMenu, 
   NavigationMenuItem, 
@@ -488,30 +488,34 @@ const Navbar = () => {
                   Login
                 </Button>
               </Link>
-              <Link to="/register">
-              <Button 
-          className="relative bg-gradient-to-r from-emerald-500 to-green-500 text-white 
-          hover:from-emerald-400 hover:to-green-400 
-          shadow-lg hover:shadow-emerald-500/40
-          transition-all duration-300
-          animate-pulse hover:animate-none
-          hover:scale-105 active:scale-95
-          before:absolute before:inset-0
-          before:bg-gradient-to-r before:from-white/20 before:to-transparent
-          before:opacity-0 hover:before:opacity-100
-          before:transition-opacity before:duration-300
-          overflow-hidden
-          ring-2 ring-emerald-500/50 hover:ring-emerald-400
-          group"
-        >
-          <span className="relative inline-flex items-center">
-            Start Free Trial
-            <span className="ml-1 transform transition-transform group-hover:translate-x-0.5">→</span>
-          </span>
-          <span className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 
-            blur-xl group-hover:blur-2xl transition-all duration-300"></span>
-        </Button>
-              </Link>
+              <PopupButton
+  url="https://calendly.com/adarsh1885/schedule-a-demo"
+  rootElement={document.getElementById("root")}
+  className="relative bg-gradient-to-r from-emerald-500 to-green-500 text-white 
+    hover:from-emerald-400 hover:to-green-400 
+    shadow-lg hover:shadow-emerald-500/40
+    transition-all duration-300
+    animate-pulse hover:animate-none
+    hover:scale-105 active:scale-95
+    before:absolute before:inset-0
+    before:bg-gradient-to-r before:from-white/20 before:to-transparent
+    before:opacity-0 hover:before:opacity-100
+    before:transition-opacity before:duration-300
+    overflow-hidden
+    ring-2 ring-emerald-500/50 hover:ring-emerald-400
+    group
+    px-4 py-2 rounded-md font-medium"
+  text={
+    <>
+      <span className="relative inline-flex items-center">
+        Book Demo
+
+      </span>
+      <span className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 
+        blur-xl group-hover:blur-2xl transition-all duration-300"></span>
+    </>
+  }
+/>
             </div>
           )}
   

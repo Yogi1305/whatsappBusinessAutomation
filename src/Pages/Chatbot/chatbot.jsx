@@ -823,26 +823,31 @@ useEffect(() => {
   }, [conversation, lastUpdateType]);
   useEffect(() => {
     const contactID = getContactIDfromURL();
-    if (contactID && contacts.length > 0 && businessPhoneNumberId) {
-      const contact = contacts.find(c => c.id === parseInt(contactID));
-      if (contact) {
-        if (!selectedContact || selectedContact.id !== contact.id) {
-          setConversation([]); // Reset conversation state
-          setSelectedContact(contact);
-        }
-        fetchConversation(contact.phone);
-      }
+    if (!contactID || contacts.length === 0 || !businessPhoneNumberId) return;
+    
+    const contact = contacts.find(c => c.id === parseInt(contactID));
+    if (contact && (!selectedContact || selectedContact.id !== contact.id)) {
+      // Only set the selected contact - the other useEffect will handle fetching
+      setSelectedContact(contact);
     }
-  }, [contacts, selectedContact?.id, businessPhoneNumberId, fetchConversation]);
+  }, [contacts.length, businessPhoneNumberId]); // Reduced dependencies
   useEffect(() => {
-    if (selectedContact?.phone && businessPhoneNumberId && !isSocketUpdate.current) {
-      const controller = new AbortController();
-      fetchConversation(selectedContact.phone, 1, false, controller.signal);
-      return () => controller.abort();
+    if (!selectedContact?.phone || !businessPhoneNumberId) return;
+    
+    // Skip fetch if this update was triggered by socket
+    if (isSocketUpdate.current) {
+      isSocketUpdate.current = false;
+      return;
     }
-    // Reset the flag after the effect runs
-    isSocketUpdate.current = false;
-  }, [selectedContact?.phone, businessPhoneNumberId]);
+    
+    setIsLoading(true);
+    const controller = new AbortController();
+    
+    fetchConversation(selectedContact.phone, 1, false, controller.signal)
+      .finally(() => setIsLoading(false));
+    
+    return () => controller.abort();
+  }, [selectedContact?.phone, businessPhoneNumberId, fetchConversation]);
   const addInputField = () => {
     setInputFields([...inputFields, { value: '' }]);
   };
@@ -854,12 +859,11 @@ useEffect(() => {
     
   
   useEffect(() => {
-    setConversation(['']);
-    setNewMessages(['']);
-    //console.log("selected contact 3:", selectedContact)
-    
-    if(selectedContact){
-    fetchConversation(selectedContact.phone);}
+    if (selectedContact) {
+      // Only clear messages, don't fetch again
+      setConversation([]);
+      setNewMessages([]);
+    }
   }, [selectedContact]);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -872,6 +876,8 @@ useEffect(() => {
     fetchConversation(selectedContact.phone, currentMessagePage + 1, true);
   };
   const handleContactSelection = async (contact) => {
+    if (selectedContact?.id === contact.id) return; // Prevent duplicate selections
+    
     try {
       setIsLoading(true);
       setConversation([]); // Clear messages immediately
@@ -879,27 +885,21 @@ useEffect(() => {
       setHasMoreMessages(true);
   
       navigate({ search: `?id=${contact.id}` }, { replace: true });
+      
+      // Set selected contact after all other state changes to reduce effect triggers
       setSelectedContact(contact);
+      
+      // Don't fetch here - the main useEffect will handle it
       
       // Update unread count
       setContacts(prev => prev.map(c => 
         c.id === contact.id ? { ...c, unreadCount: 0 } : c
       ));
   
-      // Check if it's a dummy contact
-      const isDummyContact = DUMMY_CONTACTS.some(dc => dc.phone === contact.phone);
-      if (isDummyContact) {
-        const dummyContact = DUMMY_CONTACTS.find(dc => dc.phone === contact.phone);
-        setConversation(DUMMY_CONVERSATIONS[dummyContact.id] || []);
-        setIsLoading(false);
-      } else {
-        await fetchConversation(contact.phone);
-      }
-  
     } catch (error) {
       console.error('Contact selection failed:', error);
     } finally {
-      setIsLoading(false);
+      // Loading state will be managed by the main useEffect
     }
   };
   const handleToggleSmileys = () => {
