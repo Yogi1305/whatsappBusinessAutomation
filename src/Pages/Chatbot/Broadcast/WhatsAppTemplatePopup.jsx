@@ -198,13 +198,15 @@ const TransliteratingInput = ({ value, onChange, language,placeholder,maxLength,
 // Transliterating Textarea Component
 const TransliteratingTextArea = ({ value, onChange, language, placeholder, className, ...props }) => {
   const [inputValue, setInputValue] = useState(value || '');
-  const transliterated = useTransliteration(inputValue, language);
+  
+  // Modified transliteration hook usage to preserve line breaks
+  const transliteratedParts = useTransliterationWithLineBreaks(inputValue, language);
 
   useEffect(() => {
-    if (transliterated !== value) {
-      onChange?.({ target: { value: transliterated } });
+    if (transliteratedParts !== value) {
+      onChange?.({ target: { value: transliteratedParts } });
     }
-  }, [transliterated, onChange, value]);
+  }, [transliteratedParts, onChange, value]);
 
   return (
     <>
@@ -220,6 +222,63 @@ const TransliteratingTextArea = ({ value, onChange, language, placeholder, class
       </p>
     </>
   );
+};
+
+// New hook that preserves line breaks during transliteration
+const useTransliterationWithLineBreaks = (text, language) => {
+  const [transliterated, setTransliterated] = useState('');
+
+  useEffect(() => {
+    const processTextWithLineBreaks = async () => {
+      if (!text) {
+        setTransliterated('');
+        return;
+      }
+
+      // Skip transliteration for English
+      if (language === 'en_US' || language === 'en') {
+        setTransliterated(text);
+        return;
+      }
+
+      // Split by line breaks, transliterate each part separately, then rejoin
+      const lines = text.split('\n');
+      
+      const transliteratedLines = await Promise.all(
+        lines.map(async (line) => {
+          // Use existing transliteration logic for each line
+          if (!line) return '';
+          
+          const langCode = languageConfigs[language]?.code;
+          if (!langCode) return line;
+          
+          try {
+            const response = await fetch(
+              `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${langCode}&dt=t&q=${encodeURIComponent(line)}`
+            );
+            
+            const data = await response.text();
+            
+            try {
+              const parsedData = JSON.parse(data.replace(/,+/g, ','));
+              return parsedData[0][0][0] || line;
+            } catch (parseError) {
+              return line;
+            }
+          } catch (error) {
+            return line;
+          }
+        })
+      );
+      
+      // Rejoin with line breaks preserved
+      setTransliterated(transliteratedLines.join('\n'));
+    };
+    
+    processTextWithLineBreaks();
+  }, [text, language]);
+
+  return transliterated;
 };
 
 const WhatsAppTemplatePopup = ({
@@ -501,106 +560,115 @@ const WhatsAppTemplatePopup = ({
             </div>
           </form>
 
-          <div className="w-[400px] flex-shrink-0 hidden md:block">
-          <Card className="w-full max-w-md mx-auto shadow-lg sticky top-0 z-10">
-  <CardHeader className="p-3 bg-[#128C7E] text-white">
-    <CardTitle className="text-base">Preview</CardTitle>
-  </CardHeader>
-  <CardContent className="p-4 bg-gray-50">
-    <div className="max-w-md mx-auto bg-[#DCF8C6] p-3 rounded-lg relative">
-      {/* Header Content */}
-      {headerType === 'text' && headerContent && (
-        <div className="font-semibold text-gray-800 mb-2 break-words whitespace-normal overflow-hidden w-full">
-          {headerContent}
-        </div>
-      )}
+       <div className="w-[400px] flex-shrink-0 hidden md:block">
+  <Card className="w-full max-w-md mx-auto shadow-lg sticky top-0 z-10">
+    <CardHeader className="p-3 bg-[#128C7E] text-white">
+      <CardTitle className="text-base">Preview</CardTitle>
+    </CardHeader>
+    <CardContent className="p-4 bg-gray-50">
+      <div className="max-w-md mx-auto bg-[#DCF8C6] p-3 rounded-lg relative">
+        {/* Header Content */}
+        {headerType === 'text' && headerContent && (
+          <pre className="font-semibold text-gray-800 mb-2 whitespace-pre-wrap break-words overflow-hidden w-full">
+            {headerContent}
+          </pre>
+        )}
 
-      {/* Image Header */}
-      {headerType === 'image' && headerContent && (
-        <div className="mt-2 space-y-2">
-          <img
-            src={headerContent}
-            alt="Header"
-            className="w-full h-48 object-cover rounded-lg mb-2"
-          />
-        </div>
-      )}
-
-      {/* Video Header */}
-      {headerType === 'video' && headerContent && (
-        <div className="mt-2 space-y-2">
-          <video controls className="w-full h-48 object-cover rounded-lg mb-2">
-            <source src={headerContent} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      )}
-
-      {/* Document Header */}
-      {headerType === 'document' && headerContent && (
-  <div className="p-3 bg-white border border-gray-300 rounded-lg flex items-center space-x-3">
-    {/* Document Icon */}
-    <div className="bg-gray-200 p-2 rounded-full">
-      📄 {/* Unicode document icon */}
-    </div>
-
-    {/* File Details */}
-    <div className="flex-1">
-      <p className="text-sm text-gray-800 font-semibold break-words">
-        {headerContent.name}
-      </p>
-      <p className="text-xs text-gray-500">
-        {headerContent.size ? (headerContent.size / 1024).toFixed(2) + ' KB' : 'Unknown Size'}
-      </p>
-    </div>
-
-    {/* Download Button */}
-    <a
-      href={headerContent}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition"
-    >
-      Download
-    </a>
-  </div>
-)}
-
-
-      {/* Body Text */}
-      <div className="text-gray-900 mb-2 break-words">
-        {convertMentionsForFrontend(bodyText)}
-      </div>
-
-      {/* Footer Text */}
-      {footerText && (
-        <div className="text-sm text-gray-700 break-words mb-2">{footerText}</div>
-      )}
-
-      {/* Buttons */}
-      {buttons.length > 0 && (
-        <div className="space-y-2 pt-2">
-          {buttons.map((button, index) => (
-            <button
-              key={index}
-              className="w-full bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#1ea855] transition-colors"
-            >
-              {button.text}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Timestamp and Read Status */}
-      <div className="text-xs text-gray-500 text-right mt-2 flex justify-end items-center">
-        <span className="mr-1">1:10 PM</span>
-        <span className="text-blue-500">✓✓</span>
-      </div>
-    </div>
-  </CardContent>
-</Card>
-
+        {/* Image Header */}
+        {headerType === 'image' && headerContent && (
+          <div className="mt-2 space-y-2">
+            <img
+              src={headerContent}
+              alt="Header"
+              className="w-full h-48 object-cover rounded-lg mb-2"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://via.placeholder.com/300?text=Image+Preview';
+              }}
+            />
           </div>
+        )}
+
+        {/* Video Header */}
+        {headerType === 'video' && headerContent && (
+          <div className="mt-2 space-y-2">
+            <video controls className="w-full h-48 object-cover rounded-lg mb-2">
+              <source src={headerContent} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
+
+        {/* Document Header */}
+        {headerType === 'document' && headerContent && (
+          <div className="p-3 bg-white border border-gray-300 rounded-lg flex items-center space-x-3">
+            {/* Document Icon */}
+            <div className="bg-gray-200 p-2 rounded-full">
+              📄
+            </div>
+
+            {/* File Details */}
+            <div className="flex-1">
+              <p className="text-sm text-gray-800 font-semibold break-words">
+                {typeof headerContent === 'object' ? headerContent.name : 'Document'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {typeof headerContent === 'object' && headerContent.size 
+                  ? (headerContent.size / 1024).toFixed(2) + ' KB' 
+                  : 'Preview'}
+              </p>
+            </div>
+
+            {/* Download Button */}
+            {typeof headerContent === 'string' && headerContent.startsWith('http') && (
+              <a
+                href={headerContent}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition"
+              >
+                View
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Body Text with proper formatting - using PRE tag */}
+      {/* Body Text with proper formatting */}
+<pre className="text-gray-900 mb-2 break-words font-sans whitespace-pre-wrap text-sm">
+  {bodyText}
+</pre>
+
+        {/* Footer Text with proper formatting */}
+        {footerText && (
+          <pre className="text-sm text-gray-700 break-words mb-2 font-sans whitespace-pre-wrap">
+            {footerText}
+          </pre>
+        )}
+
+        {/* Buttons */}
+        {buttons.length > 0 && (
+          <div className="space-y-2 pt-2">
+            {buttons.map((button, index) => (
+              <button
+                key={index}
+                className="w-full bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#1ea855] transition-colors"
+              >
+                {button.text}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Timestamp and Read Status */}
+        <div className="text-xs text-gray-500 text-right mt-2 flex justify-end items-center">
+          <span className="mr-1">1:10 PM</span>
+          <span className="text-blue-500">✓✓</span>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+</div>
         </CardContent>
       </Card>
     </div>

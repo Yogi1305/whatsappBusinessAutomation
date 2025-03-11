@@ -41,6 +41,7 @@ const tier = tenant?.tier || 'Free';
   const [showTemplatePopup, setShowTemplatePopup] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [broadcasts, setBroadcasts] = useState([]);
+  const [headerMediaUrl, setHeaderMediaUrl] = useState('');
   
   const [showBroadcastPopup, setShowBroadcastPopup] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -104,20 +105,30 @@ const tier = tenant?.tier || 'Free';
     setLanguage(template.language);
     
     const headerComponent = template.components.find(c => c.type === "HEADER");
-// console.log("Editing header component: ", headerComponent)
-if (headerComponent) {
-  setHeaderType(headerComponent.format.toLowerCase());
-  const headerText = headerComponent?.text;
-  
-  // Check if example exists before trying to access its properties
-  if (headerComponent.example && headerComponent.example.header_text) {
-    const convertedText = convertIndicesToText(headerText, headerComponent.example.header_text);
-    setHeaderContent(convertedText);
-  } else {
-    // If no example, just use the text directly
-    setHeaderContent(headerText || '');
-  }
-}
+    if (headerComponent) {
+      setHeaderType(headerComponent.format.toLowerCase());
+      
+      if (headerComponent.format === "TEXT") {
+        const headerText = headerComponent?.text;
+        
+        // Check if example exists before trying to access its properties
+        if (headerComponent.example && headerComponent.example.header_text) {
+          const convertedText = convertIndicesToText(headerText, headerComponent.example.header_text);
+          setHeaderContent(convertedText);
+        } else {
+          // If no example, just use the text directly
+          setHeaderContent(headerText || '');
+        }
+      } 
+      // Handle media headers (IMAGE, VIDEO, DOCUMENT)
+      else if (["IMAGE", "VIDEO", "DOCUMENT"].includes(headerComponent.format)) {
+        // Extract media URL from example.header_handle
+        if (headerComponent.example && headerComponent.example.header_handle && 
+            headerComponent.example.header_handle.length > 0) {
+          setHeaderMediaUrl(headerComponent.example.header_handle[0]);
+        }
+      }
+    }
     const bodyComponent = template.components.find(c => c.type === "BODY");
     // console.log("Editing body component: ", bodyComponent)
     if (bodyComponent) {
