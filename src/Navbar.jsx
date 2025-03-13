@@ -48,8 +48,8 @@ import axiosInstance from './api';
 import { fastURL} from './api.jsx';
 
 
-export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
-// export const whatsappURL = 'http://localhost:8080'
+//export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
+ export const whatsappURL = 'http://localhost:8080'
 
 
 const socket = io(whatsappURL);
