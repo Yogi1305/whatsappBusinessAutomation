@@ -622,18 +622,40 @@ useEffect(() => {
   }, [selectedContact?.phone, businessPhoneNumberId]);
 
   const handleSend = async () => {
-    if (!selectedContact || !messageTemplates[selectedContact.id]) {
-      toast.error('Please select a contact and enter a message');
+    if (!selectedContact) {
+      toast.error('No contact selected');
       return;
     }
-
-    const newMessage = { 
-      content: messageTemplates[selectedContact.id],
-      timestamp: new Date().toISOString(),
-      sender: 'bot'
-    };
-
+    
+    const messageContent = messageTemplates[selectedContact.id];
+    if (!messageContent || messageContent.trim() === '') {
+      toast.error('Please enter a message');
+      return;
+    }
+  
     try {
+      // First add the message to the conversation for immediate feedback
+      const newMessage = { 
+        id: `local_${Date.now()}`,
+        text: messageContent,
+        sender: 'bot',
+        time: new Date().toISOString(),
+        pending: true // Mark as pending until confirmed
+      };
+      
+      setConversation(prev => [...prev, newMessage]);
+      
+      // Clear the input field immediately for better UX
+      setMessageTemplates(prevTemplates => ({
+        ...prevTemplates,
+        [selectedContact.id]: ''
+      }));
+      
+      // Scroll to the new message
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+  
       if (selectedContact.isGroup) {
         // Send message to all group members
         const sendPromises = selectedContact.members.map(memberId => {
@@ -647,7 +669,7 @@ useEffect(() => {
             `${whatsappURL}/send-message`,
             {
               phoneNumbers: [phoneNumber],
-              message: newMessage.content,
+              message: messageContent,
               business_phone_number_id: businessPhoneNumberId,
               messageType: "text",
             }
@@ -660,28 +682,38 @@ useEffect(() => {
         if (phoneNumber.startsWith("91")) {
           phoneNumber = phoneNumber.slice(2);
         }
-       axiosInstance.post(
+        
+        await axiosInstance.post(
           `${whatsappURL}/send-message`,
           {
             phoneNumbers: [phoneNumber],
-            message: newMessage.content,
+            message: messageContent,
             business_phone_number_id: businessPhoneNumberId,
             messageType: "text",
           }
         );
       }
-
-      setMessageTemplates(prevTemplates => ({
-        ...prevTemplates,
-        [selectedContact.id]: ''
-      }));
+  
+      // Update the message to remove the pending status
+      setConversation(prev => 
+        prev.map(msg => 
+          msg.id === newMessage.id ? { ...msg, pending: false } : msg
+        )
+      );
       
       // Add success toast
       toast.success("Message sent successfully");
     } catch (error) {
+      // Keep the message but mark it as failed
+      setConversation(prev => 
+        prev.map(msg => 
+          msg.id === `local_${Date.now()}` ? { ...msg, pending: false, failed: true } : msg
+        )
+      );
+      
       // Add error toast with specific error message
       toast.error(`Failed to send message: ${error.response?.data?.message || error.message || 'Unknown error'}`);
-    //  console.error('Error sending message:', error);
+      console.error('Error sending message:', error);
     }
   };
 
@@ -760,6 +792,8 @@ useEffect(() => {
         height: container.scrollHeight,
         top: container.scrollTop
       } : null;
+      
+      previousScroll.current = prevScrollInfo || { height: 0, top: 0 };
   
       const response = await axiosInstance.get(
         `/whatsapp_convo_get/${contactId}`,
@@ -783,15 +817,16 @@ useEffect(() => {
       setHasMoreMessages(hasMore);
       setCurrentMessagePage(serverPage);
   
+      // Process the messages to ensure they have proper IDs and timestamps
+      const processedMessages = data.map(msg => ({
+        ...msg,
+        id: msg.id || `msg_${Date.now()}_${Math.random()}`,
+        time: msg.time || msg.timestamp || new Date().toISOString()
+      }));
+      
       setConversation(prev => {
-        const updated = append ? [...data, ...prev] : data;
-        
-        if (append && container && prevScrollInfo) {
-          requestAnimationFrame(() => {
-            const newHeight = container.scrollHeight;
-            container.scrollTop = newHeight - prevScrollInfo.height;
-          });
-        }
+        const updated = append ? [...processedMessages, ...prev] : processedMessages;
+        setLastUpdateType(append ? 'append' : 'new');
         return updated;
       });
   
@@ -1133,22 +1168,48 @@ const handleGoToPage = (pageNumber) => {
 };
 function renderMessageWithNewLines(text) {
   try {
-    // Ensure text is properly escaped for JSON.parse
-    const sanitizedText = text.replace(/\\/g, "\\\\");
+    // Handle empty or undefined text
+    if (!text) return "No content";
     
-    // Decode Unicode escape sequences
-    const decodedText = JSON.parse(`"${sanitizedText}"`);
+    // First attempt to parse if it's a JSON string
+    if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+      try {
+        const fixedMessage = fixJsonString(text);
+        const parsedMessage = JSON.parse(fixedMessage);
+        return renderInteractiveMessage(parsedMessage);
+      } catch (e) {
+        // If JSON parsing fails, continue with normal text rendering
+        console.warn("Failed to parse as JSON, treating as text:", e);
+      }
+    }
     
-    // Split by \n and render with line breaks
-    return decodedText.split('\n').map((line, index) => ( 
+    // For normal text messages, properly handle escape sequences
+    let cleanedText = text;
+    
+    // Handle escaped characters properly
+    try {
+      // If the text contains escaped characters, parse it properly
+      if (text.includes('\\')) {
+        // Remove any surrounding quotes that might be in the string
+        const textWithoutQuotes = text.replace(/^"|"$/g, '');
+        // Parse the string to handle escape sequences
+        cleanedText = JSON.parse(`"${textWithoutQuotes.replace(/"/g, '\\"')}"`);
+      }
+    } catch (error) {
+      // If parsing fails, use the original text
+      cleanedText = text;
+    }
+    
+    // Render with line breaks
+    return cleanedText.split('\n').map((line, index) => (
       <React.Fragment key={index}>
         {line}
-        <br />
+        {index < cleanedText.split('\n').length - 1 && <br />}
       </React.Fragment>
     ));
   } catch (error) {
-   // console.error("Failed to render message:", error);
-    return <div>Error rendering message</div>;
+    console.error("Failed to render message:", error);
+    return <div className="error-message">Message could not be displayed</div>;
   }
 }
 
@@ -1600,56 +1661,76 @@ function renderMessageWithNewLines(text) {
   )}
 
   {conversation.length > 0 ? (
-  conversation.map((message) => (
-    <TooltipProvider key={message.id}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div 
-            className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'}`} 
-            data-message-id={message.id}
-          > 
-            {(() => { 
-              if (typeof message.text === 'string') { 
-                if (message.text.trim().startsWith('{') || message.text.trim().startsWith('[')) { 
-                  try { 
-                    const fixedMessage = fixJsonString(message.text); 
-                    const parsedMessage = JSON.parse(fixedMessage); 
-                    return renderInteractiveMessage(parsedMessage); 
-                  } catch (e) { 
-                  //  console.error('Failed to parse message', e); 
-                    return <div className="error">Failed to parse message</div>; 
-                  } 
-                } 
-                return renderMessageWithNewLines(message.text); 
-              } 
-              if (typeof message.text === 'object' && message.text !== null) { 
-                return renderMessageContent(message); 
-              } 
-              return null; 
-            })()} 
-          </div>
-        </TooltipTrigger>
-        <TooltipContent 
-          className="bg-gray-800 text-white px-3 py-1.5 rounded shadow-lg"
-          sideOffset={5}
-        >
-          {(() => {
-            try {
-              return format(new Date(message.time), 'MMM d, yyyy h:mm a');
-            } catch (e) {
-            //  console.error('Failed to parse time:', message.time);
-              return 'Invalid date';
-            }
-          })()}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  ))
+    conversation.map((message) => (
+      <TooltipProvider key={message.id || `msg-${Date.now()}-${Math.random()}`}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div 
+              className={`cb-message ${message.sender === 'user' ? 'cb-user-message' : 'cb-bot-message'} ${message.pending ? 'message-pending' : ''} ${message.failed ? 'message-failed' : ''}`} 
+              data-message-id={message.id}
+            > 
+              {(() => { 
+                // Handle image messages
+                if (message.type === 'image') {
+                  return (
+                    <div className="message-image-container">
+                      <img 
+                        src={message.imageUrl} 
+                        alt="Message attachment" 
+                        className="message-image"
+                      />
+                      {message.caption && <p className="image-caption">{message.caption}</p>}
+                    </div>
+                  );
+                }
+                
+                // Handle text messages
+                if (typeof message.text === 'string') {
+                  return renderMessageWithNewLines(message.text);
+                }
+                
+                // Handle object messages
+                if (typeof message.text === 'object' && message.text !== null) { 
+                  return renderMessageContent(message); 
+                }
+                
+                // Fallback for empty messages
+                return <span className="empty-message">Empty message</span>;
+              })()} 
+              
+              {message.pending && <span className="message-status">Sending...</span>}
+              {message.failed && <span className="message-status error">Failed to send</span>}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent 
+            className="bg-gray-800 text-white px-3 py-1.5 rounded shadow-lg"
+            sideOffset={5}
+          >
+            {(() => {
+              try {
+                const timestamp = message.time || message.timestamp;
+                return format(new Date(timestamp), 'MMM d, yyyy h:mm a');
+              } catch (e) {
+                return 'Time unavailable';
+              }
+            })()}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ))
   ) : (
     <div className="no-messages-placeholder">
       {isLoading ? (
         <div className="loading-messages">
-          Loading messages...
+          <div className="animate-pulse flex space-x-4">
+            <div className="flex-1 space-y-4 py-1">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              </div>
+            </div>
+          </div>
         </div>
       ) : selectedContact ? (
         'No messages found'
@@ -1658,8 +1739,8 @@ function renderMessageWithNewLines(text) {
       )}
     </div>
   )}
- <div ref={messageEndRef} />
-  </div>
+  <div ref={messageEndRef} />
+</div>
   <div className="cb-input-container">
   <div className="cb-input-actions">
     <EmojiEmotionsIcon className="cb-action-icon" onClick={handleToggleSmileys} />
