@@ -36,16 +36,26 @@ const BroadcastHistory = ({
 }) => {
   const handleRefresh = async () => {
     try {
+      // Make the request and wait for it to complete
       const response = await axiosInstance.get(`${fastURL}/refresh-status/`);
+      
+      // Process the response data if needed
+      console.log("Refresh status response:", response.data);
+      
+      // Only reload after the request has completed and response is processed
       if (response.data) {
-        window.location.reload(); // This will refresh the page
+        // Small timeout to ensure any response handling is complete
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       }
+      
       return response.data;
     } catch (error) {
-    //  console.error('Error refreshing status:', error);
+      console.error('Error refreshing status:', error);
       return false;
     }
-  };
+};
   return (
     <div className="space-y-6 p-4 sm:p-6">
       {/* Header Section */}
