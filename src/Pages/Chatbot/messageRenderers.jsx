@@ -3,6 +3,34 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
+
+export const renderMessageWithNewLines = (text) => {
+  if (!text) return null;
+  
+  try {
+    // Sanitize the text for JSON parsing without logging to console
+    const sanitizedText = text.replace(/\\/g, "\\\\");
+    
+    // Decode Unicode escape sequences
+    const decodedText = JSON.parse(`"${sanitizedText}"`);
+    
+    // Convert Unicode hex codes to actual emoji characters
+    const emojiRenderedText = decodedText.replace(/\\u[\dA-F]{4}/gi, 
+      match => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16)));
+    
+    // Split by \n and render with line breaks
+    return emojiRenderedText.split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < emojiRenderedText.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+  } catch (error) {
+    // Provide a more graceful fallback when parsing fails
+    return <div className="message-error">Message could not be displayed properly</div>;
+  }
+};
+
 const PdfViewer = ({ document }) => {
   // Handle null or undefined document
   if (!document || !document.id) {
@@ -28,13 +56,12 @@ const PdfViewer = ({ document }) => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-    //  console.error('Download failed:', error);
+      // Error handling without console logging
     }
   };
 
   return (
     <div className="w-full space-y-2">
-      
       <div className="w-full h-screen max-h-[600px] border rounded-lg overflow-hidden">
         <iframe
           src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
@@ -116,8 +143,9 @@ export const renderInteractiveMessage = (parsedMessage) => {
         </div>
       );
     }
-  }else if (type === 'text') {
-    return <p className="plain-message">{text.body}</p>;
+  } else if (type === 'text') {
+    // Using renderMessageWithNewLines for text body to handle newlines and emojis consistently
+    return <div className="plain-message">{renderMessageWithNewLines(text.body)}</div>;
   } else if (type === 'image') {
     return (
       <div className="image-message">
@@ -129,11 +157,9 @@ export const renderInteractiveMessage = (parsedMessage) => {
     return renderTemplateMessage(template);
   } else if (type === 'document'){
     text = parsedMessage?.document?.id
-  //  console.log("Document url: ", text)
     return (
       <div className="image-message">
         <PdfViewer document={parsedMessage.document} />
-      { /*<PdfViewer pdfUrl={text} />*/}
       </div>
     )
   }
@@ -146,20 +172,27 @@ export const renderMessageContent = (message) => {
     // Handle message types
     switch (message.text.type) {
       case 'text':
-        return message.text.body || <div className="error">No text body provided</div>;
+        // Using renderMessageWithNewLines for text body
+        return message.text.body ? 
+          renderMessageWithNewLines(message.text.body) : 
+          <div className="error">No text body provided</div>;
 
       case 'interactive':
-        return renderInteractiveMessage(message.text.interactive) || <div className="error">Interactive message rendering failed</div>;
+        return renderInteractiveMessage(message.text.interactive) || 
+          <div className="error">Interactive message rendering failed</div>;
 
       case 'template':
-        return renderTemplateMessage(message.text.template) || <div className="error">Template message rendering failed</div>;
+        return renderTemplateMessage(message.text.template) || 
+          <div className="error">Template message rendering failed</div>;
 
       default:
         return <div className="error">Unknown message type: {message.text.type}</div>;
     }
   } else if (typeof message.text === 'string') {
-    // Fallback for plain text messages
-    return message.text || <div className="error">Message content is undefined</div>;
+    // Fallback for plain text messages - using renderMessageWithNewLines
+    return message.text ? 
+      renderMessageWithNewLines(message.text) : 
+      <div className="error">Message content is undefined</div>;
   }
 
   return <div className="error">Invalid message format</div>;
