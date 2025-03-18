@@ -394,11 +394,12 @@ const SubscriptionPage = () => {
                   transition={{ delay: 0.1 * index }}
                   whileHover={{ scale: 1.02 }}
                   className={cn(
-                    "relative flex flex-col border-2 rounded-xl p-6 transition-all",
+                    "relative flex flex-col border-2 rounded-xl p-6 transition-all cursor-pointer",
                     selectedPlan === plan.id ? "border-blue-500 bg-blue-50" : "border-gray-200",
                     state.currentSubscription?.currentPlan?.planId === plan.id ? "ring-2 ring-blue-200" : "",
                     "hover:border-blue-500"
                   )}
+                  onClick={() => setState(prev => ({ ...prev, selectedPlan: plan.id }))}
                 >
                   {plan.popular && (
                     <Badge className="absolute -top-3 right-4 bg-blue-500">

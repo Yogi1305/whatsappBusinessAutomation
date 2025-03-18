@@ -64,7 +64,7 @@ const BroadcastHistory = ({
     </Button>
     <Button 
       onClick={handleBroadcastMessage}
-      className="bg-primary text-white hover:bg-primary/90 w-full sm:w-auto"
+      className="bg-primary text-white hover:bg-primary/90 w-full sm:w-auto z-40"
     >
       New Broadcast
     </Button>
