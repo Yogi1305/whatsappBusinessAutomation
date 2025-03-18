@@ -279,7 +279,9 @@ const WhatsAppTemplatePopup = ({
       <Card className="w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col bg-white">
         <CardHeader className="border-b">
           <CardTitle>{isEditing ? 'Edit' : 'Create'} WhatsApp Template Message</CardTitle>
+        
         </CardHeader>
+        
         <CardContent className="flex gap-6 p-6 overflow-auto">
           <form onSubmit={handleCreateTemplate} className="flex-1 space-y-6">
             <div className="space-y-4">
