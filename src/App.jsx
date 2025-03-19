@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate,Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
 import { useAuth } from './authContext';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useSpring, animated } from 'react-spring';
@@ -40,13 +40,14 @@ import WhatsAppDripMarketing from './Pages/Blogs/dripmarketing.jsx';
 import { Toaster } from 'sonner';
 import WhatsAppSuperApp from './Pages/Blogs/superapp.jsx';
 import { Button } from "@/components/ui/button";
+
 const ProtectedRoute = ({ children }) => {
   const { authenticated } = useAuth();
   return authenticated ? children : <Navigate to="/login" replace />;
 };
 
 const TierProtectedRoute = ({ children, requiredTier }) => {
-  const { tenant } = useAuth();
+  const { tenant, tenantId } = useAuth();
   
   // Handle loading state
   if (!tenant) return <div className="container text-center p-8">Loading plan details...</div>;
@@ -62,21 +63,21 @@ const TierProtectedRoute = ({ children, requiredTier }) => {
 
   return (
     <div className="fixed inset-0 h-screen w-full bg-background/95 backdrop-blur-sm">
-  <div className="flex h-full w-full items-center justify-center">
-    <div className="mx-auto max-w-md space-y-4 p-6 text-center">
-      <Rocket className="h-12 w-12 text-primary mx-auto" />
-      <h1 className="text-2xl font-bold">Feature Locked</h1>
-      <p className="text-muted-foreground">
-        This feature requires {requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1)} plan
-      </p>
-      <Button asChild className="mt-4">
-        <Link to="/pricing">
-          Upgrade to {requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1)}
-        </Link>
-      </Button>
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="mx-auto max-w-md space-y-4 p-6 text-center">
+          <Rocket className="h-12 w-12 text-primary mx-auto" />
+          <h1 className="text-2xl font-bold">Feature Locked</h1>
+          <p className="text-muted-foreground">
+            This feature requires {requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1)} plan
+          </p>
+          <Button asChild className="mt-4">
+            <Link to={`/${tenantId}/payment`}>
+              Upgrade to {requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1)}
+            </Link>
+          </Button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
   );
 };
 
@@ -121,6 +122,7 @@ const MarketingBanner = () => (
     <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-emerald-950 to-transparent" />
   </div>
 );
+
 const App = () => {
   const { authenticated, logout, tenantId, tenant } = useAuth();
   
@@ -161,7 +163,7 @@ const App = () => {
               <Routes>
                 {/* Free tier accessible routes */}
                 <Route path="broadcast" element={<ProtectedRoute><BroadcastPage /></ProtectedRoute>} />
-                <Route path="contact" element={<ProtectedRoute> <TierProtectedRoute requiredTier="premium"><ContactPage /></TierProtectedRoute></ProtectedRoute>} />
+                <Route path="contact" element={<ProtectedRoute><TierProtectedRoute requiredTier="premium"><ContactPage /></TierProtectedRoute></ProtectedRoute>} />
                 <Route path="contactDetails" element={<ProtectedRoute><ContactDetails /></ProtectedRoute>} />
                 <Route path="payment" element={<ProtectedRoute><GPayUPIPayment /></ProtectedRoute>} />
                 <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
