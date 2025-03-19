@@ -68,6 +68,7 @@ import { base, div } from "framer-motion/client";
 
 //import { Button, Input } from 'antd';
 import { Phone, Mail, Plus } from "lucide-react";
+import { showErrorToast } from "./Broadcast/Toastcomponent.jsx";
 
 const socket = io(whatsappURL);
 
@@ -419,7 +420,8 @@ const Chatbot = () => {
         }
       } catch (error) {
         //  console.error('Error uploading file:', error);
-        alert("Failed to upload file. Please try again.");
+        showErrorToast
+        ("Failed to upload file. Please try again.");
       } finally {
         setIsUploading(false);
       }
