@@ -463,7 +463,9 @@
 .cb-emoji-picker {
   position: absolute;
   bottom: 80px;
-  right: 20px;
+ 
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
 }
 
@@ -628,12 +630,31 @@
 
 .cb-image-caption-input {
   width: 100%;
-  height: 4rem;
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid var(--light-gray);
-  border-radius: 5px;
+  min-height: 4rem;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  background-color: #f7f9fc;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cb-image-caption-input:focus {
+  border-color: #4f8bf0;
+  box-shadow: 0 0 0 3px rgba(79, 139, 240, 0.15);
+  outline: none;
+}
+
+.cb-image-caption-input::placeholder {
+  color: #a0aec0;
+}
+
+.cb-image-caption-input:hover:not(:focus) {
+  border-color: #cbd5e0;
 }
 
 .cb-send-image-btn {
@@ -1528,4 +1549,47 @@
 }
 .ai-content-upload-btn:hover {
   background-color: #38a169;
+}
+.message-pending {
+  opacity: 0.7;
+}
+
+.message-failed {
+  border-left: 3px solid #f44336;
+}
+
+.message-status {
+  font-size: 0.7rem;
+  margin-top: 4px;
+  display: block;
+  text-align: right;
+  color: #888;
+}
+
+.message-status.error {
+  color: #f44336;
+}
+
+.error-message {
+  color: #f44336;
+  font-style: italic;
+}
+
+.empty-message {
+  color: #888;
+  font-style: italic;
+}
+
+.message-image-container {
+  max-width: 100%;
+}
+
+.message-image {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.image-caption {
+  margin-top: 4px;
+  font-size: 0.9rem;
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PopupButton } from 'react-calendly';
+import { motion } from 'framer-motion';
 import { 
   NavigationMenu, 
   NavigationMenuItem, 
@@ -39,23 +40,84 @@ import {
   Loader2,
   Calendar,
   X,
-  CreditCard // Added Calendar icon for Scheduled Messages
+  CreditCard,
+  AlertCircle
 } from "lucide-react";
 import { useAuth } from './authContext';
-import logo from "./assets/logo.png";
+import logo from "./assets/logo.webp";
 import io from 'socket.io-client';
 import axiosInstance from './api';
-import { fastURL} from './api.jsx';
+import { fastURL } from './api.jsx';
 
-
- export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net'
- //export const whatsappURL = 'http://localhost:8080'
-
+export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net';
+//export const whatsappURL = 'http://localhost:8080';
 
 const socket = io(whatsappURL);
 
+// WhatsApp Setup Marquee Component
+const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authenticated }) => {
+  const [showBanner, setShowBanner] = useState(false);
+  
+  useEffect(() => {
+    // Only start the timer if authenticated and no businessPhoneNumberId
+    if (authenticated && !businessPhoneNumberId) {
+      const timer = setTimeout(() => {
+        setShowBanner(true);
+      }, 2000); // 2 second delay
+      
+      // Clean up the timer on unmount or when dependencies change
+      return () => clearTimeout(timer);
+    } else {
+      // Reset the banner state if conditions are no longer met
+      setShowBanner(false);
+    }
+  }, [authenticated, businessPhoneNumberId]);
+
+  // Only render the banner if showBanner is true
+  if (!showBanner) {
+    return null;
+  }
+
+  return (
+    <div className="bg-red-500 text-black h-12 text-center relative overflow-hidden border-b z-50 cursor-pointer" onClick={handleRedirect}>
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.1)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+      
+      <motion.div
+        className="flex items-center absolute whitespace-nowrap h-full"
+        animate={{
+          x: ["100%", "-100%"],
+        }}
+        transition={{
+          x: {
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear"
+          }
+        }}
+      >
+        <div className="flex items-center space-x-12 px-4">
+          <span className="text-amber-950 text-sm font-medium flex items-center">
+            <AlertCircle className="w-4 h-4 mr-2 text-amber-800" />
+            Important: Your WhatsApp Business account is not set up. Set up now to start messaging!
+          </span>
+          
+          <Button 
+            onClick={handleRedirect}
+            className="bg-red-900 hover:bg-amber-800 text-white px-3 py-1 rounded-full text-sm font-medium transition-colors"
+          >
+            Set Up WhatsApp
+          </Button>
+          
+          <span className="text-amber-950 text-sm font-medium flex items-center">
+            <AlertCircle className="w-4 h-4 mr-2 text-amber-800" />
+            Important: Your WhatsApp Business account is not set up. Set up now to start messaging!
+          </span>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 const Navbar = () => {
- 
   const { authenticated, logout, tenantId } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -63,11 +125,12 @@ const Navbar = () => {
   const location = useLocation();
   const [accountId, setAccountId] = useState('');
   const [accessToken, setAccessToken] = useState('');
-  const [businessPhoneNumberId,setBusinessPhoneNumberId]=useState('');
+  const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const navigate = useNavigate();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
@@ -81,12 +144,15 @@ const Navbar = () => {
         setBusinessPhoneNumberId(whatsappData.business_phone_number_id);
         setAccessToken(whatsappData.access_token);
       } catch (error) {
-      //  console.error('Error fetching business phone ID:', error);
+        console.error('Error fetching business phone ID:', error);
       }
     };
 
-    fetchBusinessPhoneId();
-  }, [tenantId]);
+    if (authenticated && tenantId) {
+      fetchBusinessPhoneId();
+    }
+  }, [tenantId, authenticated]);
+  
   const fetchNotifications = async () => {
     try {
       const response = await axiosInstance.get(`${fastURL}/notifications`, {
@@ -99,7 +165,7 @@ const Navbar = () => {
       setNotifications(fetchedNotifications);
       setUnreadCount(fetchedNotifications.length);
     } catch (error) {
-    //  console.error('Error fetching notifications:', error);
+      console.error('Error fetching notifications:', error);
     }
   };
 
@@ -112,42 +178,39 @@ const Navbar = () => {
     setNotifications(prev => [newNotification, ...prev]);
     setUnreadCount(prev => prev + 1);
   };
+  
   useEffect(() => {
     const handleNewSocketMessage = (message) => {
-      //console.log("notification aaya", message); 
-      if (message&&message.phone_number_id==businessPhoneNumberId) {
-       // Log the received message
-       fetchNotifications();// Process the new message
+      if (message && message.phone_number_id == businessPhoneNumberId) {
+        fetchNotifications();
       }
     };
   
     socket.on('new-message', handleNewSocketMessage);
   
     return () => {
-      socket.off('new-message', handleNewSocketMessage); // Use the same reference for cleanup
+      socket.off('new-message', handleNewSocketMessage);
     };
-  }, [businessPhoneNumberId, fetchNotifications]); // Include handleNewMessage in the dependency array if it comes from props or context
-  useEffect(() => {
-    // Fetch notifications when the component mounts
-    fetchNotifications();
-  }, [tenantId]); // Depend on tenantId to refetch if tenant changes
+  }, [businessPhoneNumberId, fetchNotifications]);
   
+  useEffect(() => {
+    if (authenticated && tenantId) {
+      fetchNotifications();
+    }
+  }, [tenantId, authenticated]);
 
   const removeNotification = async (id) => {
     try {
-      // Send delete request to the endpoint
-     axiosInstance.delete(`${fastURL}/notifications/${id}`, {
+      axiosInstance.delete(`${fastURL}/notifications/${id}`, {
         headers: {
           'X-Tenant-ID': tenantId
         }
       });
   
-      // Update local state
       setNotifications(prev => prev.filter(n => n.id !== id));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-    //  console.error('Error removing notification:', error);
-      // Optional: Add error handling, like showing a toast message
+      // console.error('Error removing notification:', error);
     }
   };
 
@@ -164,18 +227,18 @@ const Navbar = () => {
     try {
       await axiosInstance.post('logout/');
       logout();
-      // Check if the user is on a mobile device
-      const isMobile = window.innerWidth <= 768; // Typical mobile breakpoint
-      // Redirect based on device type
+      const isMobile = window.innerWidth <= 768;
       window.location.href = isMobile ? '/login' : '/';
     } catch (error) {
-    //  console.error('Logout failed', error);
+      // console.error('Logout failed', error);
       setIsLogouting(false);
     }
   };
+  
   const handleRedirect = () => {
     window.location.href = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=1546607802575879&redirect_uri=https%3A%2F%2Fnuren.ai%2Fchatbotredirect%2F&response_type=code&config_id=1573657073196264&state=pass-through%20value';
   };
+  
   // Logout Loader Component
   const LogoutLoader = () => (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -186,13 +249,9 @@ const Navbar = () => {
     </div>
   );
 
-
-  
-
   const handlePaymentClick = (e) => {
     e.preventDefault();
     if (!authenticated) {
-      // Redirect to login with retrn URL
       navigate(`/login`);
       return;
     }
@@ -298,298 +357,304 @@ const Navbar = () => {
   
   return (
     <>
-    {isLogouting && <LogoutLoader />}
-    <div className={`w-full z-40 ${!authenticated && 'fixed'} ${
-  authenticated 
-    ? 'bg-background border-b border-border/40 shadow-sm' 
-    : 'bg-black/80 border-b border-gray-900 shadow-lg'}`}>
-  <div className="container mx-auto flex justify-between items-center py-3 px-4">
-    <Link 
-      to="/" 
-      className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105"
-    >
-      <img 
-        src={logo} 
-        alt="Nuren AI" 
-        className="h-8 w-8 md:h-10 md:w-10 group-hover:rotate-6 transition-transform"
+      {isLogouting && <LogoutLoader />}
+      
+      {/* WhatsApp Setup Marquee */}
+      <WhatsAppSetupMarquee 
+        businessPhoneNumberId={businessPhoneNumberId}
+        handleRedirect={handleRedirect}
+        authenticated={authenticated}
       />
-      <span className={`hidden sm:inline text-xl md:text-2xl font-bold ${
+      
+      <div className={`w-full z-40 ${!authenticated && 'fixed'} ${
         authenticated 
-          ? 'text-primary group-hover:text-primary/80' 
-          : 'bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-300 bg-clip-text text-transparent group-hover:opacity-80 [text-shadow:0_2px_8px_rgba(0,255,128,0.1)]'
-      }`}>
-        Nuren AI
-      </span>
-    </Link>
-  
-        {/* Desktop Navigation */}
-        <div className="hidden md:block">
-          <NavLinks />
-        </div>
-  
-        {/* Right Side Actions */}
-        <div className="flex items-center space-x-4">
-          {authenticated ? (
-            <>
-              {/* Notifications Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="relative group hover:bg-primary/10 transition-all duration-300"
-                  >
-                    <Bell className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
-                    {unreadCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
-                        className="absolute -top-2 -right-2 px-1.5 py-0.5 text-xs animate-pulse"
-                      >
-                        {unreadCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div className={`${notifications.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
-                    {notifications.length > 0 ? (
-                      notifications.map(notification => {
-                        const [sender, message] = notification.content.replace('New meessage from ', '').split(': ');
-                        
-                        return (
-                          <DropdownMenuItem 
-                            key={notification.id} 
-                            onSelect={() => removeNotification(notification.id)}
-                            className="flex justify-between items-center hover:bg-primary/10 transition-colors space-x-2"
-                          >
-                            <div className="flex flex-col overflow-hidden">
-                              <span className="font-semibold text-sm text-primary truncate max-w-[200px]">
-                                {sender}
-                              </span>
-                              <span className="text-xs text-muted-foreground truncate max-w-[250px]">
-                                {message}
-                              </span>
-                              <span className="text-xs text-muted-foreground opacity-70">
-                                {new Date(notification.created_on).toLocaleString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="text-destructive hover:bg-destructive/10 flex-shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeNotification(notification.id);
-                              }}
+          ? 'bg-background border-b border-border/40 shadow-sm' 
+          : 'bg-black/80 border-b border-gray-900 shadow-lg'}`}>
+        <div className="container mx-auto flex justify-between items-center py-3 px-4">
+          <Link 
+            to="/" 
+            className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105"
+          >
+            <img 
+              src={logo} 
+              alt="Nuren AI" 
+              className="h-8 w-8 md:h-10 md:w-10 group-hover:rotate-6 transition-transform"
+            />
+            <span className={`hidden sm:inline text-xl md:text-2xl font-bold ${
+              authenticated 
+                ? 'text-primary group-hover:text-primary/80' 
+                : 'bg-gradient-to-r from-emerald-300 via-green-200 to-emerald-300 bg-clip-text text-transparent group-hover:opacity-80 [text-shadow:0_2px_8px_rgba(0,255,128,0.1)]'
+            }`}>
+              Nuren AI
+            </span>
+          </Link>
+        
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <NavLinks />
+          </div>
+        
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4">
+            {authenticated ? (
+              <>
+                {/* Notifications Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="relative group hover:bg-primary/10 transition-all duration-300"
+                    >
+                      <Bell className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+                      {unreadCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="absolute -top-2 -right-2 px-1.5 py-0.5 text-xs animate-pulse"
+                        >
+                          {unreadCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72">
+                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <div className={`${notifications.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
+                      {notifications.length > 0 ? (
+                        notifications.map(notification => {
+                          const [sender, message] = notification.content.replace('New meessage from ', '').split(': ');
+                          
+                          return (
+                            <DropdownMenuItem 
+                              key={notification.id} 
+                              onSelect={() => removeNotification(notification.id)}
+                              className="flex justify-between items-center hover:bg-primary/10 transition-colors space-x-2"
                             >
-                              &times;
-                            </Button>
-                          </DropdownMenuItem>
-                        );
-                      })
-                    ) : (
-                      <div className="text-muted-foreground text-center py-4">
-                        No new notifications
-                      </div>
+                              <div className="flex flex-col overflow-hidden">
+                                <span className="font-semibold text-sm text-primary truncate max-w-[200px]">
+                                  {sender}
+                                </span>
+                                <span className="text-xs text-muted-foreground truncate max-w-[250px]">
+                                  {message}
+                                </span>
+                                <span className="text-xs text-muted-foreground opacity-70">
+                                  {new Date(notification.created_on).toLocaleString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeNotification(notification.id);
+                                }}
+                              >
+                                &times;
+                              </Button>
+                            </DropdownMenuItem>
+                          );
+                        })
+                      ) : (
+                        <div className="text-muted-foreground text-center py-4">
+                          No new notifications
+                        </div>
+                      )}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+        
+                {/* User Profile Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="group hover:bg-primary/10 transition-all duration-300"
+                    >
+                      <UserCircle2 className="w-7 h-7 text-primary group-hover:scale-110 transition-transform" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onSelect={() => navigate(getPath('/profile'))}
+                      className="hover:bg-primary/10 transition-colors"
+                    >
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onSelect={() => navigate(getPath('/models'))}
+                      className="hover:bg-primary/10 transition-colors"
+                    >
+                      Models
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onSelect={() => navigate(getPath('/assign'))}
+                      className="hover:bg-primary/10 transition-colors"
+                    >
+                      Assign
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onSelect={() => navigate(getPath('/payment'))}
+                      className="hover:bg-primary/10 transition-colors"
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Billing
+                    </DropdownMenuItem>
+                    
+                    {!businessPhoneNumberId && (
+                      <DropdownMenuItem 
+                        onSelect={handleRedirect}
+                        className="bg-primary/20 text-primary font-semibold hover:bg-primary/30 transition-colors border-l-4 border-primary focus:bg-primary/30 active:bg-primary/40"
+                      >
+                        Set Up WhatsApp
+                      </DropdownMenuItem>
                     )}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-  
-              {/* User Profile Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+        
+                    {businessPhoneNumberId && (
+                      <DropdownMenuItem 
+                        disabled
+                        className="text-muted-foreground opacity-50 cursor-default"
+                      >
+                        WhatsApp Registered
+                      </DropdownMenuItem>
+                    )}
+        
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onSelect={handleLogout} 
+                      className="text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
+                      disabled={isLogouting}
+                    >
+                      {isLogouting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <LogOut className="mr-2" />
+                      )}
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link to="/login">
                   <Button 
                     variant="ghost" 
-                    size="icon" 
-                    className="group hover:bg-primary/10 transition-all duration-300"
+                    className="text-gray-300 bg-transparent hover:bg-gray-800/50 hover:text-white transition-all duration-300"
                   >
-                    <UserCircle2 className="w-7 h-7 text-primary group-hover:scale-110 transition-transform" />
+                    Login
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onSelect={() => navigate(getPath('/profile'))}
-                    className="hover:bg-primary/10 transition-colors"
-                  >
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onSelect={() => navigate(getPath('/models'))}
-                    className="hover:bg-primary/10 transition-colors"
-                  >
-                    Models
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onSelect={() => navigate(getPath('/assign'))}
-                    className="hover:bg-primary/10 transition-colors"
-                  >
-                    Assign
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onSelect={() => navigate(getPath('/payment'))}
-                    className="hover:bg-primary/10 transition-colors"
-                  >
-                    <CreditCard />
-                    Billing
-                    
-                  </DropdownMenuItem>
-                  
-                  {!businessPhoneNumberId && (
-                    <DropdownMenuItem 
-                      onSelect={handleRedirect}
-                      className="bg-primary/20 text-primary font-semibold hover:bg-primary/30 transition-colors border-l-4 border-primary focus:bg-primary/30 active:bg-primary/40"
-                    >
-                      Set Up WhatsApp
-                    </DropdownMenuItem>
-                  )}
-  
-                  {businessPhoneNumberId && (
-                    <DropdownMenuItem 
-                      disabled
-                      className="text-muted-foreground opacity-50 cursor-default"
-                    >
-                      WhatsApp Registered
-                    </DropdownMenuItem>
-                  )}
-  
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onSelect={handleLogout} 
-                    className="text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
-                    disabled={isLogouting}
-                  >
-                    {isLogouting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <LogOut className="mr-2" />
-                    )}
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : (
-            <div className="flex items-center space-x-3">
-              <Link to="/login">
+                </Link>
+                <PopupButton
+                  url="https://calendly.com/adarsh1885/schedule-a-demo"
+                  rootElement={document.getElementById("root")}
+                  className="relative bg-gradient-to-r from-emerald-500 to-green-500 text-white 
+                    hover:from-emerald-400 hover:to-green-400 
+                    shadow-lg hover:shadow-emerald-500/40
+                    transition-all duration-300
+                    animate-pulse hover:animate-none
+                    hover:scale-105 active:scale-95
+                    before:absolute before:inset-0
+                    before:bg-gradient-to-r before:from-white/20 before:to-transparent
+                    before:opacity-0 hover:before:opacity-100
+                    before:transition-opacity before:duration-300
+                    overflow-hidden
+                    ring-2 ring-emerald-500/50 hover:ring-emerald-400
+                    group
+                    px-4 py-2 rounded-md font-medium"
+                  text={
+                    <>
+                      <span className="relative inline-flex items-center">
+                        Book Demo
+                      </span>
+                      <span className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 
+                        blur-xl group-hover:blur-2xl transition-all duration-300"></span>
+                    </>
+                  }
+                />
+              </div>
+            )}
+        
+            {/* Mobile Menu */}
+            <Sheet 
+              open={isSheetOpen} 
+              onOpenChange={setIsSheetOpen}
+              modal={false}
+            >
+              <SheetTrigger asChild className="md:hidden">
                 <Button 
                   variant="ghost" 
-                  className="text-gray-300 bg-transparent hover:bg-gray-800/50 hover:text-white transition-all duration-300"
+                  size="icon" 
+                  className={`${
+                    authenticated 
+                      ? "hover:bg-primary/10" 
+                      : "text-gray-300 hover:bg-gray-800/50 bg-transparent"
+                  } transition-all duration-300`}
                 >
-                  Login
+                  <MenuIcon className={
+                    authenticated 
+                      ? "w-6 h-6 text-primary group-hover:scale-110 transition-transform"
+                      : "w-6 h-6 text-gray-300 group-hover:text-white group-hover:scale-110 transition-transform"
+                  } />
                 </Button>
-              </Link>
-              <PopupButton
-  url="https://calendly.com/adarsh1885/schedule-a-demo"
-  rootElement={document.getElementById("root")}
-  className="relative bg-gradient-to-r from-emerald-500 to-green-500 text-white 
-    hover:from-emerald-400 hover:to-green-400 
-    shadow-lg hover:shadow-emerald-500/40
-    transition-all duration-300
-    animate-pulse hover:animate-none
-    hover:scale-105 active:scale-95
-    before:absolute before:inset-0
-    before:bg-gradient-to-r before:from-white/20 before:to-transparent
-    before:opacity-0 hover:before:opacity-100
-    before:transition-opacity before:duration-300
-    overflow-hidden
-    ring-2 ring-emerald-500/50 hover:ring-emerald-400
-    group
-    px-4 py-2 rounded-md font-medium"
-  text={
-    <>
-      <span className="relative inline-flex items-center">
-        Book Demo
-
-      </span>
-      <span className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 
-        blur-xl group-hover:blur-2xl transition-all duration-300"></span>
-    </>
-  }
-/>
-            </div>
-          )}
-  
-          {/* Mobile Menu */}
-          <Sheet 
-            open={isSheetOpen} 
-            onOpenChange={setIsSheetOpen}
-            modal={false}
-          >
-            <SheetTrigger asChild className="md:hidden">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`${
-                  authenticated 
-                    ? "hover:bg-primary/10" 
-                    : "text-gray-300 hover:bg-gray-800/50 bg-transparent"
-                } transition-all duration-300`}
+              </SheetTrigger>
+              <SheetContent 
+                side="left" 
+                className={`w-[300px] ${
+                  authenticated ? "" : "bg-black/90 backdrop-blur-md border-r border-gray-900"
+                }`}
+                style={{ zIndex: 205 }}
               >
-                <MenuIcon className={
-                  authenticated 
-                    ? "w-6 h-6 text-primary group-hover:scale-110 transition-transform"
-                    : "w-6 h-6 text-gray-300 group-hover:text-white group-hover:scale-110 transition-transform"
-                } />
-              </Button>
-            </SheetTrigger>
-            <SheetContent 
-              side="left" 
-              className={`w-[300px] ${
-                authenticated ? "" : "bg-black/90 backdrop-blur-md border-r border-gray-900"
-              }`}
-              style={{ zIndex: 205 }}
-            >
-              <SheetHeader>
-                <SheetTitle className={`flex items-center space-x-2 ${
-                  authenticated ? "" : "text-white"
-                }`}>
-                  <img src={logo} alt="Nuren AI Logo" className="h-8 w-8" />
-                  <span>Nuren AI</span>
-                </SheetTitle>
-              </SheetHeader>
-              <div className="grid gap-4 py-4">
-                <NavLinks />
-                {!authenticated && (
-                  <div className="space-y-3">
-                    <Link to="/login">
-                      <Button className="w-full bg-gray-900/80 text-gray-300 hover:bg-gray-800 hover:text-white">
-                        Login
-                      </Button>
-                    </Link>
-                    <Link to="/signup">
-                      <Button className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:from-emerald-600 hover:to-green-600">
-                        Start Free Trial
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-                
-                {/* Close Button at the bottom */}
-                <SheetClose asChild>
-                  <Button 
-                    variant="destructive" 
-                    className="w-full mt-4 flex items-center justify-center"
-                  >
-                    <X className="mr-2 h-5 w-5" />Close
-                  </Button>
-                </SheetClose>
-              </div>
-            </SheetContent>
-          </Sheet>
+                <SheetHeader>
+                  <SheetTitle className={`flex items-center space-x-2 ${
+                    authenticated ? "" : "text-white"
+                  }`}>
+                    <img src={logo} alt="Nuren AI Logo" className="h-8 w-8" />
+                    <span>Nuren AI</span>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="grid gap-4 py-4">
+                  <NavLinks />
+                  {!authenticated && (
+                    <div className="space-y-3">
+                      <Link to="/login">
+                        <Button className="w-full bg-gray-900/80 text-gray-300 hover:bg-gray-800 hover:text-white">
+                          Login
+                        </Button>
+                      </Link>
+                      <Link to="/signup">
+                        <Button className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:from-emerald-600 hover:to-green-600">
+                          Start Free Trial
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                  
+                  {/* Close Button at the bottom */}
+                  <SheetClose asChild>
+                    <Button 
+                      variant="destructive" 
+                      className="w-full mt-4 flex items-center justify-center"
+                    >
+                      <X className="mr-2 h-5 w-5" />Close
+                    </Button>
+                  </SheetClose>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
-    </div>
-  </>
+    </>
   );
 };
 

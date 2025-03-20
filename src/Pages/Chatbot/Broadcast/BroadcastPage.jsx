@@ -15,6 +15,7 @@ import CarouselEditor from './Carousel';
 import CampaignsDashboard from './CampaignDash';
 import WhatsAppCommands from './Commands';
 import { useAuth } from '../../../authContext';
+import { showErrorToast, showSuccessToast } from './Toastcomponent';
 //import CampaignManager from './Campaign';
 const getTenantIdFromUrl = () => {
   const pathArray = window.location.pathname.split('/');
@@ -421,14 +422,16 @@ const tier = tenant?.tier || 'Free';
       resetTemplateForm();
       await fetchTemplates();
       setActiveTab('templates');
-      alert("Template created successfully!");
+      showSuccessToast("Template created successfully!");
       setLoading(false);
+    
+     
     } catch (error) {
     //  console.error('Error creating/updating template:', error);
       setLoading(false);
       // Provide detailed error message
       const errorMessage = error.response?.data?.error?.message || error.message || 'An error occurred while creating the template';
-      alert(errorMessage);
+      showErrorToast(errorMessage);
      
     }
   };

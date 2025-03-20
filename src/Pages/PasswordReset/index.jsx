@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../authContext';
-import logo from '../../assets/logo.png';
+import logo from '../../assets/logo.webp';
 import axiosInstance from '../../api';
 import axios from 'axios';
 import {whatsappURL}  from '../../Navbar';
@@ -222,7 +222,7 @@ const [passwordsMatch, setPasswordsMatch] = useState(true); // To track if passw
                     setOtp('')
                   } else {
                  //   console.log(otp)
-                    alert('Invalid OTP, please try again');
+                 showErrorToast('Invalid OTP, please try again');
                   }
                 }}
                 className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
