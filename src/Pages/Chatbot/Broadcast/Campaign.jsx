@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/tabs";
 import axiosInstance, { djangoURL } from '../../../api';
 import { toast } from 'react-toastify';
+import { showErrorToast, showSuccessToast } from './Toastcomponent';
 
 var campaignName = 'new';
 const suggestedSequences = [
@@ -464,11 +465,11 @@ const WhatsAppCampaign = ({
         );
   
         // Show success notification
-        alert("Template approved successfully");
+        showSuccessToast("Template approved successfully");
   
       } catch (error) {
       //  console.error('Error sending template for approval:', error);
-        alert('Failed to send template for approval');
+      showErrorToast('Failed to send template for approval');
       }
     }
   };

@@ -211,7 +211,7 @@ const Register = () => {
             setOrganisations([...organisations, { id: data.id, name: newOrg.name, tenantId: newOrg.tenantId }]);
             setShowNewOrgForm(false);
             setNewOrg({ name: '', tenantId: '', password: '' });
-            alert('New organisation created successfully!');
+            showSuccessToast('New organisation created successfully!');
         } catch (error) {
         //    console.error('Error creating new organisation:', error);
         }

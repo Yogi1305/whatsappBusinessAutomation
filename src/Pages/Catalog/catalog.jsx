@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { showErrorToast } from "../Chatbot/Broadcast/Toastcomponent";
 
 const Catalog = () => {
   const [loading, setLoading] = useState(true);
@@ -87,7 +88,7 @@ const Catalog = () => {
       const newData = tableData.filter((_, index) => index !== rowIndex);
       setTableData(newData);
     } else {
-      alert("Minimum of 5 rows required. Cannot delete further.");
+      showErrorToast("Minimum of 5 rows required. Cannot delete further.");
     }
   };
 
