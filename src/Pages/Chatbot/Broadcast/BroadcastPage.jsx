@@ -422,7 +422,7 @@ const tier = tenant?.tier || 'Free';
       await fetchTemplates();
       setActiveTab('templates');
       alert("Template created successfully!");
-     
+      setLoading(false);
     } catch (error) {
     //  console.error('Error creating/updating template:', error);
       setLoading(false);
