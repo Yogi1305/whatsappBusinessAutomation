@@ -63,7 +63,7 @@ const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authentic
     if (authenticated && !businessPhoneNumberId) {
       const timer = setTimeout(() => {
         setShowBanner(true);
-      }, 2000); // 2 second delay
+      }, 3000); // 2 second delay
       
       // Clean up the timer on unmount or when dependencies change
       return () => clearTimeout(timer);
