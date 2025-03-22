@@ -204,6 +204,7 @@ const Chatbot = () => {
   const [showLoadMoreButton, setShowLoadMoreButton] = useState(false);
   useEffect(() => {
     const container = messagesContainerRef.current;
+ 
     if (!container) return;
 
     const handleScroll = () => {
@@ -322,9 +323,11 @@ const Chatbot = () => {
       setIsLoading(true);
 
       // Fetch contacts for the specific page
+    
       const response = await axiosInstance.get(
         `${fastURL}/contacts/${page}?order_by=last_replied&sort_by=desc`
       );
+      console.log(response)
       if (!response.data.contacts || response.data.contacts.length === 0) {
         setContacts(DUMMY_CONTACTS);
         setTotalPages(1);
@@ -836,6 +839,7 @@ const Chatbot = () => {
         );
 
         const data = response.data.conversations || [];
+        
         const serverPage = response.data.page_no;
         const totalPages = response.data.total_pages;
 
@@ -1120,7 +1124,6 @@ const Chatbot = () => {
           headers: { token: localStorage.getItem("token") },
         }
       );
-
       const newContact = response.data;
       //setContacts(prev => sortContacts([newContact, ...prev]));
       setSelectedContact(newContact);

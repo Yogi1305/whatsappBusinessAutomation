@@ -41,7 +41,8 @@ import {
   Calendar,
   X,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  Check
 } from "lucide-react";
 import { useAuth } from './authContext';
 import logo from "./assets/logo.webp";
@@ -54,15 +55,16 @@ export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net';
 
 const socket = io(whatsappURL);
 
+
 // WhatsApp Setup Marquee Component
-const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authenticated }) => {
+const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authenticated, loading}) => {
   // Only show for authenticated users without WhatsApp setup
-  if (!authenticated || businessPhoneNumberId) {
+  if (!authenticated || businessPhoneNumberId || loading) {
     return null;
   }
-
+ const navigate=useNavigate();
   return (
-    <div className="bg-red-500 text-black  h-12 text-center relative overflow-hidden border-b  z-50 cursor-pointer"  onClick={handleRedirect}>
+    <div className="bg-red-500 text-black h-12 text-center relative overflow-hidden border-b z-50 cursor-pointer" onClick={handleRedirect}>
       <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.1)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
       
       <motion.div
@@ -97,8 +99,6 @@ const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authentic
           </span>
         </div>
       </motion.div>
-      
-      
     </div>
   );
 };
@@ -114,6 +114,7 @@ const Navbar = () => {
   const [businessPhoneNumberId, setBusinessPhoneNumberId] = useState('');
   const navigate = useNavigate();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   
@@ -131,11 +132,15 @@ const Navbar = () => {
         setAccessToken(whatsappData.access_token);
       } catch (error) {
         console.error('Error fetching business phone ID:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     if (authenticated && tenantId) {
       fetchBusinessPhoneId();
+    } else {
+      setLoading(false);
     }
   }, [tenantId, authenticated]);
   
@@ -187,7 +192,7 @@ const Navbar = () => {
 
   const removeNotification = async (id) => {
     try {
-      axiosInstance.delete(`${fastURL}/notifications/${id}`, {
+      await axiosInstance.delete(`${fastURL}/notifications/${id}`, {
         headers: {
           'X-Tenant-ID': tenantId
         }
@@ -196,7 +201,24 @@ const Navbar = () => {
       setNotifications(prev => prev.filter(n => n.id !== id));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      // console.error('Error removing notification:', error);
+      console.error('Error removing notification:', error);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      // API call to clear all notifications
+      await axiosInstance.delete(`${fastURL}/notification/all`, {
+        headers: {
+          'X-Tenant-ID': tenantId
+        }
+      });
+      
+      // Update local state
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
     }
   };
 
@@ -216,7 +238,7 @@ const Navbar = () => {
       const isMobile = window.innerWidth <= 768;
       window.location.href = isMobile ? '/login' : '/';
     } catch (error) {
-      // console.error('Logout failed', error);
+      console.error('Logout failed', error);
       setIsLogouting(false);
     }
   };
@@ -243,7 +265,27 @@ const Navbar = () => {
     }
     navigate(`${tenantId}/payment`);
   };
-
+//  find contact id 
+const handlefindid=async(text,id)=>{
+   const phone=text.split(' | ')[0];
+  //  console.log("phone is ",phone);
+   
+      try {
+        const response = await axiosInstance.get(
+                `${fastURL}/contacts/${0}?phone=${phone}`
+              );
+          console.log(response.data.contacts[0].id);
+          
+        navigate(`/${tenantId}/chatbot?id=${response.data.contacts[0].id}`);
+        removeNotification(id)
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      
+      } catch (error) {
+        console.log("error in handlefindid ",error);
+      }
+}
   const NavLinks = () => {
     const linkBaseClasses = authenticated 
       ? "group flex items-center gap-2 hover:bg-primary/10 transition-all duration-300 px-3 py-2 rounded-md relative"
@@ -350,6 +392,7 @@ const Navbar = () => {
         businessPhoneNumberId={businessPhoneNumberId}
         handleRedirect={handleRedirect}
         authenticated={authenticated}
+        loading={loading}
       />
       
       <div className={`w-full z-40 ${!authenticated && 'fixed'} ${
@@ -404,18 +447,46 @@ const Navbar = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-72">
-                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                    <div className="flex justify-between items-center px-2 py-1.5">
+                      <DropdownMenuLabel className="py-0">Notifications</DropdownMenuLabel>
+                      {notifications.length > 0 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            clearAllNotifications();
+                          }}
+                          className="text-xs text-primary hover:bg-primary/10 flex items-center gap-1 h-7 px-2"
+                        >
+                          <Check className="h-3 w-3" />
+                          Mark all as read
+                        </Button>
+                      )}
+                    </div>
                     <DropdownMenuSeparator />
-                    <div className={`${notifications.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
+                    <div className={`${notifications.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`} >
                       {notifications.length > 0 ? (
                         notifications.map(notification => {
                           const [sender, message] = notification.content.replace('New meessage from ', '').split(': ');
-                          
+                          // console.log(notification.content);
                           return (
                             <DropdownMenuItem 
                               key={notification.id} 
-                              onSelect={() => removeNotification(notification.id)}
-                              className="flex justify-between items-center hover:bg-primary/10 transition-colors space-x-2"
+                             
+                              className="flex justify-between items-center hover:bg-primary/10 transition-colors space-x-2"  onSelect={(e) => {
+                                e.preventDefault();
+                                
+                              }}
+                              onClick={(e) => {
+                                
+                                if (notification && notification.content) {
+                                  handlefindid(notification.content,notification.id);
+                                } else {
+                                  console.log("Cannot process notification - content is missing");
+                                }
+                              }}
                             >
                               <div className="flex flex-col overflow-hidden">
                                 <span className="font-semibold text-sm text-primary truncate max-w-[200px]">
