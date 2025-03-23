@@ -57,11 +57,30 @@ const socket = io(whatsappURL);
 
 
 // WhatsApp Setup Marquee Component
-const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authenticated, loading}) => {
-  // Only show for authenticated users without WhatsApp setup
-  if (!authenticated || businessPhoneNumberId || loading) {
-    return null;
-  }
+
+  const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authenticated }) => {
+    const [showBanner, setShowBanner] = useState(false);
+    
+    useEffect(() => {
+      // Only start the timer if authenticated and no businessPhoneNumberId
+      if (authenticated && !businessPhoneNumberId) {
+        const timer = setTimeout(() => {
+          setShowBanner(true);
+        }, 2000); // 2 second delay
+        
+        // Clean up the timer on unmount or when dependencies change
+        return () => clearTimeout(timer);
+      } else {
+        // Reset the banner state if conditions are no longer met
+        setShowBanner(false);
+      }
+    }, [authenticated, businessPhoneNumberId]);
+  
+    // Only render the banner if showBanner is true
+    if (!showBanner) {
+      return null;
+    }
+  
  const navigate=useNavigate();
   return (
     <div className="bg-red-500 text-black h-12 text-center relative overflow-hidden border-b z-50 cursor-pointer" onClick={handleRedirect}>
@@ -102,7 +121,6 @@ const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authentic
     </div>
   );
 };
-
 const Navbar = () => {
   const { authenticated, logout, tenantId } = useAuth();
   const [notifications, setNotifications] = useState([]);
@@ -392,7 +410,7 @@ const handlefindid=async(text,id)=>{
         businessPhoneNumberId={businessPhoneNumberId}
         handleRedirect={handleRedirect}
         authenticated={authenticated}
-        loading={loading}
+        
       />
       
       <div className={`w-full z-40 ${!authenticated && 'fixed'} ${
