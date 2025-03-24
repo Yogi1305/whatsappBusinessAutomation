@@ -56,6 +56,7 @@ export const whatsappURL = 'https://whatsappbotserver.azurewebsites.net';
 const socket = io(whatsappURL);
 
 
+
 // WhatsApp Setup Marquee Component
 
   const WhatsAppSetupMarquee = ({ businessPhoneNumberId, handleRedirect, authenticated }) => {
@@ -81,7 +82,7 @@ const socket = io(whatsappURL);
       return null;
     }
   
- const navigate=useNavigate();
+ 
   return (
     <div className="bg-red-500 text-black h-12 text-center relative overflow-hidden border-b z-50 cursor-pointer" onClick={handleRedirect}>
       <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.1)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
@@ -133,6 +134,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+ 
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   
