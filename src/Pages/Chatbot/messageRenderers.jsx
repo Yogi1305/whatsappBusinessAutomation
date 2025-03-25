@@ -2,7 +2,7 @@ import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import './messageStyles.css'; // Make sure to create this CSS file
+
 
 export const renderMessageWithNewLines = (text) => {
   if (!text) return null;
@@ -75,25 +75,24 @@ const PdfViewer = ({ document }) => {
 
 export default PdfViewer;
 
-export const renderTemplateMessage = (template, isBot) => {
+export const renderTemplateMessage = (template) => {
   if (!template || !template.name) {
     return <div className="error">Invalid template message</div>;
   }
   return (
-    <div className={`template-message ${isBot ? 'bot-message' : 'user-message'}`}>
-      <p className="template-text">Template: {template.name}</p>
+    <div className="template-message">
+      <p>Template: {template.name}</p>
     </div>
   );
 };
 
-export const renderInteractiveMessage = (parsedMessage, isBot) => {
+export const renderInteractiveMessage = (parsedMessage) => {
   let { type, interactive, text, image, template } = parsedMessage;
-  const messageClass = isBot ? 'bot-message' : 'user-message';
 
   if (type === 'interactive') {
     if (interactive.type === 'list') {
       return (
-        <div className={`interactive-message list-message ${messageClass}`}>
+        <div className="interactive-message list-message">
           <p className="message-text">{interactive.body.text}</p>
           <ul className="message-list">
             {interactive.action.sections.map((section, sectionIndex) => (
@@ -114,7 +113,7 @@ export const renderInteractiveMessage = (parsedMessage, isBot) => {
       );
     } else if (interactive.type === 'button') {
       return (
-        <div className={`interactive-message button-message ${messageClass}`}>
+        <div className="interactive-message button-message">
           <p className="message-text">{interactive.body.text}</p>
           <div className="message-buttons">
             {interactive.action.buttons.map((button, buttonIndex) => (
@@ -128,7 +127,7 @@ export const renderInteractiveMessage = (parsedMessage, isBot) => {
     } 
     else if (interactive.type === 'product') {
       return (
-        <div className={`interactive-message product-card ${messageClass}`}>
+        <div className='interactive-message product-card'>
           <div className='product-image'>
             <img 
               src={interactive.action.product_details.image_link} 
@@ -146,103 +145,55 @@ export const renderInteractiveMessage = (parsedMessage, isBot) => {
     }
   } else if (type === 'text') {
     // Using renderMessageWithNewLines for text body to handle newlines and emojis consistently
-    return <div className={`plain-message ${messageClass}`}>{renderMessageWithNewLines(text.body)}</div>;
+    return <div className="plain-message">{renderMessageWithNewLines(text.body)}</div>;
   } else if (type === 'image') {
     return (
-      <div className={`image-message ${messageClass}`}>
+      <div className="image-message">
         <img src={image.id} alt="Sent image" className="message-image" />
         {image.caption && <p className="message-caption">{image.caption}</p>}
       </div>
     );
   } else if (type === 'template') {
-    return renderTemplateMessage(template, isBot);
+    return renderTemplateMessage(template);
   } else if (type === 'document'){
+    text = parsedMessage?.document?.id
     return (
-      <div className={`document-message ${messageClass}`}>
+      <div className="image-message">
         <PdfViewer document={parsedMessage.document} />
       </div>
-    );
+    )
   }
 
-  return <p className={`error-message ${messageClass}`}>Unsupported message type</p>;
+  return <p className="error-message">Unsupported message type</p>;
 };
 
 export const renderMessageContent = (message) => {
-  // Determine if message is from a bot (assuming sender field is available)
-  const isBot = message.sender === 'bot';
-  
   if (typeof message.text === 'object' && message.text !== null) {
     // Handle message types
     switch (message.text.type) {
       case 'text':
         // Using renderMessageWithNewLines for text body
-        return (
-          <div className={`message-container ${isBot ? 'bot-container' : 'user-container'}`}>
-            {message.text.body ? 
-              <div className={`text-message ${isBot ? 'bot-message' : 'user-message'}`}>
-                <span className="message-content">{renderMessageWithNewLines(message.text.body)}</span>
-                {message.time && <span className="message-time">{message.time}</span>}
-              </div> : 
-              <div className={`error ${isBot ? 'bot-message' : 'user-message'}`}>
-                <span className="error-content">No text body provided</span>
-              </div>
-            }
-          </div>
-        );
+        return message.text.body ? 
+          renderMessageWithNewLines(message.text.body) : 
+          <div className="error">No text body provided</div>;
 
       case 'interactive':
-        return (
-          <div className={`message-container ${isBot ? 'bot-container' : 'user-container'}`}>
-            {renderInteractiveMessage(message.text, isBot) || 
-              <div className={`error ${isBot ? 'bot-message' : 'user-message'}`}>
-                <span className="error-content">Interactive message rendering failed</span>
-              </div>
-            }
-          </div>
-        );
+        return renderInteractiveMessage(message.text.interactive) || 
+          <div className="error">Interactive message rendering failed</div>;
 
       case 'template':
-        return (
-          <div className={`message-container ${isBot ? 'bot-container' : 'user-container'}`}>
-            {renderTemplateMessage(message.text.template, isBot) || 
-              <div className={`error ${isBot ? 'bot-message' : 'user-message'}`}>
-                <span className="error-content">Template message rendering failed</span>
-              </div>
-            }
-          </div>
-        );
+        return renderTemplateMessage(message.text.template) || 
+          <div className="error">Template message rendering failed</div>;
 
       default:
-        return (
-          <div className={`message-container ${isBot ? 'bot-container' : 'user-container'}`}>
-            <div className={`error ${isBot ? 'bot-message' : 'user-message'}`}>
-              <span className="error-content">Unknown message type: {message.text.type}</span>
-            </div>
-          </div>
-        );
+        return <div className="error">Unknown message type: {message.text.type}</div>;
     }
   } else if (typeof message.text === 'string') {
     // Fallback for plain text messages - using renderMessageWithNewLines
-    return (
-      <div className={`message-container ${isBot ? 'bot-container' : 'user-container'}`}>
-        <div className={`plain-message ${isBot ? 'bot-message' : 'user-message'}`}>
-          <span className="message-content">
-            {message.text ? 
-              renderMessageWithNewLines(message.text) : 
-              <span className="error-content">Message content is undefined</span>
-            }
-          </span>
-          {message.time && <span className="message-time">{message.time}</span>}
-        </div>
-      </div>
-    );
+    return message.text ? 
+      renderMessageWithNewLines(message.text) : 
+      <div className="error">Message content is undefined</div>;
   }
 
-  return (
-    <div className={`message-container ${isBot ? 'bot-container' : 'user-container'}`}>
-      <div className={`error ${isBot ? 'bot-message' : 'user-message'}`}>
-        <span className="error-content">Invalid message format</span>
-      </div>
-    </div>
-  );
+  return <div className="error">Invalid message format</div>;
 };
