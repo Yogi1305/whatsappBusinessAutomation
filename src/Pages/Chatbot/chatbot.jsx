@@ -1,3 +1,11 @@
+import { 
+  getContactUnreadCount, 
+  getAllContactUnreadCounts, 
+  updateContactUnreadCount,
+  getCachedConversation,
+  storeConversation,
+  addMessageToCache
+} from '../../indexedDBUtils.js';
 import React, {
   useState,
   useEffect,
@@ -71,6 +79,10 @@ import { Phone, Mail, Plus } from "lucide-react";
 import { showErrorToast } from "./Broadcast/Toastcomponent.jsx";
 
 const socket = io(whatsappURL);
+
+
+
+
 
 // Add this near the top of your file, after imports
 const DUMMY_CONTACTS = [
@@ -202,7 +214,85 @@ const Chatbot = () => {
   const previousScroll = useRef({ height: 0, top: 0 });
   const [lastUpdateType, setLastUpdateType] = useState(null);
   const [showLoadMoreButton, setShowLoadMoreButton] = useState(false);
-  useEffect(() => {
+ 
+  const unreadCountsRef = useRef({});
+  const [unreadCountsLoaded, setUnreadCountsLoaded] = useState(false);
+
+// Load unread counts from IndexedDB when component mounts
+// Add these functions inside your component or in a utility file
+const loadUnreadCounts = async () => {
+  try {
+    const counts = await getAllContactUnreadCounts();
+    return counts;
+  } catch (error) {
+    console.error("Error loading unread counts from IndexedDB:", error);
+    return {};
+  }
+};
+
+const saveUnreadCounts = async (unreadData) => {
+  try {
+    // Save each contact's unread count individually
+    const promises = Object.entries(unreadData).map(([contactId, count]) => 
+      updateContactUnreadCount(contactId, count)
+    );
+    await Promise.all(promises);
+  } catch (error) {
+    console.error("Error saving unread counts to IndexedDB:", error);
+  }
+};
+
+
+
+useEffect(() => {
+  const loadSavedUnreadCounts = async () => {
+    try {
+      const savedCounts = await loadUnreadCounts();
+      unreadCountsRef.current = savedCounts;
+      setUnreadCountsLoaded(true);
+    } catch (error) {
+      console.error("Failed to load unread counts:", error);
+      setUnreadCountsLoaded(true); // Mark as loaded even on error
+    }
+  };
+  
+  loadSavedUnreadCounts();
+}, []);
+
+
+useEffect(() => {
+  if (contacts.length > 0 && unreadCountsLoaded) {
+    const updatedContacts = contacts.map(contact => {
+      const savedCount = unreadCountsRef.current[contact.id];
+      return {
+        ...contact,
+        unreadCount: savedCount !== undefined ? savedCount : contact.unreadCount || 0
+      };
+    });
+    setContacts(updatedContacts);
+  }
+}, [contacts.length, unreadCountsLoaded]);
+
+
+// Save unread counts whenever they change
+ useEffect(() => {
+  if (contacts.length > 0) {
+    const unreadData = contacts.reduce((acc, contact) => {
+      if (contact.unreadCount > 0) {
+        acc[contact.id] = contact.unreadCount;
+      }
+      return acc;
+    }, {});
+    
+    // Only save if there are actual changes
+    if (JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)) {
+      unreadCountsRef.current = unreadData;
+      saveUnreadCounts(unreadData);
+    }
+  }
+}, [contacts]);
+
+useEffect(() => {
     const container = messagesContainerRef.current;
  
     if (!container) return;
@@ -216,7 +306,7 @@ const Chatbot = () => {
     return () => container.removeEventListener("scroll", handleScroll);
   }, [hasMoreMessages]);
 
-  const [isOpen, setIsOpen] = useState(false);
+const [isOpen, setIsOpen] = useState(false);
   const toggleFab = () => {
     setIsOpen(!isOpen);
   };
@@ -224,7 +314,7 @@ const Chatbot = () => {
     setAuthPopupp(false);
   };
 
-  useEffect(() => {
+useEffect(() => {
     // Show popup only if not authenticated and not in demo mode
     setAuthPopupp(!authenticated);
   }, [authenticated]);
@@ -254,7 +344,7 @@ const Chatbot = () => {
     }
   }, [conversation, lastUpdateType]);
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
         //console.log("fetching business phone number id")
@@ -304,49 +394,51 @@ const Chatbot = () => {
   };
 
   ``;
-  /*const fetchContacts = async () => {
-    try {
-      const response = await axiosInstance.get(`${fastURL}/contacts`, {
-        headers: {
-          token: localStorage.getItem('token'),
-        },
-      });
-      // Ensure all contacts have the necessary properties
-      
-      setContacts(response.data);
-    } catch (error) {
-      console.error("Error fetching contacts data:", error);
-    }
-  };*/
+ 
   const fetchContacts = async (page = 1) => {
     try {
       setIsLoading(true);
-
-      // Fetch contacts for the specific page
-    
+      
       const response = await axiosInstance.get(
         `${fastURL}/contacts/${page}?order_by=last_replied&sort_by=desc`
       );
-      console.log(response)
+      
+      let newContacts;
       if (!response.data.contacts || response.data.contacts.length === 0) {
-        setContacts(DUMMY_CONTACTS);
+        newContacts = DUMMY_CONTACTS;
         setTotalPages(1);
         setCurrentPage(1);
       } else {
-        setContacts(response.data.contacts);
+        // Merge loaded unread counts with fetched contacts
+        newContacts = response.data.contacts.map(contact => {
+          const savedCount = unreadCountsRef.current[contact.id];
+          return {
+            ...contact,
+            unreadCount: savedCount !== undefined ? savedCount : contact.unreadCount || 0
+          };
+        });
+        
         setTotalPages(response.data.total_pages);
         setCurrentPage(page);
       }
+
+      setContacts(newContacts);
     } catch (error) {
-      setContacts(DUMMY_CONTACTS);
+      const dummyWithUnread = DUMMY_CONTACTS.map(contact => {
+        const savedCount = unreadCountsRef.current[contact.id];
+        return {
+          ...contact,
+          unreadCount: savedCount !== undefined ? savedCount : contact.unreadCount || 0
+        };
+      });
+      
+      setContacts(dummyWithUnread);
       setTotalPages(1);
       setCurrentPage(1);
-      //   console.error("Error fetching contacts data:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
   const getInitials = (firstName, lastName) => {
     const firstInitial =
       firstName && firstName.charAt(0) ? firstName.charAt(0).toUpperCase() : "";
@@ -490,6 +582,8 @@ const Chatbot = () => {
     hasNewMessage: true, // Default or initial state
   });
 
+
+
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [conversation]);
@@ -537,50 +631,35 @@ const Chatbot = () => {
       }
     };
     const handleNewMessage = (message) => {
-      if (
-        message &&
-        parseInt(message.phone_number_id) === parseInt(businessPhoneNumberId)
-      ) {
-        //console.log('Received normal message:', message);
-        isSocketUpdate.current = true; // Flag that this is a socket update
+      if (message && parseInt(message.phone_number_id) === parseInt(businessPhoneNumberId)) {
+        isSocketUpdate.current = true;
+        
         if (selectedContact?.phone !== message.contactPhone) {
-          setContacts((prevContacts) =>
-            prevContacts.map((contact) =>
-              contact.phone === message.contactPhone
-                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
-                : contact
-            )
-          );
-          return; // Exit the function here if it's not the selected contact
+          setContacts(prevContacts => {
+            const updatedContacts = prevContacts.map(contact => {
+              if (contact.phone === message.contactPhone) {
+                const newUnreadCount = (contact.unreadCount || 0) + 1;
+                
+                // Update IndexedDB in a non-blocking way
+                updateContactUnreadCount(contact.id, newUnreadCount);
+                
+                return { 
+                  ...contact, 
+                  unreadCount: newUnreadCount,
+                  lastMessageTimestamp: Date.now()
+                };
+              }
+              return contact;
+            });
+            return updatedContacts;
+          });
+          return;
         }
-        // Update conversation if it's for the selected contact
-        if (
-          parseInt(message.contactPhone) === parseInt(selectedContact?.phone)
-        ) {
-          setConversation((prev) => [
-            ...prev,
-            {
-              id: `msg_${Date.now()}`,
-              text: JSON.stringify(message.message),
-              sender: "user",
-              timestamp: Date.now(),
-            },
-          ]);
-        }
-
-        // Update unread count if message is not for selected contact
-        if (selectedContact?.phone !== message.contactPhone) {
-          setContacts((prevContacts) =>
-            prevContacts.map((contact) =>
-              contact.phone === message.contactPhone
-                ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
-                : contact
-            )
-          );
-        }
+        
+        // Rest of the function...
       }
     };
-
+  
     const handleNodeMessage = (rawMessage) => {
       if (
         rawMessage &&
@@ -590,14 +669,25 @@ const Chatbot = () => {
           // console.log('Received node message:', rawMessage);
           isSocketUpdate.current = true;
           if (selectedContact?.phone !== rawMessage.contactPhone) {
-            setContacts((prevContacts) =>
-              prevContacts.map((contact) =>
-                contact.phone === rawMessage.contactPhone
-                  ? { ...contact, unreadCount: (contact.unreadCount || 0) + 1 }
-                  : contact
-              )
-            );
-            return; // Exit the function here if it's not the selected contact
+            setContacts(prevContacts => {
+              const updatedContacts = prevContacts.map(contact => {
+                if (contact.phone === rawMessage.contactPhone) {
+                  const newUnreadCount = (contact.unreadCount || 0) + 1;
+                  
+                  // Update IndexedDB
+                  updateContactUnreadCount(contact.id, newUnreadCount);
+                  
+                  return { 
+                    ...contact, 
+                    unreadCount: newUnreadCount,
+                    lastMessageTimestamp: Date.now()
+                  };
+                }
+                return contact;
+              });
+              return updatedContacts;
+            });
+            return;
           }
           // Update conversation if it's for the selected contact
           if (
@@ -946,32 +1036,83 @@ const Chatbot = () => {
     setLastUpdateType("append");
     fetchConversation(selectedContact.phone, currentMessagePage + 1, true);
   };
-  const handleContactSelection = async (contact) => {
-    if (selectedContact?.id === contact.id) return; // Prevent duplicate selections
+  // const handleContactSelection = async (contact) => {
+  //   if (selectedContact?.id === contact.id) return;
+  
+  //   try {
+  //     setIsLoading(true);
+  //     setConversation([]);
+  //     setCurrentMessagePage(1);
+  //     setHasMoreMessages(true);
+  
+  //     navigate({ search: `?id=${contact.id}` }, { replace: true });
+  
+  //     // Reset unread count for this contact
+  //     const updatedContacts = contacts.map(c => 
+  //       c.id === contact.id ? { ...c, unreadCount: 0 } : c
+  //     );
+  //     setContacts(updatedContacts);
+      
+  //     // Update IndexedDB
+  //     await updateContactUnreadCount(contact.id, 0);
 
+
+  
+  //     setSelectedContact(contact);
+  //   } catch (error) {
+  //     console.error("Contact selection failed:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+  const handleContactSelection = async (contact) => {
+    if (selectedContact?.id === contact.id) return;
+  
     try {
       setIsLoading(true);
-      setConversation([]); // Clear messages immediately
+      setConversation([]);
       setCurrentMessagePage(1);
       setHasMoreMessages(true);
-
+  
       navigate({ search: `?id=${contact.id}` }, { replace: true });
-
-      // Set selected contact after all other state changes to reduce effect triggers
-      setSelectedContact(contact);
-
-      // Don't fetch here - the main useEffect will handle it
-
-      // Update unread count
-      setContacts((prev) =>
-        prev.map((c) => (c.id === contact.id ? { ...c, unreadCount: 0 } : c))
+  
+      // Reset unread count for this contact in state
+      const updatedContacts = contacts.map(c => 
+        c.id === contact.id ? { ...c, unreadCount: 0 } : c
       );
+      setContacts(updatedContacts);
+      
+      // Update IndexedDB - set unread count to 0
+      await updateContactUnreadCount(contact.id, 0);
+      // console.log(`Reset unread count for contact ${contact.id} in IndexedDB`);
+  
+      // If contact has a phone number, delete all notifications for this contact
+      if (contact.phone) {
+        try {
+        //   // API call to delete notifications for this contact
+          await axiosInstance.delete(`${fastURL}/notifications/contact/${contact.id}`, {
+            headers: {
+              'X-Tenant-ID': tenantId
+            }
+          });
+          // console.log(`Deleted notifications for contact ID: ${contact.id}`);
+          
+          // Dispatch event to update notification UI in Navbar
+          window.dispatchEvent(new CustomEvent('refreshNotifications'));
+        } catch (deleteError) {
+          console.error(`Failed to delete notifications for contact ${contact.id}:`, deleteError);
+          // Continue with contact selection even if notification deletion fails
+        }
+      }
+  
+      setSelectedContact(contact);
     } catch (error) {
       console.error("Contact selection failed:", error);
     } finally {
-      // Loading state will be managed by the main useEffect
+      setIsLoading(false);
     }
   };
+  
   const handleToggleSmileys = () => {
     setShowSmileys(!showSmileys);
   };
@@ -1256,6 +1397,221 @@ const Chatbot = () => {
       );
     }
   }
+// Add this effect to store conversations in IndexedDB when they change
+useEffect(() => {
+  if (selectedContact && conversation.length > 0) {
+    // Store the conversation in IndexedDB
+    storeConversation(selectedContact.id, conversation);
+  }
+}, [selectedContact, conversation]);
+
+
+useEffect(() => {
+  if (!selectedContact?.phone || !businessPhoneNumberId) return;
+
+  // Skip fetch if this update was triggered by socket
+  if (isSocketUpdate.current) {
+    isSocketUpdate.current = false;
+    return;
+  }
+
+  setIsLoading(true);
+  const controller = new AbortController();
+
+  // First try to load from cache
+  const loadConversation = async () => {
+    try {
+      // Try to get cached conversation first
+      const cachedMessages = await getCachedConversation(selectedContact.id);
+      
+      if (cachedMessages && cachedMessages.length > 0) {
+        // Use cached messages first for instant display
+        setConversation(cachedMessages);
+        setLastUpdateType("new");
+      }
+      
+      // Then fetch from server to get the latest
+      await fetchConversation(
+        selectedContact.phone,
+        1,
+        false,
+        controller.signal
+      );
+    } catch (error) {
+      console.error("Error loading conversation:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  loadConversation();
+
+  return () => controller.abort();
+}, [selectedContact?.phone, businessPhoneNumberId, fetchConversation]);
+
+
+
+// Load unread counts from IndexedDB when component mounts
+useEffect(() => {
+  const loadSavedUnreadCounts = async () => {
+    try {
+      const savedCounts = await loadUnreadCounts();
+      unreadCountsRef.current = savedCounts;
+      setUnreadCountsLoaded(true);
+    } catch (error) {
+      console.error("Failed to load unread counts:", error);
+      setUnreadCountsLoaded(true); // Mark as loaded even on error
+    }
+  };
+  
+  loadSavedUnreadCounts();
+}, []);
+
+// Save unread counts whenever they change
+useEffect(() => {
+  if (contacts.length > 0) {
+    const unreadData = contacts.reduce((acc, contact) => {
+      if (contact.unreadCount > 0) {
+        acc[contact.id] = contact.unreadCount;
+      }
+      return acc;
+    }, {});
+    
+    // Only save if there are actual changes
+    if (JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)) {
+      unreadCountsRef.current = unreadData;
+      saveUnreadCounts(unreadData);
+    }
+  }
+}, [contacts]);
+
+
+
+const updateUnreadCountInIndexedDB = async (contactId, count) => {
+  try {
+    await updateContactUnreadCount(contactId, count);
+  } catch (error) {
+    console.error("Error updating unread count in IndexedDB:", error);
+  }
+};
+
+// Check for new notifications when the user logs in
+useEffect(() => {
+  const checkForNewNotifications = async () => {
+    if (authenticated) {
+      try {
+        const response = await axiosInstance.get(`${fastURL}/notifications`, {
+          headers: { token: localStorage.getItem("token") },
+        });
+        const newNotifications = response.data.notifications ;
+        // console.log("for each ",response.data);
+
+        newNotifications.forEach(notification => {
+          const contactId = notification.contactId;
+          const unreadCount = notification.unreadCount;
+          updateUnreadCountInIndexedDB(contactId, unreadCount);
+        });
+
+        setContacts(prevContacts => {
+          return prevContacts.map(contact => {
+            const notification = newNotifications.find(n => n.contactId === contact.id);
+            if (notification) {
+              return { ...contact, unreadCount: notification.unreadCount };
+            }
+            return contact;
+          });
+        });
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    }
+  };
+
+  checkForNewNotifications();
+}, [authenticated]);
+
+// // Sync unread counts between server and IndexedDB
+// useEffect(() => {
+//   const syncUnreadCounts = async () => {
+//     try {
+//       const response = await axiosInstance.get(`${fastURL}/unread-counts`, {
+//         headers: { token: localStorage.getItem("token") },
+//       });
+//       const serverUnreadCounts = response.data;
+
+//       for (const [contactId, count] of Object.entries(serverUnreadCounts)) {
+//         await updateUnreadCountInIndexedDB(contactId, count);
+//       }
+
+//       setContacts(prevContacts => {
+//         return prevContacts.map(contact => {
+//           const serverCount = serverUnreadCounts[contact.id] || 0;
+//           return { ...contact, unreadCount: serverCount };
+//         });
+//       });
+//     } catch (error) {
+//       console.error("Error syncing unread counts:", error);
+//     }
+//   };
+
+//   if (navigator.onLine) {
+//     syncUnreadCounts();
+//   }
+// }, [authenticated]);
+
+// // Sync unread counts when the user comes back online
+// useEffect(() => {
+//   const handleOnline = () => {
+//     syncUnreadCounts();
+//   };
+
+//   window.addEventListener("online", handleOnline);
+//   return () => window.removeEventListener("online", handleOnline);
+// }, []);
+
+
+useEffect(() => {
+  const loadSavedUnreadCounts = async () => {
+    try {
+      const savedCounts = await loadUnreadCounts();
+      unreadCountsRef.current = savedCounts;
+      setUnreadCountsLoaded(true);
+    } catch (error) {
+      console.error("Failed to load unread counts:", error);
+      setUnreadCountsLoaded(true);
+    }
+  };
+  
+  loadSavedUnreadCounts();
+}, []);
+useEffect(() => {
+  if (contacts.length > 0 && unreadCountsLoaded) {
+    const updatedContacts = contacts.map(contact => {
+      const savedCount = unreadCountsRef.current[contact.id];
+      return {
+        ...contact,
+        unreadCount: savedCount !== undefined ? savedCount : contact.unreadCount || 0
+      };
+    });
+    setContacts(updatedContacts);
+  }
+}, [contacts.length, unreadCountsLoaded]);
+
+useEffect(() => {
+  if (contacts.length > 0) {
+    const unreadData = contacts.reduce((acc, contact) => {
+      if (contact.unreadCount > 0) {
+        acc[contact.id] = contact.unreadCount;
+      }
+      return acc;
+    }, {});
+    
+    if (JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)) {
+      unreadCountsRef.current = unreadData;
+      saveUnreadCounts(unreadData);
+    }
+  }
+}, [contacts]);
 
   return (
     <div className={`${authenticated ? "" : "mt-[60px]"} `}>
@@ -1453,6 +1809,7 @@ const Chatbot = () => {
                 </div>
               )}
               {visibleMessages.map((message, index) => (
+                
                 <div
                   key={index}
                   className={`cb-message ${

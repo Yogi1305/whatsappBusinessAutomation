@@ -1,10 +1,9 @@
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, FileText, Check, Clock } from 'lucide-react';
 
-
-export const renderMessageWithNewLines = (text) => {
+export const renderMessageWithNewLines = (text, sender) => {
   if (!text) return null;
   
   try {
@@ -19,23 +18,31 @@ export const renderMessageWithNewLines = (text) => {
       match => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16)));
     
     // Split by \n and render with line breaks
-    return emojiRenderedText.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        {index < emojiRenderedText.split('\n').length - 1 && <br />}
-      </React.Fragment>
-    ));
+    return (
+      <div className={`message-bubble ${sender === 'user' ? 'user-bubble' : 'bot-bubble'}`}>
+        {emojiRenderedText.split('\n').map((line, index) => (
+          <React.Fragment key={index}>
+            {line}
+            {index < emojiRenderedText.split('\n').length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </div>
+    );
   } catch (error) {
     // Provide a more graceful fallback when parsing fails
-    return <div className="message-error">Message could not be displayed properly</div>;
+    return (
+      <div className={`message-bubble ${sender === 'user' ? 'user-bubble error-bubble' : 'bot-bubble error-bubble'}`}>
+        Message could not be displayed properly
+      </div>
+    );
   }
 };
 
-const PdfViewer = ({ document }) => {
+const PdfViewer = ({ document, sender }) => {
   // Handle null or undefined document
   if (!document || !document.id) {
     return (
-      <Alert variant="destructive" className="w-full max-w-xl">
+      <Alert variant="destructive" className={`w-full max-w-xl ${sender === 'user' ? 'ml-auto' : 'mr-auto'}`}>
         <AlertDescription>Invalid document data provided</AlertDescription>
       </Alert>
     );
@@ -61,8 +68,20 @@ const PdfViewer = ({ document }) => {
   };
 
   return (
-    <div className="w-full space-y-2">
-      <div className="w-full h-screen max-h-[600px] border rounded-lg overflow-hidden">
+    <div className={`document-container ${sender === 'user' ? 'user-document' : 'bot-document'}`}>
+      <div className="document-header">
+        <FileText className="document-icon" />
+        <span className="document-title">PDF Document</span>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="download-button" 
+          onClick={handleDownload}
+        >
+          <Download size={16} />
+        </Button>
+      </div>
+      <div className="document-preview">
         <iframe
           src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
           className="w-full h-full"
@@ -75,24 +94,32 @@ const PdfViewer = ({ document }) => {
 
 export default PdfViewer;
 
-export const renderTemplateMessage = (template) => {
+export const renderTemplateMessage = (template, sender) => {
   if (!template || !template.name) {
-    return <div className="error">Invalid template message</div>;
+    return (
+      <div className={`template-message ${sender === 'user' ? 'user-template' : 'bot-template'}`}>
+        <div className="error">Invalid template message</div>
+      </div>
+    );
   }
   return (
-    <div className="template-message">
-      <p>Template: {template.name}</p>
+    <div className={`template-message ${sender === 'user' ? 'user-template' : 'bot-template'}`}>
+      <div className="template-header">Template Message</div>
+      <p className="template-name">{template.name}</p>
     </div>
   );
 };
 
-export const renderInteractiveMessage = (parsedMessage) => {
-  let { type, interactive, text, image, template } = parsedMessage;
+export const renderInteractiveMessage = (parsedMessage, sender) => {
+  let { type, interactive, text, image, template, document } = parsedMessage;
+
+  const containerClass = `interactive-container ${sender === 'user' ? 'user-interactive' : 'bot-interactive'}`;
 
   if (type === 'interactive') {
     if (interactive.type === 'list') {
       return (
-        <div className="interactive-message list-message">
+        <div className={`${containerClass} list-message`}>
+          {/* <div className="interactive-header">Interactive Message</div> */}
           <p className="message-text">{interactive.body.text}</p>
           <ul className="message-list">
             {interactive.action.sections.map((section, sectionIndex) => (
@@ -113,7 +140,8 @@ export const renderInteractiveMessage = (parsedMessage) => {
       );
     } else if (interactive.type === 'button') {
       return (
-        <div className="interactive-message button-message">
+        <div className={`${containerClass} button-message`}>
+          {/* <div className="interactive-header">Interactive Message</div> */}
           <p className="message-text">{interactive.body.text}</p>
           <div className="message-buttons">
             {interactive.action.buttons.map((button, buttonIndex) => (
@@ -127,7 +155,8 @@ export const renderInteractiveMessage = (parsedMessage) => {
     } 
     else if (interactive.type === 'product') {
       return (
-        <div className='interactive-message product-card'>
+        <div className={`${containerClass} product-card`}>
+          <div className="interactive-header">Product</div>
           <div className='product-image'>
             <img 
               src={interactive.action.product_details.image_link} 
@@ -145,55 +174,127 @@ export const renderInteractiveMessage = (parsedMessage) => {
     }
   } else if (type === 'text') {
     // Using renderMessageWithNewLines for text body to handle newlines and emojis consistently
-    return <div className="plain-message">{renderMessageWithNewLines(text.body)}</div>;
+    return renderMessageWithNewLines(text.body, sender);
   } else if (type === 'image') {
     return (
-      <div className="image-message">
-        <img src={image.id} alt="Sent image" className="message-image" />
+      <div className={`${containerClass} image-message`}>
+        <div className="image-wrapper">
+          <img src={image.id} alt="Sent image" className="message-image" />
+        </div>
         {image.caption && <p className="message-caption">{image.caption}</p>}
       </div>
     );
   } else if (type === 'template') {
-    return renderTemplateMessage(template);
+    return renderTemplateMessage(template, sender);
   } else if (type === 'document'){
-    text = parsedMessage?.document?.id
     return (
-      <div className="image-message">
-        <PdfViewer document={parsedMessage.document} />
+      <div className={`${containerClass} document-message`}>
+        <PdfViewer document={parsedMessage.document} sender={sender} />
       </div>
-    )
+    );
   }
 
-  return <p className="error-message">Unsupported message type</p>;
+  return (
+    <div className={`${containerClass} error-message`}>
+      Unsupported message type
+    </div>
+  );
 };
 
 export const renderMessageContent = (message) => {
+  const sender = message.sender || 'bot';
+  
+  // Add message status indicators
+  const renderMessageStatus = () => {
+    if (message.pending) {
+      return <Clock size={14} className="message-status-icon pending" />;
+    } else if (message.failed) {
+      return <div className="message-status-icon failed">!</div>;
+    } else if (sender === 'bot') {
+      return <Check size={14} className="message-status-icon sent" />;
+    }
+    return null;
+  };
+  
+  // Wrapper for all message types with proper alignment
+  const MessageWrapper = ({ children }) => (
+    <div className={`message-wrapper ${sender === 'user' ? 'user-message-wrapper' : 'bot-message-wrapper'}`}>
+      {children}
+      <div className="message-status">
+        {renderMessageStatus()}
+        <span className="message-time">
+          {message.time ? new Date(message.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+        </span>
+      </div>
+    </div>
+  );
+
   if (typeof message.text === 'object' && message.text !== null) {
     // Handle message types
     switch (message.text.type) {
       case 'text':
-        // Using renderMessageWithNewLines for text body
-        return message.text.body ? 
-          renderMessageWithNewLines(message.text.body) : 
-          <div className="error">No text body provided</div>;
+        return (
+          <MessageWrapper>
+            {message.text.body ? 
+              renderMessageWithNewLines(message.text.body, sender) : 
+              <div className="error">No text body provided</div>}
+          </MessageWrapper>
+        );
 
       case 'interactive':
-        return renderInteractiveMessage(message.text.interactive) || 
-          <div className="error">Interactive message rendering failed</div>;
+        return (
+          <MessageWrapper>
+            {renderInteractiveMessage(message.text.interactive, sender) || 
+              <div className="error">Interactive message rendering failed</div>}
+          </MessageWrapper>
+        );
 
       case 'template':
-        return renderTemplateMessage(message.text.template) || 
-          <div className="error">Template message rendering failed</div>;
+        return (
+          <MessageWrapper>
+            {renderTemplateMessage(message.text.template, sender) || 
+              <div className="error">Template message rendering failed</div>}
+          </MessageWrapper>
+        );
 
       default:
-        return <div className="error">Unknown message type: {message.text.type}</div>;
+        return (
+          <MessageWrapper>
+            <div className="error">Unknown message type: {message.text.type}</div>
+          </MessageWrapper>
+        );
     }
   } else if (typeof message.text === 'string') {
     // Fallback for plain text messages - using renderMessageWithNewLines
-    return message.text ? 
-      renderMessageWithNewLines(message.text) : 
-      <div className="error">Message content is undefined</div>;
+    return (
+      <MessageWrapper>
+        {message.text ? 
+          renderMessageWithNewLines(message.text, sender) : 
+          <div className="error">Message content is undefined</div>}
+      </MessageWrapper>
+    );
+  } else if (message.type === 'image') {
+    // Handle image messages
+    return (
+      <MessageWrapper>
+        <div className={`image-container ${sender === 'user' ? 'user-image' : 'bot-image'}`}>
+          <img src={message.imageUrl} alt="Sent image" className="message-image" />
+          {message.caption && <p className="image-caption">{message.caption}</p>}
+        </div>
+      </MessageWrapper>
+    );
+  } else if (message.type === 'document') {
+    // Handle document messages
+    return (
+      <MessageWrapper>
+        <PdfViewer document={message} sender={sender} />
+      </MessageWrapper>
+    );
   }
 
-  return <div className="error">Invalid message format</div>;
+  return (
+    <MessageWrapper>
+      <div className="error">Invalid message format</div>
+    </MessageWrapper>
+  );
 };
