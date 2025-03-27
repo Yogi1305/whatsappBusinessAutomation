@@ -396,17 +396,17 @@
   z-index: 1;
 }
 
-.cb-user-message {
+/* .cb-user-message {
   align-self: flex-end;
   background-color: #f0f0f0;
   color: var(--white);
-}
+} */
 
-.cb-bot-message {
+/* .cb-bot-message {
   align-self: flex-start;
   background-color: #f0f0f0;
   color: var(--text-color);
-}
+} */
 
 .cb-input-container {
   padding: 20px;
@@ -1168,14 +1168,14 @@
   }
   
   .cb-user-message {
-    align-self: flex-end;
+    align-self: flex-start;
     background-color: var(--primary-color);
     color: var(--white);
     border-bottom-right-radius: 4px;
   }
   
   .cb-bot-message {
-    align-self: flex-start;
+    align-self: flex-end;
     background-color: var(--white);
     color: var(--text-color);
     border-bottom-left-radius: 4px;
