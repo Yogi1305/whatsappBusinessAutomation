@@ -146,7 +146,7 @@ const Navbar = () => {
     debounce(async () => {
       if (notificationQueue.current.length === 0) return;
       
-      console.log(`Processing ${notificationQueue.current.length} queued notifications`);
+      // console.log(`Processing ${notificationQueue.current.length} queued notifications`);
       
       // Group notifications by contact phone
       const phoneToNotifications = {};
