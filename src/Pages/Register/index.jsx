@@ -277,7 +277,7 @@ const Register = () => {
                   username;
                   
               await axios.post(
-                  'https://nurenaiautomatic-b7hmdnb4fzbpbtbh.canadacentral-01.azurewebsites.net/webhook-test/Nurnai/Email',
+                  'https://nurenaiautomatic-b7hmdnb4fzbpbtbh.canadacentral-01.azurewebsites.net/webhook/Nurnai/Email',
                   {
                       email: email,
                       first_name: first_name
