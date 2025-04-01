@@ -7,6 +7,7 @@ import { auth, googleProvider } from '../../firebase';
 import register from '../../assets/resgister.webp';
 import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '../../authContext';
+import axios from 'axios';
 const FullScreenLoader = () => (
   <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
     <div className="text-center">
@@ -218,79 +219,99 @@ const Register = () => {
     };
 
     const handleFirebaseSignIn = async () => {
-        setFirebaseError(null); // Reset any previous errors
-        setIsSubmitting(true); // Start loading
-
-        try {
-            const result = await signInWithPopup(auth, googleProvider);
-            const user = result.user;
-            const email = user.email;
-            const username = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, 'a');
-            const password = `${username}nutenai`;
-
-            // Create tenant with organisation name and password derived from email
-            const tenantId = await createTenantID();
-            const tenantResponse = await fetch(`${djangoURL}/createTenant/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    tenant_id: tenantId,
-                    organization: username,
-                    password: username,
-                }),
-            });
-
-            if (!tenantResponse.ok) {
-                throw new Error(`HTTP error! Status: ${tenantResponse.status}`);
-            }
-
-            // Register user with the extracted details
-            const registerResponse = await fetch(`${djangoURL}/register/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Tenant-Id': tenantId,
-                },
-                body: JSON.stringify({
-                    username,
-                    email,
-                    password,
-                    role: 'user',
-                    organisation: username,
-                    phone: '0000000000',
-                    tenant: tenantId,
-                }),
-            });
-
-            if (!registerResponse.ok) {
-                throw new Error(`HTTP error! Status: ${registerResponse.status}`);
-            }
-
-            // Automatically log in the user
-            const loginResponse = await fetch(`${djangoURL}/login/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            });
-
-            if (!loginResponse.ok) {
-                throw new Error(`HTTP error! Status: ${loginResponse.status}`);
-            }
-
-            const loginData = await loginResponse.json();
-            localStorage.setItem('token', loginData.token);
-            login(loginData.user_id, loginData.tenant_id, loginData.role, loginData.model);
-            navigate('/'); // Redirect to dashboard or desired page
-
-        } catch (error) {
-        //    console.error('Firebase sign-in or registration failed:', error);
-            setFirebaseError(error.message); // Set error message for user feedback
-        } finally {
-            setIsSubmitting(false); // Stop loading
-        }
-    };
+      setFirebaseError(null); // Reset any previous errors
+      setIsSubmitting(true); // Start loading
+  
+      try {
+          const result = await signInWithPopup(auth, googleProvider);
+          const user = result.user;
+          const email = user.email;
+          const username = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, 'a');
+          const password = `${username}nutenai`;
+  
+          // Create tenant with organisation name and password derived from email
+          const tenantId = await createTenantID();
+          const tenantResponse = await fetch(`${djangoURL}/createTenant/`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  tenant_id: tenantId,
+                  organization: username,
+                  password: username,
+              }),
+          });
+  
+          if (!tenantResponse.ok) {
+              throw new Error(`HTTP error! Status: ${tenantResponse.status}`);
+          }
+  
+          // Register user with the extracted details
+          const registerResponse = await fetch(`${djangoURL}/register/`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-Tenant-Id': tenantId,
+              },
+              body: JSON.stringify({
+                  username,
+                  email,
+                  password,
+                  role: 'user',
+                  organisation: username,
+                  phone: '0000000000',
+                  tenant: tenantId,
+              }),
+          });
+  
+          if (!registerResponse.ok) {
+              throw new Error(`HTTP error! Status: ${registerResponse.status}`);
+          }
+          
+          // Send welcome email via webhook
+          try {
+              // Extract first name from the user's display name or use the username
+              const first_name = user.displayName ? 
+                  user.displayName.split(' ')[0] : 
+                  username;
+                  
+              await axios.post(
+                  'https://nurenaiautomatic-b7hmdnb4fzbpbtbh.canadacentral-01.azurewebsites.net/webhook-test/Nurnai/Email',
+                  {
+                      email: email,
+                      first_name: first_name
+                  }
+              );
+              console.log('Welcome email webhook triggered successfully');
+          } catch (emailError) {
+              // Log the error but don't fail the sign-up process
+              console.error('Failed to trigger welcome email:', emailError);
+          }
+          
+          // Automatically log in the user
+          const loginResponse = await fetch(`${djangoURL}/login/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, password }),
+          });
+  
+          if (!loginResponse.ok) {
+              throw new Error(`HTTP error! Status: ${loginResponse.status}`);
+          }
+  
+          const loginData = await loginResponse.json();
+          localStorage.setItem('token', loginData.token);
+          login(loginData.user_id, loginData.tenant_id, loginData.role, loginData.model);
+          navigate('/'); // Redirect to dashboard or desired page
+  
+      } catch (error) {
+          // console.error('Firebase sign-in or registration failed:', error);
+          setFirebaseError(error.message); // Set error message for user feedback
+      } finally {
+          setIsSubmitting(false); // Stop loading
+      }
+  };
 
     const renderStepIndicator = () => (
         <div className="flex items-center justify-center mb-8">
