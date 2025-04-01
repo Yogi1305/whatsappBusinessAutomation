@@ -1036,35 +1036,8 @@ useEffect(() => {
     setLastUpdateType("append");
     fetchConversation(selectedContact.phone, currentMessagePage + 1, true);
   };
-  // const handleContactSelection = async (contact) => {
-  //   if (selectedContact?.id === contact.id) return;
-  
-  //   try {
-  //     setIsLoading(true);
-  //     setConversation([]);
-  //     setCurrentMessagePage(1);
-  //     setHasMoreMessages(true);
-  
-  //     navigate({ search: `?id=${contact.id}` }, { replace: true });
-  
-  //     // Reset unread count for this contact
-  //     const updatedContacts = contacts.map(c => 
-  //       c.id === contact.id ? { ...c, unreadCount: 0 } : c
-  //     );
-  //     setContacts(updatedContacts);
-      
-  //     // Update IndexedDB
-  //     await updateContactUnreadCount(contact.id, 0);
-
-
-  
-  //     setSelectedContact(contact);
-  //   } catch (error) {
-  //     console.error("Contact selection failed:", error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+ 
+ 
   const handleContactSelection = async (contact) => {
     if (selectedContact?.id === contact.id) return;
   
@@ -1099,6 +1072,9 @@ useEffect(() => {
           
           // Dispatch event to update notification UI in Navbar
           window.dispatchEvent(new CustomEvent('refreshNotifications'));
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         } catch (deleteError) {
           console.error(`Failed to delete notifications for contact ${contact.id}:`, deleteError);
           // Continue with contact selection even if notification deletion fails
@@ -1112,7 +1088,8 @@ useEffect(() => {
       setIsLoading(false);
     }
   };
-  
+ 
+
   const handleToggleSmileys = () => {
     setShowSmileys(!showSmileys);
   };

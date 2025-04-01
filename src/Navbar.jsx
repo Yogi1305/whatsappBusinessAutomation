@@ -200,7 +200,93 @@ const Navbar = () => {
     }, 500), // 500ms debounce time
     []
   );
+
+   // Enhanced fetchNotifications function
+   const fetchNotifications = useCallback(async () => {
+    if (!authenticated || !tenantId) return;
+    
+    try {
+      const response = await axiosInstance.get(`${fastURL}/notifications`, {
+        headers: {
+          'X-Tenant-ID': tenantId
+        }
+      });
+      
+      const fetchedNotifications = response.data.notifications || [];
+      
+      // Group notifications by contact_id to avoid duplicates
+      const contactNotifications = {};
+      
+      // First pass: organize notifications by contact ID
+      fetchedNotifications.forEach(notification => {
+        if (notification.contact_id) {
+          const contactId = notification.contact_id.toString();
+          if (!contactNotifications[contactId]) {
+            contactNotifications[contactId] = [];
+          }
+          contactNotifications[contactId].push(notification);
+        }
+      });
+      
+      // Keep only the most recent notification per contact
+      const uniqueNotifications = Object.values(contactNotifications)
+        .map(notifications => {
+          // Sort by created_on date and take the most recent
+          return notifications.sort((a, b) => 
+            new Date(b.created_on) - new Date(a.created_on)
+          )[0];
+        });
+      
+      console.log(`Processed ${fetchedNotifications.length} notifications into ${uniqueNotifications.length} unique contacts`);
+      
+      // Update state with unique notifications
+      setNotifications(uniqueNotifications);
+      setUnreadCount(uniqueNotifications.length);
+      
+      // Process each unique contact's notification to update IndexedDB
+      for (const notification of uniqueNotifications) {
+        if (!notification.contact_id) continue;
+        
+        const contactId = notification.contact_id.toString();
+        
+        // Get current unread count from IndexedDB
+        const counts = await getAllContactUnreadCounts();
+        const currentCount = counts[contactId] || 0;
+        
+        // Don't increment if we already have a count for this contact
+        // Just ensure there's at least 1 unread message
+        const newCount = Math.max(1, currentCount);
+        
+        // Update IndexedDB - set the count to at least 1, but don't increment
+        await updateContactUnreadCount(contactId, newCount);
+      }
+      
+      // Dispatch event to update UI in other components
+      window.dispatchEvent(new CustomEvent('notificationsUpdated'));
+      
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  }, [authenticated, tenantId]);
   
+  // Add this useEffect to listen for the refreshNotifications event
+useEffect(() => {
+  const handleRefreshNotifications = () => {
+    console.log("Refreshing notifications from event");
+    fetchNotifications();
+  };
+
+  // Add event listener
+  window.addEventListener('refreshNotifications', handleRefreshNotifications);
+
+  // Clean up
+  return () => {
+    window.removeEventListener('refreshNotifications', handleRefreshNotifications);
+  };
+}, [fetchNotifications]);
+
+
+
   useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
@@ -227,151 +313,104 @@ const Navbar = () => {
     }
   }, [tenantId, authenticated]);
   
-  // Enhanced fetchNotifications function
-  const fetchNotifications = useCallback(async () => {
-    if (!authenticated || !tenantId) return;
-    
-    try {
-      const response = await axiosInstance.get(`${fastURL}/notifications`, {
-        headers: {
-          'X-Tenant-ID': tenantId
+ 
+
+
+
+ 
+  // Enhanced socket event handlers
+  useEffect(() => {
+    // Create a set to track which messages we've already processed
+    const processedMessageIds = new Set();
+  
+    const handleNewSocketMessage = (message) => {
+      if (!message || !message.phone_number_id || !businessPhoneNumberId) return;
+      
+      // Generate a unique ID for the message
+      const messageId = message.id || `${message.contactPhone}-${Date.now()}`;
+      
+      // Skip if we've already processed this message
+      if (processedMessageIds.has(messageId)) {
+        console.log(`Skipping already processed message: ${messageId}`);
+        return;
+      }
+      
+      // Check if the message is for this business phone
+      if (message.phone_number_id == businessPhoneNumberId) {
+        console.log('Received socket message:', message);
+        
+        // Mark as processed
+        processedMessageIds.add(messageId);
+        
+        // If we have a contact ID, use that directly
+        if (message.contact_id) {
+          // Update unread count for this contact
+          updateContactUnreadCount(message.contact_id.toString(), 1).then(() => {
+            console.log(`Updated unread count for contact ${message.contact_id}`);
+          });
         }
-      });
-      
-      const fetchedNotifications = response.data.notifications || [];
-      setNotifications(fetchedNotifications);
-      setUnreadCount(fetchedNotifications.length);
-      
-      // Process notifications to update IndexedDB
-      const processedNotifications = [];
-      
-      for (const notification of fetchedNotifications) {
-        if (!notification.content) continue;
-        
-        // Extract phone number from notification content
-        const match = notification.content.match(/New meessage from (\d+)/);
-        if (!match || !match[1]) continue;
-        
-        const phone = match[1];
-        processedNotifications.push({
-          id: notification.id,
-          contactPhone: phone,
-          content: notification.content
-        });
-      }
-      
-      // Add to queue and process
-      if (processedNotifications.length > 0) {
-        notificationQueue.current = [...notificationQueue.current, ...processedNotifications];
-        processNotificationQueue();
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  }, [authenticated, tenantId, processNotificationQueue]);
-
-  // Enhanced socket event handlers
-  // useEffect(() => {
-  //   const handleNewSocketMessage = (message) => {
-  //     if (!message || !message.phone_number_id || !businessPhoneNumberId) return;
-      
-  //     // Check if the message is for this business phone
-  //     if (message.phone_number_id == businessPhoneNumberId) {
-  //       console.log('Received socket message:', message);
-        
-  //       // Queue this notification for processing
-  //       if (message.contactPhone) {
-  //         const messageContent = message.message?.text?.body || 
-  //                              (message.message?.type === 'image' ? 'Sent an image' : 'New message');
-          
-  //         notificationQueue.current.push({
-  //           id: Date.now(),
-  //           contactPhone: message.contactPhone,
-  //           content: `New meessage from ${message.contactPhone}: ${messageContent}`
-  //         });
-          
-  //         // Process the queue
-  //         processNotificationQueue();
-  //       }
-        
-  //       // Refresh notifications from server
-  //       fetchNotifications();
-  //     }
-  //   };
-  
-  //   socket.on('new-message', handleNewSocketMessage);
-  //   socket.on('node-message', handleNewSocketMessage);
-    
-  //   // Socket connection event
-  //   socket.on('connect', () => {
-  //     console.log('Connected to notification socket');
-  //     socketConnected.current = true;
-  //     fetchNotifications(); // Refresh notifications when socket connects
-  //   });
-    
-  //   socket.on('disconnect', () => {
-  //     console.log('Disconnected from notification socket');
-  //     socketConnected.current = false;
-  //   });
-  
-  //   return () => {
-  //     socket.off('new-message', handleNewSocketMessage);
-  //     socket.off('node-message', handleNewSocketMessage);
-  //     socket.off('connect');
-  //     socket.off('disconnect');
-  //   };
-  // }, [businessPhoneNumberId, fetchNotifications, processNotificationQueue]);
-  // Enhanced socket event handlers
-useEffect(() => {
-  const handleNewSocketMessage = (message) => {
-    if (!message || !message.phone_number_id || !businessPhoneNumberId) return;
-    
-    // Check if the message is for this business phone
-    if (message.phone_number_id == businessPhoneNumberId) {
-      console.log('Received socket message:', message);
-      
-      // Queue this notification for processing
-      if (message.contactPhone) {
-        const messageContent = message.message?.text?.body || 
+        // If we only have a phone number, need to find the contact ID
+        else if (message.contactPhone) {
+          const messageContent = message.message?.text?.body || 
                              (message.message?.type === 'image' ? 'Sent an image' : 'New message');
+          
+          // First check our cache
+          let contactId = contactsCache.current[message.contactPhone];
+          
+          if (contactId) {
+            // We have the contact ID in cache, update unread count
+            updateContactUnreadCount(contactId, 1).then(() => {
+              console.log(`Updated unread count for contact ${contactId} (from cache)`);
+            });
+          } else {
+            // Need to find the contact ID
+            axiosInstance.get(`${fastURL}/contacts/${0}?phone=${message.contactPhone}`)
+              .then(response => {
+                if (response.data.contacts && response.data.contacts.length > 0) {
+                  contactId = response.data.contacts[0].id.toString();
+                  contactsCache.current[message.contactPhone] = contactId;
+                  
+                  return updateContactUnreadCount(contactId, 1);
+                }
+              })
+              .then(() => {
+                if (contactId) {
+                  console.log(`Updated unread count for contact ${contactId} (looked up)`);
+                }
+              })
+              .catch(error => {
+                console.error(`Error finding/updating contact for ${message.contactPhone}:`, error);
+              });
+          }
+        }
         
-        notificationQueue.current.push({
-          id: Date.now(),
-          contactPhone: message.contactPhone,
-          content: `New meessage from ${message.contactPhone}: ${messageContent}`
-        });
-        
-        // Process the queue
-        processNotificationQueue();
+        // Refresh notifications from server
+        fetchNotifications();
       }
-      
-      // Refresh notifications from server
-      fetchNotifications();
-    }
-  };
-
-  socket.on('new-message', handleNewSocketMessage);
-  socket.on('node-message', handleNewSocketMessage);
+    };
   
-  // Socket connection event
-  socket.on('connect', () => {
-    console.log('Connected to notification socket');
-    socketConnected.current = true;
-    fetchNotifications(); // Refresh notifications when socket connects
-  });
+    socket.on('new-message', handleNewSocketMessage);
+    socket.on('node-message', handleNewSocketMessage);
+    
+    // Socket connection event
+    socket.on('connect', () => {
+      console.log('Connected to notification socket');
+      socketConnected.current = true;
+      fetchNotifications(); // Refresh notifications when socket connects
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('Disconnected from notification socket');
+      socketConnected.current = false;
+    });
   
-  socket.on('disconnect', () => {
-    console.log('Disconnected from notification socket');
-    socketConnected.current = false;
-  });
-
-  return () => {
-    socket.off('new-message', handleNewSocketMessage);
-    socket.off('node-message', handleNewSocketMessage);
-    socket.off('connect');
-    socket.off('disconnect');
-  };
-}, [businessPhoneNumberId, fetchNotifications, processNotificationQueue]);
+    return () => {
+      socket.off('new-message', handleNewSocketMessage);
+      socket.off('node-message', handleNewSocketMessage);
+      socket.off('connect');
+      socket.off('disconnect');
+    };
+  }, [businessPhoneNumberId, fetchNotifications]);
   
   // Initial notifications fetch
   useEffect(() => {
@@ -394,48 +433,83 @@ useEffect(() => {
         });
         
         const fetchedNotifications = response.data.notifications || [];
-        setNotifications(fetchedNotifications);
-        setUnreadCount(fetchedNotifications.length);
         
         if (fetchedNotifications.length > 0) {
           console.log(`Found ${fetchedNotifications.length} notifications after login`);
           
-          // Process notifications to update IndexedDB
-          const notificationsToProcess = [];
+          // Get already processed notification IDs from localStorage
+          const processedIds = JSON.parse(localStorage.getItem('processedNotificationIds') || '[]');
           
+          // Group notifications by contact_id to avoid duplicates
+          const contactToNotifications = {};
+          
+          // First pass: organize notifications by contact ID or phone
           for (const notification of fetchedNotifications) {
             if (!notification.content) continue;
             
-            // Extract phone number from notification content
-            const match = notification.content.match(/(\d+)\s+\|\s+New meessage from/);
-            if (!match || !match[1]) continue;
+            let contactKey;
             
-            const phone = match[1];
-            notificationsToProcess.push({
-              id: notification.id,
-              contactPhone: phone,
-              content: notification.content
-            });
+            // If notification has contact_id, use it directly
+            if (notification.contact_id) {
+              contactKey = `contact_${notification.contact_id}`;
+            } else {
+              // Extract phone number from notification content
+              const match = notification.content.match(/(\d+)\s+\|\s+New meessage from/);
+              if (!match || !match[1]) continue;
+              
+              const phone = match[1];
+              contactKey = `phone_${phone}`;
+              
+              // Store additional info for later processing
+              notification._extractedPhone = phone;
+            }
+            
+            // Skip if this notification has already been processed
+            if (processedIds.includes(notification.id.toString())) {
+              console.log(`Skipping already processed notification ${notification.id}`);
+              continue;
+            }
+            
+            // Add to the contact's notification list
+            if (!contactToNotifications[contactKey]) {
+              contactToNotifications[contactKey] = [];
+            }
+            contactToNotifications[contactKey].push(notification);
           }
           
-          // Process each notification to update IndexedDB
-          for (const notification of notificationsToProcess) {
+          console.log(`Grouped notifications into ${Object.keys(contactToNotifications).length} unique contacts`);
+          
+          // Process each contact's notifications (only count each contact once)
+          const newProcessedIds = [];
+          
+          for (const [contactKey, notifications] of Object.entries(contactToNotifications)) {
             try {
-              // Get contact ID (from cache or API)
-              let contactId = contactsCache.current[notification.contactPhone];
+              let contactId;
               
-              if (!contactId) {
-                // Find contact ID for this phone number
-                try {
-                  const response = await axiosInstance.get(`${fastURL}/contacts/${0}?phone=${notification.contactPhone}`);
-                  if (response.data.contacts && response.data.contacts.length > 0) {
-                    contactId = response.data.contacts[0].id.toString();
-                    // Cache the contact ID for future use
-                    contactsCache.current[notification.contactPhone] = contactId;
+              // Check if this is a contact_id key
+              if (contactKey.startsWith('contact_')) {
+                contactId = contactKey.replace('contact_', '');
+              } 
+              // Otherwise, it's a phone key - need to look up the contact ID
+              else if (contactKey.startsWith('phone_')) {
+                const phone = contactKey.replace('phone_', '');
+                
+                // Check cache first
+                contactId = contactsCache.current[phone];
+                
+                if (!contactId) {
+                  // Find contact ID for this phone number
+                  try {
+                    const response = await axiosInstance.get(`${fastURL}/contacts/${0}?phone=${phone}`);
+                    if (response.data.contacts && response.data.contacts.length > 0) {
+                      contactId = response.data.contacts[0].id.toString();
+                      // Cache the contact ID for future use
+                      contactsCache.current[phone] = contactId;
+                    }
+                  } catch (error) {
+                    console.error(`Error finding contact ID for phone ${phone}:`, error);
+                    continue; // Skip to next contact
                   }
-                } catch (error) {
-                  console.error(`Error finding contact ID for phone ${notification.contactPhone}:`, error);
-                  continue; // Skip to next notification
                 }
               }
               
@@ -444,22 +518,40 @@ useEffect(() => {
                 const counts = await getAllContactUnreadCounts();
                 const currentCount = counts[contactId] || 0;
                 
-                // Increment unread count
+                // Set the unread count to current + 1 (only increment once per contact)
                 const newCount = currentCount + 1;
                 
                 // Update IndexedDB
                 await updateContactUnreadCount(contactId, newCount);
-                console.log(`Updated unread count for contact ${contactId} (${notification.contactPhone}) to ${newCount}`);
+                console.log(`Updated unread count for contact ${contactId} to ${newCount}`);
+                
+                // Mark all notifications for this contact as processed
+                notifications.forEach(notification => {
+                  newProcessedIds.push(notification.id.toString());
+                });
               }
             } catch (error) {
-              console.error(`Error processing notification for phone ${notification.contactPhone}:`, error);
+              console.error(`Error processing notifications for contact ${contactKey}:`, error);
             }
           }
+          
+          // Update processed notification IDs in localStorage
+          localStorage.setItem('processedNotificationIds', 
+            JSON.stringify([...processedIds, ...newProcessedIds]));
+          
+          // Update the UI with all fetched notifications
+          // (we still show all in the UI, but only count unique contacts for unread counts)
+          setNotifications(fetchedNotifications);
+          
+          // Set unread count to the number of unique contacts with notifications
+          setUnreadCount(Object.keys(contactToNotifications).length);
           
           // Dispatch an event to notify other components about updated notifications
           window.dispatchEvent(new CustomEvent('notificationsUpdated'));
         } else {
           console.log("No new notifications found after login");
+          setNotifications([]);
+          setUnreadCount(0);
         }
       } catch (error) {
         console.error('Error checking for notifications after login:', error);
@@ -468,47 +560,50 @@ useEffect(() => {
   };
 
   checkForNewNotificationsOnLogin();
-}, [authenticated, tenantId]); // This will run when authentication status changes
+}, [authenticated, tenantId]);
 
   // Enhanced handlefindid function
-  const handlefindid = async (text, id) => {
+  const handlefindid = async (contactId, id) => {
     try {
-       
-      
-      
-      const match = text.match(/(\d+)\s+\|\s+New meessage from/);
-      if (!match || !match[1]) {
-        console.error("Could not extract phone number from notification:", text);
+      if (!contactId) {
+        console.error("Contact ID is missing");
         return;
       }
       
-      const phone = match[1];
+      // Convert to string to ensure consistency
+      contactId = contactId.toString();
       
-      // Check cache first
-      let contactId = contactsCache.current[phone];
-      
-      if (!contactId) {
-        const response = await axiosInstance.get(`${fastURL}/contacts/${0}?phone=${phone}`);
-        if (!response.data.contacts || response.data.contacts.length === 0) {
-          console.error("No contact found for phone:", phone);
-          return;
-        }
-        
-        contactId = response.data.contacts[0].id;
-        // Update cache
-        contactsCache.current[phone] = contactId.toString();
-      }
+      console.log(`Processing contact ID: ${contactId}, notification ID: ${id}`);
       
       // Reset unread count in IndexedDB
-      await updateContactUnreadCount(contactId.toString(), 0);
-      // console.log(`Reset unread count for contact ${contactId}`);
+      await updateContactUnreadCount(contactId, 0);
+      console.log(`Reset unread count for contact ${contactId}`);
       
       // Remove notification
-      await removeNotification(id);
+      if (id) {
+        await removeNotification(id);
+        console.log(`Removed notification ${id}`);
+        
+        // Also remove all other notifications for this contact
+        const otherNotifications = notifications.filter(n => 
+          n.contact_id && n.contact_id.toString() === contactId && n.id !== id
+        );
+        
+        if (otherNotifications.length > 0) {
+          console.log(`Removing ${otherNotifications.length} other notifications for contact ${contactId}`);
+          
+          for (const notification of otherNotifications) {
+            await removeNotification(notification.id);
+          }
+        }
+      }
       
       // Navigate to the chatbot with the contact ID
       navigate(`/${tenantId}/chatbot?id=${contactId}`);
-
+  
+      // Dispatch event to update UI in other components
+      window.dispatchEvent(new CustomEvent('notificationsUpdated'));
+  
       setTimeout(() => {
         window.location.reload();
       }, 100);
@@ -529,10 +624,13 @@ useEffect(() => {
   
       setNotifications(prev => prev.filter(n => n.id !== id));
       setUnreadCount(prev => Math.max(0, prev - 1));
+      
+      // Dispatch event to update UI in other components
+      window.dispatchEvent(new CustomEvent('notificationsUpdated'));
     } catch (error) {
       console.error('Error removing notification:', error);
     }
-  };
+  }; 
 
   const clearAllNotifications = async () => {
     try {
@@ -788,7 +886,8 @@ useEffect(() => {
                               }}
                               onClick={(e) => {
                                 if (notification && notification.content) {
-                                  handlefindid(notification.content,notification.id);
+                                  handlefindid(notification.contact_id,notification.id);
+                                  console.log(notification)
                                 } else {
                                   console.log("Cannot process notification - content is missing");
                                 }
