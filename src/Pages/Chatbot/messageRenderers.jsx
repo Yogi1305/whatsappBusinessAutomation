@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Check, Clock } from 'lucide-react';
+import { Download, FileText, Check, Clock, ExternalLink, Video } from 'lucide-react';
 
 export const renderMessageWithNewLines = (text, sender) => {
   if (!text) return null;
@@ -38,9 +39,10 @@ export const renderMessageWithNewLines = (text, sender) => {
   }
 };
 
-const PdfViewer = ({ document, sender }) => {
+// Rename the parameter from 'document' to 'docData' to avoid conflict
+const PdfViewer = ({ document: docData, sender }) => {
   // Handle null or undefined document
-  if (!document || !document.id) {
+  if (!docData || !docData.id) {
     return (
       <Alert variant="destructive" className={`w-full max-w-xl ${sender === 'user' ? 'ml-auto' : 'mr-auto'}`}>
         <AlertDescription>Invalid document data provided</AlertDescription>
@@ -48,22 +50,39 @@ const PdfViewer = ({ document, sender }) => {
     );
   }
 
-  const pdfUrl = document.id;
+  // Make sure we have a complete URL
+  const getFullUrl = (url) => {
+    if (!url) return '';
+    
+    // If it's already an absolute URL, return it
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // If it's a relative URL, make it absolute
+    const apiBaseUrl = window.location.origin;
+    return `${apiBaseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
-  const handleDownload = async () => {
+  const pdfUrl = getFullUrl(docData.id);
+  const documentName = docData.filename || 'PDF Document';
+
+  const handleDownload = () => {
     try {
-      const response = await fetch(pdfUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'document.pdf'; // You can customize the filename
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Now this will correctly use the global document object
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.download = documentName;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log('Opening PDF at URL:', pdfUrl);
     } catch (error) {
-      // Error handling without console logging
+      console.error('Failed to open document:', error);
     }
   };
 
@@ -71,7 +90,7 @@ const PdfViewer = ({ document, sender }) => {
     <div className={`document-container ${sender === 'user' ? 'user-document' : 'bot-document'}`}>
       <div className="document-header">
         <FileText className="document-icon" />
-        <span className="document-title">PDF Document</span>
+        <span className="document-title">{documentName}</span>
         <Button 
           variant="ghost" 
           size="sm" 
@@ -81,18 +100,91 @@ const PdfViewer = ({ document, sender }) => {
           <Download size={16} />
         </Button>
       </div>
+      
       <div className="document-preview">
-        <iframe
-          src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-          className="w-full h-full"
-          title="PDF viewer"
-        />
+        <div className="pdf-container">
+          <div className="pdf-placeholder">
+            <FileText size={48} className="text-gray-400 mb-2" />
+            <p className="text-gray-600 mb-4">PDF Document</p>
+            <div className="flex flex-col space-y-2">
+              <Button 
+                variant="outline" 
+                onClick={handleDownload}
+                className="flex items-center"
+              >
+                <ExternalLink size={16} className="mr-2" />
+                Open Document
+              </Button>
+              
+              
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default PdfViewer;
+// Add VideoPlayer component
+const VideoPlayer = ({ video, sender }) => {
+  // Handle null or undefined video
+  if (!video || !video.id) {
+    return (
+      <Alert variant="destructive" className={`w-full max-w-xl ${sender === 'user' ? 'ml-auto' : 'mr-auto'}`}>
+        <AlertDescription>Invalid video data provided</AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Make sure we have a complete URL
+  const getFullUrl = (url) => {
+    if (!url) return '';
+    
+    // If it's already an absolute URL, return it
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // If it's a relative URL, make it absolute
+    const apiBaseUrl = window.location.origin;
+    return `${apiBaseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
+  const videoUrl = getFullUrl(video.id);
+  const videoName = video.filename || 'Video';
+
+  
+
+  return (
+    <div className={`video-container ${sender === 'user' ? 'user-video' : 'bot-video'}`}>
+      <div className="video-header">
+        <Video className="video-icon" size={18} />
+        <span className="video-title">{videoName}</span>
+        
+      </div>
+      
+      <div className="video-preview">
+        <video 
+          src={videoUrl} 
+          controls 
+          className="video-player"
+          width="100%"
+          preload="metadata"
+        >
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      
+      {video.caption && (
+        <div className="video-caption">
+          {video.caption}
+        </div>
+      )}
+      
+      
+    </div>
+  );
+};
 
 export const renderTemplateMessage = (template, sender) => {
   if (!template || !template.name) {
@@ -111,7 +203,7 @@ export const renderTemplateMessage = (template, sender) => {
 };
 
 export const renderInteractiveMessage = (parsedMessage, sender) => {
-  let { type, interactive, text, image, template, document } = parsedMessage;
+  let { type, interactive, text, image, template, document, video } = parsedMessage;
 
   const containerClass = `interactive-container ${sender === 'user' ? 'user-interactive' : 'bot-interactive'}`;
 
@@ -186,17 +278,23 @@ export const renderInteractiveMessage = (parsedMessage, sender) => {
     );
   } else if (type === 'template') {
     return renderTemplateMessage(template, sender);
-  } else if (type === 'document'){
+  } else if (type === 'document') {
     return (
       <div className={`${containerClass} document-message`}>
         <PdfViewer document={parsedMessage.document} sender={sender} />
+      </div>
+    );
+  } else if (type === 'video') {
+    return (
+      <div className={`${containerClass} video-message`}>
+        <VideoPlayer video={parsedMessage.video} sender={sender} />
       </div>
     );
   }
 
   return (
     <div className={`${containerClass} error-message`}>
-      Unsupported message type
+      Unsupported message type: {type}
     </div>
   );
 };
@@ -283,6 +381,13 @@ export const renderMessageContent = (message) => {
         </div>
       </MessageWrapper>
     );
+  } else if (message.type === 'video') {
+    // Handle video messages
+    return (
+      <MessageWrapper>
+        <VideoPlayer video={message} sender={sender} />
+      </MessageWrapper>
+    );
   } else if (message.type === 'document') {
     // Handle document messages
     return (
@@ -298,3 +403,6 @@ export const renderMessageContent = (message) => {
     </MessageWrapper>
   );
 };
+
+// Main export
+export default PdfViewer;

@@ -1,11 +1,11 @@
-import { 
-  getContactUnreadCount, 
-  getAllContactUnreadCounts, 
+import {
+  getContactUnreadCount,
+  getAllContactUnreadCounts,
   updateContactUnreadCount,
   getCachedConversation,
   storeConversation,
-  addMessageToCache
-} from '../../indexedDBUtils.js';
+  addMessageToCache,
+} from "../../indexedDBUtils.js";
 import React, {
   useState,
   useEffect,
@@ -77,14 +77,11 @@ import { base, div } from "framer-motion/client";
 //import { Button, Input } from 'antd';
 import { Phone, Mail, Plus } from "lucide-react";
 import { showErrorToast } from "./Broadcast/Toastcomponent.jsx";
+import FileTypeSelectionModal from "./FileTypeSelectionModal";
 
 const socket = io(whatsappURL);
 
 
-
-
-
-// Add this near the top of your file, after imports
 const DUMMY_CONTACTS = [
   {
     id: "dummy1",
@@ -188,7 +185,7 @@ const Chatbot = () => {
 
   const [unreadCounts, setUnreadCounts] = useState({});
   const messageEndRef = useRef(null);
-  const fileInputRef = useRef(null);
+  // const fileInputRef = useRef(null);
   const [imageToSend, setImageToSend] = useState(null);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [imageCaption, setImageCaption] = useState("");
@@ -214,87 +211,249 @@ const Chatbot = () => {
   const previousScroll = useRef({ height: 0, top: 0 });
   const [lastUpdateType, setLastUpdateType] = useState(null);
   const [showLoadMoreButton, setShowLoadMoreButton] = useState(false);
- 
+
   const unreadCountsRef = useRef({});
   const [unreadCountsLoaded, setUnreadCountsLoaded] = useState(false);
 
-// Load unread counts from IndexedDB when component mounts
-// Add these functions inside your component or in a utility file
-const loadUnreadCounts = async () => {
-  try {
-    const counts = await getAllContactUnreadCounts();
-    return counts;
-  } catch (error) {
-    console.error("Error loading unread counts from IndexedDB:", error);
-    return {};
-  }
-};
-
-const saveUnreadCounts = async (unreadData) => {
-  try {
-    // Save each contact's unread count individually
-    const promises = Object.entries(unreadData).map(([contactId, count]) => 
-      updateContactUnreadCount(contactId, count)
-    );
-    await Promise.all(promises);
-  } catch (error) {
-    console.error("Error saving unread counts to IndexedDB:", error);
-  }
-};
-
-
-
-useEffect(() => {
-  const loadSavedUnreadCounts = async () => {
-    try {
-      const savedCounts = await loadUnreadCounts();
-      unreadCountsRef.current = savedCounts;
-      setUnreadCountsLoaded(true);
-    } catch (error) {
-      console.error("Failed to load unread counts:", error);
-      setUnreadCountsLoaded(true); // Mark as loaded even on error
-    }
+  // Load unread counts from IndexedDB when component mounts
+  // Add these functions inside your component or in a utility file
+  const isWithin24Hours = (timestamp) => {
+    if (!timestamp) return false;
+    
+    const now = new Date();
+    const messageTime = new Date(timestamp);
+    const diffInHours = (now - messageTime) / (1000 * 60 * 60);
+    
+    return diffInHours < 24;
   };
   
-  loadSavedUnreadCounts();
-}, []);
-
-
-useEffect(() => {
-  if (contacts.length > 0 && unreadCountsLoaded) {
-    const updatedContacts = contacts.map(contact => {
-      const savedCount = unreadCountsRef.current[contact.id];
-      return {
-        ...contact,
-        unreadCount: savedCount !== undefined ? savedCount : contact.unreadCount || 0
-      };
-    });
-    setContacts(updatedContacts);
-  }
-}, [contacts.length, unreadCountsLoaded]);
-
-
-// Save unread counts whenever they change
- useEffect(() => {
-  if (contacts.length > 0) {
-    const unreadData = contacts.reduce((acc, contact) => {
-      if (contact.unreadCount > 0) {
-        acc[contact.id] = contact.unreadCount;
-      }
-      return acc;
-    }, {});
+  const getInteractionStatus = (contact) => {
+    if (contact.last_replied) return {
+      status: "last_replied",
+      timestamp: contact.last_replied,
+      label: "Replied",
+      isActive: isWithin24Hours(contact.last_replied)
+    };
     
-    // Only save if there are actual changes
-    if (JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)) {
-      unreadCountsRef.current = unreadData;
-      saveUnreadCounts(unreadData);
-    }
-  }
-}, [contacts]);
+    if (contact.last_seen) return {
+      status: "last_seen",
+      timestamp: contact.last_seen,
+      label: "Seen",
+      isActive: isWithin24Hours(contact.last_seen)
+    };
+    
+    if (contact.last_delivered) return {
+      status: "last_delivered",
+      timestamp: contact.last_delivered,
+      label: "Delivered",
+      isActive: isWithin24Hours(contact.last_delivered)
+    };
+    
+    return {
+      status: "no_interaction",
+      timestamp: null,
+      label: "No Interaction",
+      isActive: false
+    };
+  };
+  
+  const ActivityIndicator = React.memo(({ contact }) => {
+    const interactionInfo = useMemo(() => getInteractionStatus(contact), [contact]);
+    
+    return (
+      <div className="flex items-center">
+        <div 
+          className={`activity-indicator w-3 h-3 rounded-full ${
+            interactionInfo.isActive ? 'bg-green-500' : 'bg-red-500'
+          }`}
+          title={`${interactionInfo.label} ${interactionInfo.timestamp ? 
+            `- ${new Date(interactionInfo.timestamp).toLocaleString()}` : 
+            ''}`}
+        />
+        <span className="text-xs text-gray-400 ml-2">
+          {interactionInfo.label}
+        </span>
+      </div>
+    );
+  });
 
-useEffect(() => {
+  const loadUnreadCounts = async () => {
+    try {
+      const counts = await getAllContactUnreadCounts();
+      return counts;
+    } catch (error) {
+      console.error("Error loading unread counts from IndexedDB:", error);
+      return {};
+    }
+  };
+
+  const saveUnreadCounts = async (unreadData) => {
+    try {
+      // Save each contact's unread count individually
+      const promises = Object.entries(unreadData).map(([contactId, count]) =>
+        updateContactUnreadCount(contactId, count)
+      );
+      await Promise.all(promises);
+    } catch (error) {
+      console.error("Error saving unread counts to IndexedDB:", error);
+    }
+  };
+
+  useEffect(() => {
+    const loadSavedUnreadCounts = async () => {
+      try {
+        const savedCounts = await loadUnreadCounts();
+        unreadCountsRef.current = savedCounts;
+        setUnreadCountsLoaded(true);
+      } catch (error) {
+        console.error("Failed to load unread counts:", error);
+        setUnreadCountsLoaded(true); // Mark as loaded even on error
+      }
+    };
+
+    loadSavedUnreadCounts();
+  }, []);
+
+  useEffect(() => {
+    if (contacts.length > 0 && unreadCountsLoaded) {
+      const updatedContacts = contacts.map((contact) => {
+        const savedCount = unreadCountsRef.current[contact.id];
+        return {
+          ...contact,
+          unreadCount:
+            savedCount !== undefined ? savedCount : contact.unreadCount || 0,
+        };
+      });
+      setContacts(updatedContacts);
+    }
+  }, [contacts.length, unreadCountsLoaded]);
+
+  const [showFileTypeModal, setShowFileTypeModal] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Add this function to handle file type selection
+  const handleFileTypeSelect = (fileType, acceptTypes) => {
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = acceptTypes;
+      fileInputRef.current.click();
+    }
+    setShowFileTypeModal(false);
+  };
+
+  // Replace your existing handleFileSelect function with this enhanced version
+  const handleFileSelect = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      // Create a preview for the file before uploading
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        const previewUrl = e.target.result; // This is a data URL
+
+        // Now upload to Facebook Graph API
+        try {
+          // Determine file type for proper handling
+          const fileType = file.type.split("/")[0]; // e.g., 'image', 'video', 'application'
+          let mediaType;
+
+          // Map file type to WhatsApp media type
+          if (fileType === "image") {
+            mediaType = "image";
+          } else if (fileType === "video") {
+            mediaType = "video";
+          } else if (fileType === "audio") {
+            mediaType = "audio";
+          } else {
+            mediaType = "document";
+          }
+
+          // Create FormData object
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("type", mediaType); // Use the determined media type
+          formData.append("messaging_product", "whatsapp");
+
+          const response = await axios.post(
+            `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+
+          if (response.data && response.data.id) {
+            // Store the media ID
+            const mediaId = response.data.id;
+            setImageToSend(mediaId);
+
+            // Store the preview URL with file type info
+            setImageMap((prevMap) => ({
+              ...prevMap,
+              [mediaId]: previewUrl,
+            }));
+
+            // Show preview
+            setShowImagePreview(true);
+            setIsUploading(false);
+
+            console.log(
+              `File uploaded successfully as ${mediaType}`,
+              file.type
+            );
+          } else {
+            throw new Error("Failed to upload media");
+          }
+        } catch (uploadError) {
+          console.error("Error uploading to WhatsApp:", uploadError);
+          toast.error("Failed to upload to WhatsApp. Please try again.");
+          setIsUploading(false);
+        }
+      };
+
+      reader.onerror = () => {
+        console.error("Error reading file");
+        toast.error("Failed to read file. Please try again.");
+        setIsUploading(false);
+      };
+
+      // Read the file as a data URL
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error handling file:", error);
+      toast.error("Failed to process file. Please try again.");
+      setIsUploading(false);
+    }
+  };
+
+  // Save unread counts whenever they change
+  useEffect(() => {
+    if (contacts.length > 0) {
+      const unreadData = contacts.reduce((acc, contact) => {
+        if (contact.unreadCount > 0) {
+          acc[contact.id] = contact.unreadCount;
+        }
+        return acc;
+      }, {});
+
+      // Only save if there are actual changes
+      if (
+        JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)
+      ) {
+        unreadCountsRef.current = unreadData;
+        saveUnreadCounts(unreadData);
+      }
+    }
+  }, [contacts]);
+
+  useEffect(() => {
     const container = messagesContainerRef.current;
- 
+
     if (!container) return;
 
     const handleScroll = () => {
@@ -306,7 +465,7 @@ useEffect(() => {
     return () => container.removeEventListener("scroll", handleScroll);
   }, [hasMoreMessages]);
 
-const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const toggleFab = () => {
     setIsOpen(!isOpen);
   };
@@ -314,7 +473,7 @@ const [isOpen, setIsOpen] = useState(false);
     setAuthPopupp(false);
   };
 
-useEffect(() => {
+  useEffect(() => {
     // Show popup only if not authenticated and not in demo mode
     setAuthPopupp(!authenticated);
   }, [authenticated]);
@@ -344,7 +503,7 @@ useEffect(() => {
     }
   }, [conversation, lastUpdateType]);
 
- useEffect(() => {
+  useEffect(() => {
     const fetchBusinessPhoneId = async () => {
       try {
         //console.log("fetching business phone number id")
@@ -394,15 +553,15 @@ useEffect(() => {
   };
 
   ``;
- 
+
   const fetchContacts = async (page = 1) => {
     try {
       setIsLoading(true);
-      
+
       const response = await axiosInstance.get(
         `${fastURL}/contacts/${page}?order_by=last_replied&sort_by=desc`
       );
-      
+
       let newContacts;
       if (!response.data.contacts || response.data.contacts.length === 0) {
         newContacts = DUMMY_CONTACTS;
@@ -410,28 +569,30 @@ useEffect(() => {
         setCurrentPage(1);
       } else {
         // Merge loaded unread counts with fetched contacts
-        newContacts = response.data.contacts.map(contact => {
+        newContacts = response.data.contacts.map((contact) => {
           const savedCount = unreadCountsRef.current[contact.id];
           return {
             ...contact,
-            unreadCount: savedCount !== undefined ? savedCount : contact.unreadCount || 0
+            unreadCount:
+              savedCount !== undefined ? savedCount : contact.unreadCount || 0,
           };
         });
-        
+
         setTotalPages(response.data.total_pages);
         setCurrentPage(page);
       }
 
       setContacts(newContacts);
     } catch (error) {
-      const dummyWithUnread = DUMMY_CONTACTS.map(contact => {
+      const dummyWithUnread = DUMMY_CONTACTS.map((contact) => {
         const savedCount = unreadCountsRef.current[contact.id];
         return {
           ...contact,
-          unreadCount: savedCount !== undefined ? savedCount : contact.unreadCount || 0
+          unreadCount:
+            savedCount !== undefined ? savedCount : contact.unreadCount || 0,
         };
       });
-      
+
       setContacts(dummyWithUnread);
       setTotalPages(1);
       setCurrentPage(1);
@@ -467,62 +628,6 @@ useEffect(() => {
     fetchTenantData();
   }, []);
 
-  const handleFileSelect = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setIsUploading(true);
-      try {
-        // Create FormData object
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("type", "image"); // Adjust based on file type if needed
-        formData.append("messaging_product", "whatsapp");
-
-        // Upload to Facebook Graph API
-        const response = await axios.post(
-          `https://graph.facebook.com/v16.0/${businessPhoneNumberId}/media`, //HARDCODE
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        //console.log('File uploaded to WhatsApp, ID:', response.data.id);
-        setHeaderMediaId(response.data.id);
-        setImageToSend(response.data.id);
-
-        if (response.data && response.data.id) {
-          // Store the media ID
-          const mediaId = response.data.id;
-
-          // You might want to store this mediaId in state or use it immediately
-          setImageToSend(mediaId);
-          setShowImagePreview(true);
-
-          // If you want to show a preview, you can still use FileReader
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            setImageMap((prevMap) => ({
-              ...prevMap,
-              [mediaId]: e.target.result,
-            }));
-          };
-          reader.readAsDataURL(file);
-        } else {
-          throw new Error("Failed to upload media");
-        }
-      } catch (error) {
-        //  console.error('Error uploading file:', error);
-        showErrorToast
-        ("Failed to upload file. Please try again.");
-      } finally {
-        setIsUploading(false);
-      }
-    }
-  };
-
   const handleAddField = () => {
     setInputFields([...inputFields, { type: "text", value: "" }]);
   };
@@ -537,41 +642,84 @@ useEffect(() => {
     setInputFields(newInputFields);
   };
 
+  // Keep the existing function name but enhance its functionality
   const handleImageSend = async () => {
     if (!imageToSend || !selectedContact) return;
+  
     let phoneNumber = selectedContact.phone;
     if (phoneNumber.startsWith("91")) {
       phoneNumber = phoneNumber.slice(2);
     }
+  
     try {
+      // Determine file type from the data URL
+      const previewData = imageMap[imageToSend];
+      let mediaType = "document"; // Default type
+  
+      if (typeof previewData === "string") {
+        if (previewData.startsWith("data:image/")) {
+          mediaType = "image";
+        } else if (previewData.startsWith("data:video/")) {
+          mediaType = "video";
+        } else if (previewData.startsWith("data:audio/")) {
+          mediaType = "audio";
+        } else if (previewData.startsWith("data:application/pdf")) {
+          mediaType = "document"; // PDFs are sent as documents
+        }
+      }
+  
       const response = await axiosInstance.post(`${whatsappURL}/send-message`, {
         phoneNumbers: [phoneNumber],
         messageType: "media",
         additionalData: {
           mediaId: imageToSend,
           caption: imageCaption,
+          mediaType: mediaType, // Include the media type
         },
         business_phone_number_id: businessPhoneNumberId,
       });
-
+    
       if (response.status === 200) {
+        // Add to conversation with the appropriate type
+        const currentTime = new Date().toISOString();
+        
         setConversation((prev) => [
           ...prev,
           {
-            type: "image",
+            type: mediaType,
             sender: "bot",
-            imageId: imageToSend,
-            imageUrl: imageMap[imageToSend], // This is for preview purposes
+            imageId: imageToSend, // Keep the original property name
+            imageUrl: imageMap[imageToSend], // Keep the original property name
             caption: imageCaption,
+            time: currentTime,
           },
         ]);
+        
+        // Add this section: Update the contact's activity status
+        setContacts((prevContacts) => {
+          return prevContacts.map((contact) => {
+            if (contact.id === selectedContact.id) {
+              return {
+                ...contact,
+                last_replied: currentTime,
+                // Also update any other timestamp fields you want to maintain
+                lastMessageTimestamp: new Date(currentTime).getTime()
+              };
+            }
+            return contact;
+          });
+        });
+  
+        // Reset states
         setImageToSend(null);
         setImageCaption("");
         setShowImagePreview(false);
+  
+        toast.success("Message sent successfully");
       }
     } catch (error) {
-      //  console.error('Error sending image:', error);
-      toast.error("Failed to send image. Please try again.");
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message. Please try again.");
     }
   };
 
@@ -581,8 +729,6 @@ useEffect(() => {
     name: "New Contact", // Default or empty name
     hasNewMessage: true, // Default or initial state
   });
-
-
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "auto" });
@@ -631,22 +777,25 @@ useEffect(() => {
       }
     };
     const handleNewMessage = (message) => {
-      if (message && parseInt(message.phone_number_id) === parseInt(businessPhoneNumberId)) {
+      if (
+        message &&
+        parseInt(message.phone_number_id) === parseInt(businessPhoneNumberId)
+      ) {
         isSocketUpdate.current = true;
-        
+
         if (selectedContact?.phone !== message.contactPhone) {
-          setContacts(prevContacts => {
-            const updatedContacts = prevContacts.map(contact => {
+          setContacts((prevContacts) => {
+            const updatedContacts = prevContacts.map((contact) => {
               if (contact.phone === message.contactPhone) {
                 const newUnreadCount = (contact.unreadCount || 0) + 1;
-                
+
                 // Update IndexedDB in a non-blocking way
                 updateContactUnreadCount(contact.id, newUnreadCount);
-                
-                return { 
-                  ...contact, 
+
+                return {
+                  ...contact,
                   unreadCount: newUnreadCount,
-                  lastMessageTimestamp: Date.now()
+                  lastMessageTimestamp: Date.now(),
                 };
               }
               return contact;
@@ -655,11 +804,11 @@ useEffect(() => {
           });
           return;
         }
-        
+
         // Rest of the function...
       }
     };
-  
+
     const handleNodeMessage = (rawMessage) => {
       if (
         rawMessage &&
@@ -669,18 +818,19 @@ useEffect(() => {
           // console.log('Received node message:', rawMessage);
           isSocketUpdate.current = true;
           if (selectedContact?.phone !== rawMessage.contactPhone) {
-            setContacts(prevContacts => {
-              const updatedContacts = prevContacts.map(contact => {
+            setContacts((prevContacts) => {
+              const updatedContacts = prevContacts.map((contact) => {
                 if (contact.phone === rawMessage.contactPhone) {
                   const newUnreadCount = (contact.unreadCount || 0) + 1;
-                  
+
                   // Update IndexedDB
                   updateContactUnreadCount(contact.id, newUnreadCount);
-                  
-                  return { 
-                    ...contact, 
+
+                  return {
+                    ...contact,
                     unreadCount: newUnreadCount,
-                    lastMessageTimestamp: Date.now()
+                    lastMessageTimestamp: Date.now(),
+                    last_replied: new Date().toISOString()
                   };
                 }
                 return contact;
@@ -735,13 +885,13 @@ useEffect(() => {
       toast.error("No contact selected");
       return;
     }
-
+  
     const messageContent = messageTemplates[selectedContact.id];
     if (!messageContent || messageContent.trim() === "") {
       toast.error("Please enter a message");
       return;
     }
-
+  
     try {
       // First add the message to the conversation for immediate feedback
       const newMessage = {
@@ -751,20 +901,20 @@ useEffect(() => {
         time: new Date().toISOString(),
         pending: true, // Mark as pending until confirmed
       };
-
+  
       setConversation((prev) => [...prev, newMessage]);
-
+  
       // Clear the input field immediately for better UX
       setMessageTemplates((prevTemplates) => ({
         ...prevTemplates,
         [selectedContact.id]: "",
       }));
-
+  
       // Scroll to the new message
       setTimeout(() => {
         messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 50);
-
+  
       if (selectedContact.isGroup) {
         // Send message to all group members
         const sendPromises = selectedContact.members.map((memberId) => {
@@ -773,7 +923,7 @@ useEffect(() => {
           if (phoneNumber.startsWith("91")) {
             phoneNumber = phoneNumber.slice(2);
           }
-
+  
           return axiosInstance.post(`${whatsappURL}/send-message`, {
             phoneNumbers: [phoneNumber],
             message: messageContent,
@@ -781,6 +931,7 @@ useEffect(() => {
             messageType: "text",
           });
         });
+        
         await Promise.all(sendPromises);
       } else {
         // Send message to individual contact
@@ -788,7 +939,7 @@ useEffect(() => {
         if (phoneNumber.startsWith("91")) {
           phoneNumber = phoneNumber.slice(2);
         }
-
+  
         await axiosInstance.post(`${whatsappURL}/send-message`, {
           phoneNumbers: [phoneNumber],
           message: messageContent,
@@ -796,14 +947,30 @@ useEffect(() => {
           messageType: "text",
         });
       }
-
+  
       // Update the message to remove the pending status
       setConversation((prev) =>
         prev.map((msg) =>
           msg.id === newMessage.id ? { ...msg, pending: false } : msg
         )
       );
-
+      
+      // Add this section: Update the contact's activity status
+      setContacts((prevContacts) => {
+        return prevContacts.map((contact) => {
+          if (contact.id === selectedContact.id) {
+            const currentTime = new Date().toISOString();
+            return {
+              ...contact,
+              last_replied: currentTime,
+              // Also update any other timestamp fields you want to maintain
+              lastMessageTimestamp: new Date(currentTime).getTime()
+            };
+          }
+          return contact;
+        });
+      });
+     
       // Add success toast
       toast.success("Message sent successfully");
     } catch (error) {
@@ -815,7 +982,7 @@ useEffect(() => {
             : msg
         )
       );
-
+  
       // Add error toast with specific error message
       toast.error(
         `Failed to send message: ${
@@ -825,7 +992,6 @@ useEffect(() => {
       console.error("Error sending message:", error);
     }
   };
-
   const getFilteredAndSortedContacts = () => {
     return contacts
       .filter((contact) => {
@@ -929,7 +1095,7 @@ useEffect(() => {
         );
 
         const data = response.data.conversations || [];
-        
+
         const serverPage = response.data.page_no;
         const totalPages = response.data.total_pages;
 
@@ -1036,51 +1202,56 @@ useEffect(() => {
     setLastUpdateType("append");
     fetchConversation(selectedContact.phone, currentMessagePage + 1, true);
   };
- 
- 
+
   const handleContactSelection = async (contact) => {
     if (selectedContact?.id === contact.id) return;
-  
+
     try {
       setIsLoading(true);
       setConversation([]);
       setCurrentMessagePage(1);
       setHasMoreMessages(true);
-  
+
       navigate({ search: `?id=${contact.id}` }, { replace: true });
-  
+
       // Reset unread count for this contact in state
-      const updatedContacts = contacts.map(c => 
+      const updatedContacts = contacts.map((c) =>
         c.id === contact.id ? { ...c, unreadCount: 0 } : c
       );
       setContacts(updatedContacts);
-      
+
       // Update IndexedDB - set unread count to 0
       await updateContactUnreadCount(contact.id, 0);
       // console.log(`Reset unread count for contact ${contact.id} in IndexedDB`);
-  
+
       // If contact has a phone number, delete all notifications for this contact
       if (contact.phone) {
         try {
-        //   // API call to delete notifications for this contact
-          await axiosInstance.delete(`${fastURL}/notifications/contact/${contact.id}`, {
-            headers: {
-              'X-Tenant-ID': tenantId
+          //   // API call to delete notifications for this contact
+          await axiosInstance.delete(
+            `${fastURL}/notifications/contact/${contact.id}`,
+            {
+              headers: {
+                "X-Tenant-ID": tenantId,
+              },
             }
-          });
+          );
           // console.log(`Deleted notifications for contact ID: ${contact.id}`);
-          
+
           // Dispatch event to update notification UI in Navbar
-          window.dispatchEvent(new CustomEvent('refreshNotifications'));
+          window.dispatchEvent(new CustomEvent("refreshNotifications"));
           setTimeout(() => {
             window.location.reload();
           }, 100);
         } catch (deleteError) {
-          console.error(`Failed to delete notifications for contact ${contact.id}:`, deleteError);
+          console.error(
+            `Failed to delete notifications for contact ${contact.id}:`,
+            deleteError
+          );
           // Continue with contact selection even if notification deletion fails
         }
       }
-  
+
       setSelectedContact(contact);
     } catch (error) {
       console.error("Contact selection failed:", error);
@@ -1088,7 +1259,6 @@ useEffect(() => {
       setIsLoading(false);
     }
   };
- 
 
   const handleToggleSmileys = () => {
     setShowSmileys(!showSmileys);
@@ -1374,221 +1544,183 @@ useEffect(() => {
       );
     }
   }
-// Add this effect to store conversations in IndexedDB when they change
-useEffect(() => {
-  if (selectedContact && conversation.length > 0) {
-    // Store the conversation in IndexedDB
-    storeConversation(selectedContact.id, conversation);
-  }
-}, [selectedContact, conversation]);
-
-
-useEffect(() => {
-  if (!selectedContact?.phone || !businessPhoneNumberId) return;
-
-  // Skip fetch if this update was triggered by socket
-  if (isSocketUpdate.current) {
-    isSocketUpdate.current = false;
-    return;
-  }
-
-  setIsLoading(true);
-  const controller = new AbortController();
-
-  // First try to load from cache
-  const loadConversation = async () => {
-    try {
-      // Try to get cached conversation first
-      const cachedMessages = await getCachedConversation(selectedContact.id);
-      
-      if (cachedMessages && cachedMessages.length > 0) {
-        // Use cached messages first for instant display
-        setConversation(cachedMessages);
-        setLastUpdateType("new");
-      }
-      
-      // Then fetch from server to get the latest
-      await fetchConversation(
-        selectedContact.phone,
-        1,
-        false,
-        controller.signal
-      );
-    } catch (error) {
-      console.error("Error loading conversation:", error);
-    } finally {
-      setIsLoading(false);
+  // Add this effect to store conversations in IndexedDB when they change
+  useEffect(() => {
+    if (selectedContact && conversation.length > 0) {
+      // Store the conversation in IndexedDB
+      storeConversation(selectedContact.id, conversation);
     }
-  };
+  }, [selectedContact, conversation]);
 
-  loadConversation();
+  useEffect(() => {
+    if (!selectedContact?.phone || !businessPhoneNumberId) return;
 
-  return () => controller.abort();
-}, [selectedContact?.phone, businessPhoneNumberId, fetchConversation]);
-
-
-
-// Load unread counts from IndexedDB when component mounts
-useEffect(() => {
-  const loadSavedUnreadCounts = async () => {
-    try {
-      const savedCounts = await loadUnreadCounts();
-      unreadCountsRef.current = savedCounts;
-      setUnreadCountsLoaded(true);
-    } catch (error) {
-      console.error("Failed to load unread counts:", error);
-      setUnreadCountsLoaded(true); // Mark as loaded even on error
+    // Skip fetch if this update was triggered by socket
+    if (isSocketUpdate.current) {
+      isSocketUpdate.current = false;
+      return;
     }
-  };
-  
-  loadSavedUnreadCounts();
-}, []);
 
-// Save unread counts whenever they change
-useEffect(() => {
-  if (contacts.length > 0) {
-    const unreadData = contacts.reduce((acc, contact) => {
-      if (contact.unreadCount > 0) {
-        acc[contact.id] = contact.unreadCount;
-      }
-      return acc;
-    }, {});
-    
-    // Only save if there are actual changes
-    if (JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)) {
-      unreadCountsRef.current = unreadData;
-      saveUnreadCounts(unreadData);
-    }
-  }
-}, [contacts]);
+    setIsLoading(true);
+    const controller = new AbortController();
 
-
-
-const updateUnreadCountInIndexedDB = async (contactId, count) => {
-  try {
-    await updateContactUnreadCount(contactId, count);
-  } catch (error) {
-    console.error("Error updating unread count in IndexedDB:", error);
-  }
-};
-
-// Check for new notifications when the user logs in
-useEffect(() => {
-  const checkForNewNotifications = async () => {
-    if (authenticated) {
+    // First try to load from cache
+    const loadConversation = async () => {
       try {
-        const response = await axiosInstance.get(`${fastURL}/notifications`, {
-          headers: { token: localStorage.getItem("token") },
-        });
-        const newNotifications = response.data.notifications ;
-        // console.log("for each ",response.data);
+        // Try to get cached conversation first
+        const cachedMessages = await getCachedConversation(selectedContact.id);
 
-        newNotifications.forEach(notification => {
-          const contactId = notification.contactId;
-          const unreadCount = notification.unreadCount;
-          updateUnreadCountInIndexedDB(contactId, unreadCount);
-        });
+        if (cachedMessages && cachedMessages.length > 0) {
+          // Use cached messages first for instant display
+          setConversation(cachedMessages);
+          setLastUpdateType("new");
+        }
 
-        setContacts(prevContacts => {
-          return prevContacts.map(contact => {
-            const notification = newNotifications.find(n => n.contactId === contact.id);
-            if (notification) {
-              return { ...contact, unreadCount: notification.unreadCount };
-            }
-            return contact;
-          });
-        });
+        // Then fetch from server to get the latest
+        await fetchConversation(
+          selectedContact.phone,
+          1,
+          false,
+          controller.signal
+        );
       } catch (error) {
-        console.error("Error fetching notifications:", error);
+        console.error("Error loading conversation:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadConversation();
+
+    return () => controller.abort();
+  }, [selectedContact?.phone, businessPhoneNumberId, fetchConversation]);
+
+  // Load unread counts from IndexedDB when component mounts
+  useEffect(() => {
+    const loadSavedUnreadCounts = async () => {
+      try {
+        const savedCounts = await loadUnreadCounts();
+        unreadCountsRef.current = savedCounts;
+        setUnreadCountsLoaded(true);
+      } catch (error) {
+        console.error("Failed to load unread counts:", error);
+        setUnreadCountsLoaded(true); // Mark as loaded even on error
+      }
+    };
+
+    loadSavedUnreadCounts();
+  }, []);
+
+  // Save unread counts whenever they change
+  useEffect(() => {
+    if (contacts.length > 0) {
+      const unreadData = contacts.reduce((acc, contact) => {
+        if (contact.unreadCount > 0) {
+          acc[contact.id] = contact.unreadCount;
+        }
+        return acc;
+      }, {});
+
+      // Only save if there are actual changes
+      if (
+        JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)
+      ) {
+        unreadCountsRef.current = unreadData;
+        saveUnreadCounts(unreadData);
       }
     }
-  };
+  }, [contacts]);
 
-  checkForNewNotifications();
-}, [authenticated]);
-
-// // Sync unread counts between server and IndexedDB
-// useEffect(() => {
-//   const syncUnreadCounts = async () => {
-//     try {
-//       const response = await axiosInstance.get(`${fastURL}/unread-counts`, {
-//         headers: { token: localStorage.getItem("token") },
-//       });
-//       const serverUnreadCounts = response.data;
-
-//       for (const [contactId, count] of Object.entries(serverUnreadCounts)) {
-//         await updateUnreadCountInIndexedDB(contactId, count);
-//       }
-
-//       setContacts(prevContacts => {
-//         return prevContacts.map(contact => {
-//           const serverCount = serverUnreadCounts[contact.id] || 0;
-//           return { ...contact, unreadCount: serverCount };
-//         });
-//       });
-//     } catch (error) {
-//       console.error("Error syncing unread counts:", error);
-//     }
-//   };
-
-//   if (navigator.onLine) {
-//     syncUnreadCounts();
-//   }
-// }, [authenticated]);
-
-// // Sync unread counts when the user comes back online
-// useEffect(() => {
-//   const handleOnline = () => {
-//     syncUnreadCounts();
-//   };
-
-//   window.addEventListener("online", handleOnline);
-//   return () => window.removeEventListener("online", handleOnline);
-// }, []);
-
-
-useEffect(() => {
-  const loadSavedUnreadCounts = async () => {
+  const updateUnreadCountInIndexedDB = async (contactId, count) => {
     try {
-      const savedCounts = await loadUnreadCounts();
-      unreadCountsRef.current = savedCounts;
-      setUnreadCountsLoaded(true);
+      await updateContactUnreadCount(contactId, count);
     } catch (error) {
-      console.error("Failed to load unread counts:", error);
-      setUnreadCountsLoaded(true);
+      console.error("Error updating unread count in IndexedDB:", error);
     }
   };
-  
-  loadSavedUnreadCounts();
-}, []);
-useEffect(() => {
-  if (contacts.length > 0 && unreadCountsLoaded) {
-    const updatedContacts = contacts.map(contact => {
-      const savedCount = unreadCountsRef.current[contact.id];
-      return {
-        ...contact,
-        unreadCount: savedCount !== undefined ? savedCount : contact.unreadCount || 0
-      };
-    });
-    setContacts(updatedContacts);
-  }
-}, [contacts.length, unreadCountsLoaded]);
 
-useEffect(() => {
-  if (contacts.length > 0) {
-    const unreadData = contacts.reduce((acc, contact) => {
-      if (contact.unreadCount > 0) {
-        acc[contact.id] = contact.unreadCount;
+  // Check for new notifications when the user logs in
+  useEffect(() => {
+    const checkForNewNotifications = async () => {
+      if (authenticated) {
+        try {
+          const response = await axiosInstance.get(`${fastURL}/notifications`, {
+            headers: { token: localStorage.getItem("token") },
+          });
+          const newNotifications = response.data.notifications;
+          // console.log("for each ",response.data);
+
+          newNotifications.forEach((notification) => {
+            const contactId = notification.contactId;
+            const unreadCount = notification.unreadCount;
+            updateUnreadCountInIndexedDB(contactId, unreadCount);
+          });
+
+          setContacts((prevContacts) => {
+            return prevContacts.map((contact) => {
+              const notification = newNotifications.find(
+                (n) => n.contactId === contact.id
+              );
+              if (notification) {
+                return { ...contact, unreadCount: notification.unreadCount };
+              }
+              return contact;
+            });
+          });
+        } catch (error) {
+          console.error("Error fetching notifications:", error);
+        }
       }
-      return acc;
-    }, {});
-    
-    if (JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)) {
-      unreadCountsRef.current = unreadData;
-      saveUnreadCounts(unreadData);
+    };
+
+    checkForNewNotifications();
+  }, [authenticated]);
+
+  useEffect(() => {
+    const loadSavedUnreadCounts = async () => {
+      try {
+        const savedCounts = await loadUnreadCounts();
+        unreadCountsRef.current = savedCounts;
+        setUnreadCountsLoaded(true);
+      } catch (error) {
+        console.error("Failed to load unread counts:", error);
+        setUnreadCountsLoaded(true);
+      }
+    };
+
+    loadSavedUnreadCounts();
+  }, []);
+  useEffect(() => {
+    if (contacts.length > 0 && unreadCountsLoaded) {
+      const updatedContacts = contacts.map((contact) => {
+        const savedCount = unreadCountsRef.current[contact.id];
+        return {
+          ...contact,
+          unreadCount:
+            savedCount !== undefined ? savedCount : contact.unreadCount || 0,
+        };
+      });
+      setContacts(updatedContacts);
     }
-  }
-}, [contacts]);
+  }, [contacts.length, unreadCountsLoaded]);
+
+  useEffect(() => {
+    if (contacts.length > 0) {
+      const unreadData = contacts.reduce((acc, contact) => {
+        if (contact.unreadCount > 0) {
+          acc[contact.id] = contact.unreadCount;
+        }
+        return acc;
+      }, {});
+
+      if (
+        JSON.stringify(unreadData) !== JSON.stringify(unreadCountsRef.current)
+      ) {
+        unreadCountsRef.current = unreadData;
+        saveUnreadCounts(unreadData);
+      }
+    }
+  }, [contacts]);
 
   return (
     <div className={`${authenticated ? "" : "mt-[60px]"} `}>
@@ -1786,7 +1918,6 @@ useEffect(() => {
                 </div>
               )}
               {visibleMessages.map((message, index) => (
-                
                 <div
                   key={index}
                   className={`cb-message ${
@@ -1978,24 +2109,62 @@ useEffect(() => {
                         ];
 
                         // Determine interaction status for each contact
-                        const getInteractionStatus = (contact) => {
-                          if (contact.last_replied) return "last_replied";
-                          if (contact.last_seen) return "last_seen";
-                          if (contact.last_delivered) return "last_delivered";
-                          return "no_interaction";
-                        };
-
+                        // const getInteractionStatus = (contact) => {
+                        //   if (contact.last_replied) return "last_replied";
+                        //   if (contact.last_seen) return "last_seen";
+                        //   if (contact.last_delivered) return "last_delivered";
+                        //   return "no_interaction";
+                        // };
+                        // const getInteractionStatus = (contact) => {
+                        //   if (contact.last_replied) return {
+                        //     status: "last_replied",
+                        //     timestamp: contact.last_replied,
+                        //     label: "Replied",
+                        //     isActive: isWithin24Hours(contact.last_replied)
+                        //   };
+                          
+                        //   if (contact.last_seen) return {
+                        //     status: "last_seen",
+                        //     timestamp: contact.last_seen,
+                        //     label: "Seen",
+                        //     isActive: isWithin24Hours(contact.last_seen)
+                        //   };
+                          
+                        //   if (contact.last_delivered) return {
+                        //     status: "last_delivered",
+                        //     timestamp: contact.last_delivered,
+                        //     label: "Delivered",
+                        //     isActive: isWithin24Hours(contact.last_delivered)
+                        //   };
+                          
+                        //   return {
+                        //     status: "no_interaction",
+                        //     timestamp: null,
+                        //     label: "No Interaction",
+                        //     isActive: false
+                        //   };
+                        // };
+                        
+                        // const isWithin24Hours = (timestamp) => {
+                        //   if (!timestamp) return false;
+                          
+                        //   const now = new Date();
+                        //   const messageTime = new Date(timestamp);
+                        //   const diffInHours = (now - messageTime) / (1000 * 60 * 60);
+                          
+                        //   return diffInHours < 24;
+                        // };
                         const aStatus = getInteractionStatus(a);
                         const bStatus = getInteractionStatus(b);
 
                         // First, sort by interaction priority
                         const priorityDiff =
-                          interactionPriority.indexOf(aStatus) -
-                          interactionPriority.indexOf(bStatus);
+                          interactionPriority.indexOf(aStatus.status) -
+                          interactionPriority.indexOf(bStatus.status);
                         if (priorityDiff !== 0) return priorityDiff;
 
                         // If same interaction status, sort by timestamp within that status
-                        switch (aStatus) {
+                        switch (aStatus.status) {
                           case "last_replied":
                             return (
                               new Date(b.last_replied).getTime() -
@@ -2033,8 +2202,10 @@ useEffect(() => {
                             <p className="text-sm text-gray-500">
                               {contact.phone || "No Phone"}
                             </p>
+                            <ActivityIndicator contact={contact} />
+
                             {/* Optional: Add interaction status hint */}
-                            <p className="text-xs text-gray-400">
+                            {/* <p className="text-xs text-gray-400">
                               {contact.last_replied
                                 ? "Replied"
                                 : contact.last_seen
@@ -2042,7 +2213,7 @@ useEffect(() => {
                                 : contact.last_delivered
                                 ? "Delivered"
                                 : "No Interaction"}
-                            </p>
+                            </p> */}
                           </div>
                           {contact.unreadCount > 0 && (
                             <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
@@ -2213,6 +2384,7 @@ useEffect(() => {
                 )}
                 <div ref={messageEndRef} />
               </div>
+             
               <div className="cb-input-container">
                 <div className="cb-input-actions">
                   <EmojiEmotionsIcon
@@ -2221,7 +2393,6 @@ useEffect(() => {
                   />
                   <input
                     type="file"
-                    accept="image/*, application/pdf, .doc, .docx, .txt"
                     style={{ display: "none" }}
                     onChange={handleFileSelect}
                     ref={fileInputRef}
@@ -2229,7 +2400,7 @@ useEffect(() => {
 
                   <AttachFileIcon
                     className="cb-action-icon"
-                    onClick={() => fileInputRef.current.click()}
+                    onClick={() => setShowFileTypeModal(true)}
                   />
                 </div>
                 <textarea
@@ -2249,6 +2420,7 @@ useEffect(() => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       // Send on Enter, ignore if Shift+Enter
                       e.preventDefault(); // Prevent new line from being added
+                    
                       handleSend();
                     }
                   }}
@@ -2257,6 +2429,13 @@ useEffect(() => {
                 />
                 <SendIcon className="cb-send-icon" onClick={handleSend} />
               </div>
+
+              {/* Add this outside the input container but inside the parent container */}
+              <FileTypeSelectionModal
+                isOpen={showFileTypeModal}
+                onClose={() => setShowFileTypeModal(false)}
+                onSelectType={handleFileTypeSelect}
+              />
 
               {showSmileys && (
                 <div className="cb-emoji-picker">
@@ -2404,11 +2583,138 @@ useEffect(() => {
                     className="cb-close-preview"
                     onClick={() => setShowImagePreview(false)}
                   />
-                  <img
-                    src={imageMap[imageToSend]}
-                    alt="Preview"
-                    className="cb-preview-image"
-                  />
+
+                  {/* Preview based on file type */}
+                  {(() => {
+                    const preview = imageMap[imageToSend];
+
+                    if (typeof preview === "string") {
+                      // Image preview
+                      if (preview.startsWith("data:image/")) {
+                        return (
+                          <div className="image-preview-wrapper">
+                            <img
+                              src={preview}
+                              alt="Image Preview"
+                              className="cb-preview-image"
+                            />
+                          </div>
+                        );
+                      }
+                      // PDF preview
+                      else if (preview.startsWith("data:application/pdf")) {
+                        return (
+                          <div className="pdf-preview-wrapper">
+                            <iframe
+                              src={preview}
+                              className="pdf-preview-frame"
+                              width="100%"
+                              height="500px"
+                              title="PDF Preview"
+                            ></iframe>
+                          </div>
+                        );
+                      }
+                      // Video preview
+                      else if (preview.startsWith("data:video/")) {
+                        return (
+                          <div className="video-preview-wrapper">
+                            <video
+                              src={preview}
+                              controls
+                              className="cb-preview-video"
+                              width="100%"
+                              height="auto"
+                            />
+                          </div>
+                        );
+                      }
+                      // Audio preview
+                      else if (preview.startsWith("data:audio/")) {
+                        return (
+                          <div className="audio-preview-container p-4 bg-gray-100 rounded-md">
+                            <div className="audio-icon flex justify-center mb-3">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-gray-600"
+                              >
+                                <path d="M9 18V5l12-2v13"></path>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <circle cx="18" cy="16" r="3"></circle>
+                              </svg>
+                            </div>
+                            <audio src={preview} controls className="w-full" />
+                          </div>
+                        );
+                      }
+                      // Generic document preview
+                      else {
+                        return (
+                          <div className="document-preview-container p-8 bg-gray-100 rounded-md flex flex-col items-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="64"
+                              height="64"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="text-gray-600 mb-3"
+                            >
+                              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                              <polyline points="13 2 13 9 20 9"></polyline>
+                            </svg>
+                            <p className="text-center text-gray-700 mt-2">
+                              {preview
+                                .split(";")[0]
+                                .split(":")[1]
+                                .split("/")[1]
+                                .toUpperCase()}{" "}
+                              file
+                            </p>
+                            <p className="text-center text-gray-500 text-sm mt-1">
+                              Ready to send
+                            </p>
+                          </div>
+                        );
+                      }
+                    } else {
+                      // Fallback if preview is not available
+                      return (
+                        <div className="generic-preview-container p-8 bg-gray-100 rounded-md flex flex-col items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="64"
+                            height="64"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-gray-600 mb-3"
+                          >
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                            <polyline points="13 2 13 9 20 9"></polyline>
+                          </svg>
+                          <p className="text-center text-gray-700">
+                            File ready to send
+                          </p>
+                        </div>
+                      );
+                    }
+                  })()}
+
                   <div className="caption-input-container">
                     <textarea
                       value={imageCaption}
@@ -2423,10 +2729,11 @@ useEffect(() => {
                       </div>
                     )}
                   </div>
+
                   <button
                     className="cb-send-image-btn"
                     onClick={handleImageSend}
-                    // disabled={isUploading || !blobUrl}
+                    disabled={isUploading}
                   >
                     {isUploading ? "Uploading..." : "Send"}
                   </button>
