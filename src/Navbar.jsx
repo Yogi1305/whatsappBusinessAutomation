@@ -335,6 +335,7 @@ useEffect(() => {
         return;
       }
       
+      
       // Check if the message is for this business phone
       if (message.phone_number_id == businessPhoneNumberId) {
         console.log('Received socket message:', message);

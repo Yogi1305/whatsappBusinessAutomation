@@ -518,7 +518,9 @@ const Chatbot = () => {
         //console.log(response.data.whatsapp_data[0].business_phone_number_id,"THIS IS BPID");
         setBusinessPhoneNumberId(
           response.data.whatsapp_data[0].business_phone_number_id
+          
         );
+        
       } catch (error) {
         //  console.error('Error fetching business phone ID:', error);
       }
@@ -1155,27 +1157,27 @@ const Chatbot = () => {
       setSelectedContact(contact);
     }
   }, [contacts.length, businessPhoneNumberId]); // Reduced dependencies
-  useEffect(() => {
-    if (!selectedContact?.phone || !businessPhoneNumberId) return;
+  // useEffect(() => {
+  //   if (!selectedContact?.phone || !businessPhoneNumberId) return;
 
-    // Skip fetch if this update was triggered by socket
-    if (isSocketUpdate.current) {
-      isSocketUpdate.current = false;
-      return;
-    }
+  //   // Skip fetch if this update was triggered by socket
+  //   if (isSocketUpdate.current) {
+  //     isSocketUpdate.current = false;
+  //     return;
+  //   }
 
-    setIsLoading(true);
-    const controller = new AbortController();
+  //   setIsLoading(true);
+  //   const controller = new AbortController();
 
-    fetchConversation(
-      selectedContact.phone,
-      1,
-      false,
-      controller.signal
-    ).finally(() => setIsLoading(false));
+  //   fetchConversation(
+  //     selectedContact.phone,
+  //     1,
+  //     false,
+  //     controller.signal
+  //   ).finally(() => setIsLoading(false));
 
-    return () => controller.abort();
-  }, [selectedContact?.phone, businessPhoneNumberId, fetchConversation]);
+  //   return () => controller.abort();
+  // }, [selectedContact?.phone, businessPhoneNumberId, fetchConversation]);
   const addInputField = () => {
     setInputFields([...inputFields, { value: "" }]);
   };
@@ -1634,6 +1636,8 @@ useEffect(() => {
   }, [selectedContact?.phone, businessPhoneNumberId, fetchConversation]);
 
   // Load unread counts from IndexedDB when component mounts
+  
+  
   useEffect(() => {
     const loadSavedUnreadCounts = async () => {
       try {

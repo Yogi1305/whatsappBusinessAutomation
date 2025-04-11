@@ -20,6 +20,7 @@ export const useBroadcastManager = (tenantId) => {
           'X-Tenant-ID': tenantId
         }
       });
+     
       setBusinessPhoneNumberId(response.data.whatsapp_data[0].business_phone_number_id);
       setAccountId(response.data.whatsapp_data[0].business_account_id);
       setAccessToken(response.data.whatsapp_data[0].access_token);
