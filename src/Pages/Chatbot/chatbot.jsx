@@ -81,7 +81,6 @@ import FileTypeSelectionModal from "./FileTypeSelectionModal";
 
 const socket = io(whatsappURL);
 
-
 const DUMMY_CONTACTS = [
   {
     id: "dummy1",
@@ -219,56 +218,64 @@ const Chatbot = () => {
   // Add these functions inside your component or in a utility file
   const isWithin24Hours = (timestamp) => {
     if (!timestamp) return false;
-    
+
     const now = new Date();
     const messageTime = new Date(timestamp);
     const diffInHours = (now - messageTime) / (1000 * 60 * 60);
-    
+
     return diffInHours < 24;
   };
-  
+
   const getInteractionStatus = (contact) => {
-    if (contact.last_replied) return {
-      status: "last_replied",
-      timestamp: contact.last_replied,
-      label: "Replied",
-      isActive: isWithin24Hours(contact.last_replied)
-    };
-    
-    if (contact.last_seen) return {
-      status: "last_seen",
-      timestamp: contact.last_seen,
-      label: "Seen",
-      isActive: isWithin24Hours(contact.last_seen)
-    };
-    
-    if (contact.last_delivered) return {
-      status: "last_delivered",
-      timestamp: contact.last_delivered,
-      label: "Delivered",
-      isActive: isWithin24Hours(contact.last_delivered)
-    };
-    
+    if (contact.last_replied)
+      return {
+        status: "last_replied",
+        timestamp: contact.last_replied,
+        label: "Replied",
+        isActive: isWithin24Hours(contact.last_replied),
+      };
+
+    if (contact.last_seen)
+      return {
+        status: "last_seen",
+        timestamp: contact.last_seen,
+        label: "Seen",
+        isActive: isWithin24Hours(contact.last_seen),
+      };
+
+    if (contact.last_delivered)
+      return {
+        status: "last_delivered",
+        timestamp: contact.last_delivered,
+        label: "Delivered",
+        isActive: isWithin24Hours(contact.last_delivered),
+      };
+
     return {
       status: "no_interaction",
       timestamp: null,
       label: "No Interaction",
-      isActive: false
+      isActive: false,
     };
   };
-  
+
   const ActivityIndicator = React.memo(({ contact }) => {
-    const interactionInfo = useMemo(() => getInteractionStatus(contact), [contact]);
-    
+    const interactionInfo = useMemo(
+      () => getInteractionStatus(contact),
+      [contact]
+    );
+
     return (
       <div className="flex items-center">
-        <div 
+        <div
           className={`activity-indicator w-3 h-3 rounded-full ${
-            interactionInfo.isActive ? 'bg-green-500' : 'bg-red-500'
+            interactionInfo.isActive ? "bg-green-500" : "bg-red-500"
           }`}
-          title={`${interactionInfo.label} ${interactionInfo.timestamp ? 
-            `- ${new Date(interactionInfo.timestamp).toLocaleString()}` : 
-            ''}`}
+          title={`${interactionInfo.label} ${
+            interactionInfo.timestamp
+              ? `- ${new Date(interactionInfo.timestamp).toLocaleString()}`
+              : ""
+          }`}
         />
         <span className="text-xs text-gray-400 ml-2">
           {interactionInfo.label}
@@ -344,7 +351,7 @@ const Chatbot = () => {
   const handleFileSelect = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+    setShowImagePreview(true);
     setIsUploading(true);
     try {
       // Create a preview for the file before uploading
@@ -399,7 +406,7 @@ const Chatbot = () => {
             }));
 
             // Show preview
-            setShowImagePreview(true);
+
             setIsUploading(false);
 
             console.log(
@@ -518,9 +525,7 @@ const Chatbot = () => {
         //console.log(response.data.whatsapp_data[0].business_phone_number_id,"THIS IS BPID");
         setBusinessPhoneNumberId(
           response.data.whatsapp_data[0].business_phone_number_id
-          
         );
-        
       } catch (error) {
         //  console.error('Error fetching business phone ID:', error);
       }
@@ -647,17 +652,17 @@ const Chatbot = () => {
   // Keep the existing function name but enhance its functionality
   const handleImageSend = async () => {
     if (!imageToSend || !selectedContact) return;
-  
+
     let phoneNumber = selectedContact.phone;
     if (phoneNumber.startsWith("91")) {
       phoneNumber = phoneNumber.slice(2);
     }
-  
+
     try {
       // Determine file type from the data URL
       const previewData = imageMap[imageToSend];
       let mediaType = "document"; // Default type
-  
+
       if (typeof previewData === "string") {
         if (previewData.startsWith("data:image/")) {
           mediaType = "image";
@@ -669,7 +674,7 @@ const Chatbot = () => {
           mediaType = "document"; // PDFs are sent as documents
         }
       }
-  
+
       const response = await axiosInstance.post(`${whatsappURL}/send-message`, {
         phoneNumbers: [phoneNumber],
         messageType: "media",
@@ -680,11 +685,11 @@ const Chatbot = () => {
         },
         business_phone_number_id: businessPhoneNumberId,
       });
-    
+
       if (response.status === 200) {
         // Add to conversation with the appropriate type
         const currentTime = new Date().toISOString();
-        
+
         setConversation((prev) => [
           ...prev,
           {
@@ -696,7 +701,7 @@ const Chatbot = () => {
             time: currentTime,
           },
         ]);
-        
+
         // Add this section: Update the contact's activity status
         setContacts((prevContacts) => {
           return prevContacts.map((contact) => {
@@ -705,18 +710,18 @@ const Chatbot = () => {
                 ...contact,
                 last_replied: currentTime,
                 // Also update any other timestamp fields you want to maintain
-                lastMessageTimestamp: new Date(currentTime).getTime()
+                lastMessageTimestamp: new Date(currentTime).getTime(),
               };
             }
             return contact;
           });
         });
-  
+
         // Reset states
         setImageToSend(null);
         setImageCaption("");
         setShowImagePreview(false);
-  
+
         toast.success("Message sent successfully");
       }
     } catch (error) {
@@ -832,7 +837,7 @@ const Chatbot = () => {
                     ...contact,
                     unreadCount: newUnreadCount,
                     lastMessageTimestamp: Date.now(),
-                    last_replied: new Date().toISOString()
+                    last_replied: new Date().toISOString(),
                   };
                 }
                 return contact;
@@ -887,13 +892,13 @@ const Chatbot = () => {
       toast.error("No contact selected");
       return;
     }
-  
+
     const messageContent = messageTemplates[selectedContact.id];
     if (!messageContent || messageContent.trim() === "") {
       toast.error("Please enter a message");
       return;
     }
-  
+
     try {
       // First add the message to the conversation for immediate feedback
       const newMessage = {
@@ -903,20 +908,20 @@ const Chatbot = () => {
         time: new Date().toISOString(),
         pending: true, // Mark as pending until confirmed
       };
-  
+
       setConversation((prev) => [...prev, newMessage]);
-  
+
       // Clear the input field immediately for better UX
       setMessageTemplates((prevTemplates) => ({
         ...prevTemplates,
         [selectedContact.id]: "",
       }));
-  
+
       // Scroll to the new message
       setTimeout(() => {
         messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 50);
-  
+
       if (selectedContact.isGroup) {
         // Send message to all group members
         const sendPromises = selectedContact.members.map((memberId) => {
@@ -925,7 +930,7 @@ const Chatbot = () => {
           if (phoneNumber.startsWith("91")) {
             phoneNumber = phoneNumber.slice(2);
           }
-  
+
           return axiosInstance.post(`${whatsappURL}/send-message`, {
             phoneNumbers: [phoneNumber],
             message: messageContent,
@@ -933,7 +938,7 @@ const Chatbot = () => {
             messageType: "text",
           });
         });
-        
+
         await Promise.all(sendPromises);
       } else {
         // Send message to individual contact
@@ -941,7 +946,7 @@ const Chatbot = () => {
         if (phoneNumber.startsWith("91")) {
           phoneNumber = phoneNumber.slice(2);
         }
-  
+
         await axiosInstance.post(`${whatsappURL}/send-message`, {
           phoneNumbers: [phoneNumber],
           message: messageContent,
@@ -949,14 +954,14 @@ const Chatbot = () => {
           messageType: "text",
         });
       }
-  
+
       // Update the message to remove the pending status
       setConversation((prev) =>
         prev.map((msg) =>
           msg.id === newMessage.id ? { ...msg, pending: false } : msg
         )
       );
-      
+
       // Add this section: Update the contact's activity status
       setContacts((prevContacts) => {
         return prevContacts.map((contact) => {
@@ -966,13 +971,13 @@ const Chatbot = () => {
               ...contact,
               last_replied: currentTime,
               // Also update any other timestamp fields you want to maintain
-              lastMessageTimestamp: new Date(currentTime).getTime()
+              lastMessageTimestamp: new Date(currentTime).getTime(),
             };
           }
           return contact;
         });
       });
-     
+
       // Add success toast
       toast.success("Message sent successfully");
     } catch (error) {
@@ -984,7 +989,7 @@ const Chatbot = () => {
             : msg
         )
       );
-  
+
       // Add error toast with specific error message
       toast.error(
         `Failed to send message: ${
@@ -1400,43 +1405,45 @@ const Chatbot = () => {
   };
 
   // Add this function to calculate remaining time until session end (24 hours from last activity)
-const getRemainingSessionTime = (timestamp) => {
-  if (!timestamp) return "No activity";
-  
-  const now = new Date();
-  const lastActivity = new Date(timestamp);
-  const sessionEndTime = new Date(lastActivity.getTime() + 24 * 60 * 60 * 1000); // 24 hours after last activity
-  
-  // If session has already ended
-  if (now > sessionEndTime) {
-    return "0h 0m (expired)";
-  }
-  
-  // Calculate remaining time
-  const diffMs = sessionEndTime - now;
-  const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
-  // Format the output
-  if (diffHrs > 0) {
-    return `${diffHrs}h ${diffMins}m`;
-  } else if (diffMins > 0) {
-    return `${diffMins}m`;
-  } else {
-    return "less than a minute";
-  }
-};
-// Add this useEffect to periodically refresh the status display
-useEffect(() => {
-  const intervalId = setInterval(() => {
-    // Force a re-render to update the activity status display
-    if (selectedContact) {
-      setSelectedContact({...selectedContact});
+  const getRemainingSessionTime = (timestamp) => {
+    if (!timestamp) return "No activity";
+
+    const now = new Date();
+    const lastActivity = new Date(timestamp);
+    const sessionEndTime = new Date(
+      lastActivity.getTime() + 24 * 60 * 60 * 1000
+    ); // 24 hours after last activity
+
+    // If session has already ended
+    if (now > sessionEndTime) {
+      return "0h 0m (expired)";
     }
-  }, 60000); // Update every minute
-  
-  return () => clearInterval(intervalId);
-}, [selectedContact]);
+
+    // Calculate remaining time
+    const diffMs = sessionEndTime - now;
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    // Format the output
+    if (diffHrs > 0) {
+      return `${diffHrs}h ${diffMins}m`;
+    } else if (diffMins > 0) {
+      return `${diffMins}m`;
+    } else {
+      return "less than a minute";
+    }
+  };
+  // Add this useEffect to periodically refresh the status display
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      // Force a re-render to update the activity status display
+      if (selectedContact) {
+        setSelectedContact({ ...selectedContact });
+      }
+    }, 60000); // Update every minute
+
+    return () => clearInterval(intervalId);
+  }, [selectedContact]);
   const handleNewChat = async () => {
     if (!newPhoneNumber.trim()) return;
 
@@ -1636,8 +1643,7 @@ useEffect(() => {
   }, [selectedContact?.phone, businessPhoneNumberId, fetchConversation]);
 
   // Load unread counts from IndexedDB when component mounts
-  
-  
+
   useEffect(() => {
     const loadSavedUnreadCounts = async () => {
       try {
@@ -1907,7 +1913,6 @@ useEffect(() => {
                         selectedContact.name,
                         selectedContact.last_name
                       )}
-                      
                     </div>
                   )}
                   <div>
@@ -2165,21 +2170,21 @@ useEffect(() => {
                         //     label: "Replied",
                         //     isActive: isWithin24Hours(contact.last_replied)
                         //   };
-                          
+
                         //   if (contact.last_seen) return {
                         //     status: "last_seen",
                         //     timestamp: contact.last_seen,
                         //     label: "Seen",
                         //     isActive: isWithin24Hours(contact.last_seen)
                         //   };
-                          
+
                         //   if (contact.last_delivered) return {
                         //     status: "last_delivered",
                         //     timestamp: contact.last_delivered,
                         //     label: "Delivered",
                         //     isActive: isWithin24Hours(contact.last_delivered)
                         //   };
-                          
+
                         //   return {
                         //     status: "no_interaction",
                         //     timestamp: null,
@@ -2187,14 +2192,14 @@ useEffect(() => {
                         //     isActive: false
                         //   };
                         // };
-                        
+
                         // const isWithin24Hours = (timestamp) => {
                         //   if (!timestamp) return false;
-                          
+
                         //   const now = new Date();
                         //   const messageTime = new Date(timestamp);
                         //   const diffInHours = (now - messageTime) / (1000 * 60 * 60);
-                          
+
                         //   return diffInHours < 24;
                         // };
                         const aStatus = getInteractionStatus(a);
@@ -2274,59 +2279,67 @@ useEffect(() => {
               </CardContent>
             </Card>
             <div className="cb-main flex-grow">
-            {selectedContact && (
-  <div className="cb-chat-header">
-    {selectedContact && (
-      <div className="cb-chat-contact-info">
-        <div className="flex items-center">
-          {profileImage && typeof profileImage === "string" ? (
-            <img
-              src={profileImage}
-              alt="Profile"
-              className="cb-profile-icon"
-            />
-          ) : (
-            <div className={`cb-default-avatar`}>
-              {getInitials(
-                selectedContact.name,
-                selectedContact.last_name
+              {selectedContact && (
+                <div className="cb-chat-header">
+                  {selectedContact && (
+                    <div className="cb-chat-contact-info">
+                      <div className="flex items-center">
+                        {profileImage && typeof profileImage === "string" ? (
+                          <img
+                            src={profileImage}
+                            alt="Profile"
+                            className="cb-profile-icon"
+                          />
+                        ) : (
+                          <div className={`cb-default-avatar`}>
+                            {getInitials(
+                              selectedContact.name,
+                              selectedContact.last_name
+                            )}
+                          </div>
+                        )}
+                        <div className="cb-contact-details">
+                          <div className="flex items-center">
+                            <span className="cb-contact-name">
+                              {selectedContact.name} {selectedContact.last_name}
+                            </span>
+                            {/* Active status indicator */}
+                            <div className="ml-2 flex items-center">
+                              {getInteractionStatus(selectedContact)
+                                .isActive ? (
+                                <div className="flex items-center">
+                                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></div>
+                                  <span className="text-xs text-green-600 font-medium">
+                                    Active
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center">
+                                  <div className="w-2.5 h-2.5 bg-red-500 rounded-full mr-1.5"></div>
+                                  <span className="text-xs text-red-600 font-medium">
+                                    Session Ended
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <span className="cb-contact-phone">
+                            {selectedContact.phone}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {getInteractionStatus(selectedContact).isActive
+                              ? `Session ends in ${getRemainingSessionTime(
+                                  getInteractionStatus(selectedContact)
+                                    .timestamp
+                                )}`
+                              : "Session has expired"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
-            </div>
-          )}
-          <div className="cb-contact-details">
-            <div className="flex items-center">
-              <span className="cb-contact-name">
-                {selectedContact.name} {selectedContact.last_name}
-              </span>
-              {/* Active status indicator */}
-              <div className="ml-2 flex items-center">
-                {getInteractionStatus(selectedContact).isActive ? (
-                  <div className="flex items-center">
-                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></div>
-                    <span className="text-xs text-green-600 font-medium">Active</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <div className="w-2.5 h-2.5 bg-red-500 rounded-full mr-1.5"></div>
-                    <span className="text-xs text-red-600 font-medium">Session Ended</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <span className="cb-contact-phone">
-              {selectedContact.phone}
-            </span>
-            <span className="text-xs text-gray-500">
-              {getInteractionStatus(selectedContact).isActive ? 
-                `Session ends in ${getRemainingSessionTime(getInteractionStatus(selectedContact).timestamp)}` : 
-                "Session has expired"}
-            </span>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-)}
 
               <div className="cb-message-container" ref={messagesContainerRef}>
                 {showLoadMoreButton && hasMoreMessages && (
@@ -2451,7 +2464,7 @@ useEffect(() => {
                 )}
                 <div ref={messageEndRef} />
               </div>
-             
+
               <div className="cb-input-container">
                 <div className="cb-input-actions">
                   <EmojiEmotionsIcon
@@ -2487,7 +2500,7 @@ useEffect(() => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       // Send on Enter, ignore if Shift+Enter
                       e.preventDefault(); // Prevent new line from being added
-                    
+
                       handleSend();
                     }
                   }}
@@ -2643,162 +2656,37 @@ useEffect(() => {
                 </TabsContent>
               </Tabs>
             </Card>
+
             {showImagePreview && (
-              <div className="cb-image-preview-overlay">
-                <div className="cb-image-preview-container">
+              <div className="preview-overlay">
+                <div className="preview-container">
                   <CloseIcon
-                    className="cb-close-preview"
-                    onClick={() => setShowImagePreview(false)}
+                    className="close-preview"
+                    onClick={() => {
+                      setImageToSend(null);
+                      setImageCaption("");
+                      setShowImagePreview(false);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
                   />
-
-                  {/* Preview based on file type */}
-                  {(() => {
-                    const preview = imageMap[imageToSend];
-
-                    if (typeof preview === "string") {
-                      // Image preview
-                      if (preview.startsWith("data:image/")) {
-                        return (
-                          <div className="image-preview-wrapper">
-                            <img
-                              src={preview}
-                              alt="Image Preview"
-                              className="cb-preview-image"
-                            />
-                          </div>
-                        );
-                      }
-                      // PDF preview
-                      else if (preview.startsWith("data:application/pdf")) {
-                        return (
-                          <div className="pdf-preview-wrapper">
-                            <iframe
-                              src={preview}
-                              className="pdf-preview-frame"
-                              width="100%"
-                              height="500px"
-                              title="PDF Preview"
-                            ></iframe>
-                          </div>
-                        );
-                      }
-                      // Video preview
-                      else if (preview.startsWith("data:video/")) {
-                        return (
-                          <div className="video-preview-wrapper">
-                            <video
-                              src={preview}
-                              controls
-                              className="cb-preview-video"
-                              width="100%"
-                              height="auto"
-                            />
-                          </div>
-                        );
-                      }
-                      // Audio preview
-                      else if (preview.startsWith("data:audio/")) {
-                        return (
-                          <div className="audio-preview-container p-4 bg-gray-100 rounded-md">
-                            <div className="audio-icon flex justify-center mb-3">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="48"
-                                height="48"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-600"
-                              >
-                                <path d="M9 18V5l12-2v13"></path>
-                                <circle cx="6" cy="18" r="3"></circle>
-                                <circle cx="18" cy="16" r="3"></circle>
-                              </svg>
-                            </div>
-                            <audio src={preview} controls className="w-full" />
-                          </div>
-                        );
-                      }
-                      // Generic document preview
-                      else {
-                        return (
-                          <div className="document-preview-container p-8 bg-gray-100 rounded-md flex flex-col items-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="64"
-                              height="64"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-gray-600 mb-3"
-                            >
-                              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                              <polyline points="13 2 13 9 20 9"></polyline>
-                            </svg>
-                            <p className="text-center text-gray-700 mt-2">
-                              {preview
-                                .split(";")[0]
-                                .split(":")[1]
-                                .split("/")[1]
-                                .toUpperCase()}{" "}
-                              file
-                            </p>
-                            <p className="text-center text-gray-500 text-sm mt-1">
-                              Ready to send
-                            </p>
-                          </div>
-                        );
-                      }
-                    } else {
-                      // Fallback if preview is not available
-                      return (
-                        <div className="generic-preview-container p-8 bg-gray-100 rounded-md flex flex-col items-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="64"
-                            height="64"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-gray-600 mb-3"
-                          >
-                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                            <polyline points="13 2 13 9 20 9"></polyline>
-                          </svg>
-                          <p className="text-center text-gray-700">
-                            File ready to send
-                          </p>
-                        </div>
-                      );
-                    }
-                  })()}
-
-                  <div className="caption-input-container">
-                    <textarea
-                      value={imageCaption}
-                      onChange={(e) => setImageCaption(e.target.value)}
-                      placeholder="Add a caption..."
-                      className="cb-image-caption-input"
-                      maxLength={500}
+                  <div className="image-wrapper">
+                    <img
+                      src={imageMap[imageToSend]}
+                      alt="loading the file"
+                      className="preview-image"
                     />
-                    {imageCaption.length > 0 && (
-                      <div className="caption-character-count">
-                        {imageCaption.length}/500
-                      </div>
-                    )}
                   </div>
-
+                  <textarea
+                    value={imageCaption}
+                    onChange={(e) => setImageCaption(e.target.value)}
+                    placeholder="Add a caption..."
+                    className="caption-input"
+                    maxLength={500}
+                  />
                   <button
-                    className="cb-send-image-btn"
+                    className="send-button"
                     onClick={handleImageSend}
                     disabled={isUploading}
                   >

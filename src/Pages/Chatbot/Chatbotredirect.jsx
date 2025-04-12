@@ -22,6 +22,18 @@ const Chatbotredirect = () => {
             { code },  // This is the body of the request
             { headers: { 'X-Tenant-Id': tenantID } }  // This is the headers object
           );
+         
+          const setan = await axios.post(
+            `https://graph.facebook.com/v20.0/${response.data.wbid}/?is_enabled_for_insights=true`,
+            {}, 
+            { 
+              headers: { 'X-Tenant-Id': tenantID },
+              params: {
+                access_token: response.data.access_token
+              }
+            }
+          );
+          
 
           // Handle the response (you can save token or do other logic here)
         //  console.log('Backend response:', response.data);
